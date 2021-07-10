@@ -17,64 +17,64 @@ export class ShipObject extends ITangibleObject {
   @Field(() => Int, { nullable: true })
   chassisType: number | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpArmorHpMaximum: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpArmorHpCurrent: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpEfficiencyGeneral: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpEfficiencyEng: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpEngMaintenance: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpMass: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpCrc: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpHpCurrent: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpHpMaximum: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpFlags: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpNames: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponDamageMaximum: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponDamageMinimum: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponEffectivenessShields: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponEffectivenessArmor: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponEngPerShot: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponRefireRate: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponAmmoCurrent: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponAmmoMaximum: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   weaponAmmoType: string | null;
 
   @Field(() => Float, { nullable: true })
@@ -146,7 +146,7 @@ export class ShipObject extends ITangibleObject {
   @Field(() => Float, { nullable: true })
   chassisCmpMassMaximum: number | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cmpCreators: string | null;
 
   @Field(() => Int, { nullable: true })
@@ -155,6 +155,6 @@ export class ShipObject extends ITangibleObject {
   @Field(() => Int, { nullable: true })
   cargoHoldContentsCurrent: number | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   cargoHoldContents: string | null;
 }

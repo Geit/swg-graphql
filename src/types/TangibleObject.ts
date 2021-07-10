@@ -20,7 +20,7 @@ export class ITangibleObject extends IServerObject {
   @Field({ description: 'Whether the object can be seen by players' })
   visible: boolean;
 
-  @Field({ nullable: true, description: 'Packed buffer determining how the object looks in game' })
+  @Field(() => String, { nullable: true, description: 'Packed buffer determining how the object looks in game' })
   appearanceData: string | null;
 
   @Field(() => Float, { nullable: true, description: 'The interest radius, in meters ' })
@@ -41,7 +41,7 @@ export class ITangibleObject extends IServerObject {
   })
   damageTaken: number | null;
 
-  @Field({ nullable: true, description: 'Appearance file this object is currently imitating' })
+  @Field(() => String, { nullable: true, description: 'Appearance file this object is currently imitating' })
   customAppearance: string | null;
 
   @Field(() => Int, {

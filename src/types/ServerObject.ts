@@ -12,7 +12,7 @@ export class IServerObject {
   @Field(() => ID)
   id!: string;
 
-  @Field({
+  @Field(() => String, {
     description: 'The current name of this Object, may be null if this is using a localised/template name.',
     nullable: true,
   })
@@ -27,10 +27,10 @@ export class IServerObject {
   @Field(() => [Float], { description: 'The snapshot node that this item should be loaded with', nullable: true })
   nodeLocation: Location | null;
 
-  @Field({ description: 'The Game Object Type ID of the object.', nullable: true })
+  @Field(() => Int, { description: 'The Game Object Type ID of the object.', nullable: true })
   typeId: number | null;
 
-  @Field({ description: 'The planet/scene where the item was last seen.', nullable: true })
+  @Field(() => String, { description: 'The planet/scene where the item was last seen.', nullable: true })
   scene: string | null;
 
   @Field(() => Int, { description: 'The ID of the Object Controller responsible for this object.', nullable: true })
@@ -42,7 +42,7 @@ export class IServerObject {
   })
   deletionReason: number | null;
 
-  @Field({
+  @Field(() => String, {
     description: 'If non-null, the timestamp at which this object was deleted.',
     nullable: true,
   })
@@ -57,17 +57,16 @@ export class IServerObject {
   @Field(() => Int, { description: 'The identifier of the slot arrangement for this object', nullable: true })
   slotArrangement: number | null;
 
-  @Field({ description: 'Boolean indicating whether this object is controlled by a player', nullable: true })
-  playerControlled: boolean | null;
+  @Field({ description: 'Boolean indicating whether this object is controlled by a player' })
+  playerControlled: boolean;
 
   @Field(() => Int)
   cacheVersion: number | null;
 
   @Field({
     description: 'Boolean indicating whether this object should load its contents immediately when it is loaded',
-    nullable: true,
   })
-  loadContents: boolean | null;
+  loadContents: boolean;
 
   @Field(() => Int, {
     description: 'The amount of credits on the object',
@@ -87,16 +86,16 @@ export class IServerObject {
   })
   complexity: number | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   nameStringTable: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   nameStringText: string | null;
 
   @Field(() => Int, { nullable: true })
   templateId: number | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   staticItemName: string;
 
   @Field(() => Int)
@@ -120,7 +119,7 @@ export class IServerObject {
   @Field(() => [IServerObject], { description: 'The contents of this object', nullable: true })
   contents: IServerObject[];
 
-  @Field({
+  @Field(() => String, {
     description: "Computed property respresenting the object's actual name",
     nullable: true,
   })

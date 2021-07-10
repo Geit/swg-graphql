@@ -49,7 +49,7 @@ export class CreatureObject extends ITangibleObject {
   })
   attributes: number[] | null;
 
-  @Field({
+  @Field(() => String, {
     nullable: true,
     description:
       'Packed/encoded string containing any buffs that will be reapplied to the creature when it is next active',

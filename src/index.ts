@@ -9,7 +9,7 @@ import kibanaAuthorisationContext from './context/kibana-auth';
 async function bootstrap() {
   // Build the schema by pulling in all the resolvers from the resolvers folder
   const schema = await buildSchema({
-    resolvers: [`${__dirname}/resolvers/*.{ts}`],
+    resolvers: [`${__dirname}/resolvers/*.{js,ts}`],
     container: Container,
   });
 

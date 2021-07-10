@@ -8,7 +8,7 @@ export class ManfSchematicObject extends ITangibleObject {
   @Field(() => ID, { nullable: true, description: 'The Object ID of the creator of this manufacturing schematic' })
   creatorId: string | null;
 
-  @Field({ nullable: true, description: 'The name of the creator of this manufacturing schematic' })
+  @Field(() => String, { nullable: true, description: 'The name of the creator of this manufacturing schematic' })
   creatorName: string | null;
 
   @Field(() => Int, {
