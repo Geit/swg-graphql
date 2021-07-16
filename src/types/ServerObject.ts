@@ -121,9 +121,8 @@ export class IServerObject {
 
   @Field(() => String, {
     description: "Computed property respresenting the object's actual name",
-    nullable: true,
   })
-  resolvedName: string | null;
+  resolvedName: string;
 
   @Field(() => Int, {
     description: 'Computed property representing the number of items stored within this item',

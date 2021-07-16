@@ -59,7 +59,7 @@ export const DISABLE_AUTH = Boolean(process.env.DISABLE_AUTH);
 /**
  * Elastic HTTP host, used by the authorisation layer to validate incoming requests.
  */
-export const ELASTIC_SEARCH_URL = process.env.ELASTIC_SEARCH_URL ?? 'http://localhoaast:9200/';
+export const ELASTIC_SEARCH_URL = process.env.ELASTIC_SEARCH_URL ?? 'http://localhost:9200/';
 
 /**
  * Required Elastic privilege the requesters must have in order to make queries.
