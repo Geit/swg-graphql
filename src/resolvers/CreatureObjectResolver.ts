@@ -1,4 +1,4 @@
-import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { FieldResolver, Float, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { CreatureObjectService } from '../services/CreatureObjectService';
@@ -85,6 +85,12 @@ export class CreatureObjectResolver implements ResolverInterface<CreatureObject>
 
   @FieldResolver()
   async worldspaceLocation(@Root() object: IServerObject) {
+    const creature = await this.creatureObjectService.load(object.id);
+    return creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
+  }
+
+  @FieldResolver(() => [Float])
+  async location(@Root() object: IServerObject) {
     const creature = await this.creatureObjectService.load(object.id);
     return creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
   }

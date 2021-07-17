@@ -23,4 +23,15 @@ export class CellObjectResolver implements ResolverInterface<CellObject> {
     const rc = await this.cellObjectService.load(object.id);
     return rc?.IS_PUBLIC === 'Y';
   }
+
+  @FieldResolver(() => String)
+  async resolvedName(@Root() object: IServerObject) {
+    const rc = await this.cellObjectService.load(object.id);
+
+    if (!rc || !rc.CELL_NUMBER) {
+      return 'Cell Object';
+    }
+
+    return `Cell #${rc?.CELL_NUMBER}`;
+  }
 }

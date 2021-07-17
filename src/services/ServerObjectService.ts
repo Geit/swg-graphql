@@ -7,6 +7,7 @@ import { CellObject } from '../types/CellObject';
 import { HarvesterInstallationObject } from '../types/HarvesterInstallationObject';
 import { InstallationObject } from '../types/InstallationObject';
 import { ManfSchematicObject } from '../types/ManfSchematicObject';
+import { PlayerObject } from '../types/PlayerObject';
 import { ResourceContainerObject } from '../types/ResourceContainerObject';
 import { ShipObject } from '../types/ShipObject';
 
@@ -27,6 +28,7 @@ const TAG_TO_TYPE_MAP: Record<number, any> = {
   [TAGIFY('HINO')]: HarvesterInstallationObject,
   [TAGIFY('INSO')]: InstallationObject,
   [TAGIFY('MCSO')]: ManfSchematicObject,
+  [TAGIFY('PLAY')]: PlayerObject,
 };
 
 /**
@@ -101,7 +103,7 @@ export class ServerObjectService {
         });
       } else {
         query.where(wb => {
-          wb.whereRaw('CONTAINS(NAME_STRING_TABLE, ?) > 0', [`%${filters.searchText!}%`]);
+          wb.whereRaw('CONTAINS(NAME_STRING_TABLE, ?, 1) > 0', [`${filters.searchText!}%`]).orderByRaw('SCORE(1) DESC');
         });
       }
     }
