@@ -118,9 +118,9 @@ export class ServerObjectService {
         });
       } else {
         query.where(wb => {
-          wb.where('OBJECT_ID', '=', `${filters.searchText!}`)
-            .orWhere('CONTAINED_BY', '=', `${filters.searchText!}`)
-            .orWhere('LOAD_WITH', '=', `${filters.searchText!}`);
+          wb.where('OBJECT_ID', '=', filters.searchText!)
+            .orWhere('CONTAINED_BY', '=', filters.searchText!)
+            .orWhere('LOAD_WITH', '=', filters.searchText!);
         });
       }
     }

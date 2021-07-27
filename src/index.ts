@@ -17,13 +17,8 @@ async function bootstrap() {
 
   app.use(
     cors({
-      origin() {
-        if (process.env.NODE_ENV !== 'production') {
-          return true;
-        }
-
-        return false;
-      },
+      origin: process.env.NODE_ENV !== 'production',
+      maxAge: 60 * 60,
     })
   );
 
