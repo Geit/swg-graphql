@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 
-import { DISABLE_TEXT_SEARCH } from '../config';
+import { ENABLE_TEXT_SEARCH } from '../config';
 import { WeaponObject, CreatureObject, ServerObject, TangibleObject } from '../types';
 import { BuildingObject } from '../types/BuildingObject';
 import { CellObject } from '../types/CellObject';
@@ -93,17 +93,34 @@ export class ServerObjectService {
     }
 
     if (filters.searchText) {
-      if (DISABLE_TEXT_SEARCH) {
+      if (ENABLE_TEXT_SEARCH) {
+        //
+        /*
+          This requires a specific index to be setup in Oracle. Something like:
+
+          BEGIN
+            ctx_ddl.create_preference('object_search_idx', 'MULTI_COLUMN_DATASTORE');
+            ctx_ddl.set_attribute('object_search_idx', 'COLUMNS', 'object_name, name_string_text, static_item_name');
+          END;
+
+
+          CREATE INDEX object_search_idx_real
+          ON objects(name_string_table)
+          INDEXTYPE IS CTXSYS.CONTEXT
+          PARAMETERS ('DATASTORE object_search_idx SYNC (EVERY "SYSDATE+1/24")') ONLINE PARALLEL 2;
+        */
         query.where(wb => {
-          //CONTAINS(name_string_table, '%12000071%') > 0)
-          wb.where('OBJECT_ID', 'LIKE', `${filters.searchText!}%`)
-            .orWhere('OBJECT_NAME', 'LIKE', `${filters.searchText!}%`)
-            .orWhere('NAME_STRING_TEXT', 'LIKE', `${filters.searchText!}%`)
-            .orWhere('STATIC_ITEM_NAME', 'LIKE', `${filters.searchText!}%`);
+          wb.whereRaw('CONTAINS(NAME_STRING_TABLE, ?, 1) > 0', [`${filters.searchText!}%`])
+            .orWhere('OBJECT_ID', '=', `${filters.searchText!}`)
+            .orWhere('CONTAINED_BY', '=', `${filters.searchText!}`)
+            .orWhere('LOAD_WITH', '=', `${filters.searchText!}`)
+            .orderByRaw('SCORE(1) DESC');
         });
       } else {
         query.where(wb => {
-          wb.whereRaw('CONTAINS(NAME_STRING_TABLE, ?, 1) > 0', [`${filters.searchText!}%`]).orderByRaw('SCORE(1) DESC');
+          wb.where('OBJECT_ID', '=', `${filters.searchText!}`)
+            .orWhere('CONTAINED_BY', '=', `${filters.searchText!}`)
+            .orWhere('LOAD_WITH', '=', `${filters.searchText!}`);
         });
       }
     }

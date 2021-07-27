@@ -39,7 +39,7 @@ export const PORT = parseInt(process.env.PORT ?? '4000');
  * The text search features require a specific index to be set up within your database.
  * If these indexes are not available, you should disable (full) text search.
  */
-export const DISABLE_TEXT_SEARCH = Boolean(process.env.DISABLE_TEXT_SEARCH);
+export const ENABLE_TEXT_SEARCH = Boolean(process.env.ENABLE_TEXT_SEARCH);
 
 /**
  * Whether to disable the authorisation layer.
