@@ -60,12 +60,11 @@ export class StringFileLoader {
     return Promise.all(
       fileNames.map(async fileName => {
         const stringMap: Record<string, string> = {};
-        const filePath = path.join(__dirname, '../../data/en', `${fileName}.stf`);
+        const filePath = path.join(__dirname, '../../data/string/en', `${fileName}.stf`);
         let file: Buffer;
         try {
           file = await fs.readFile(filePath);
         } catch (err) {
-          // eslint-disable-next-line no-console
           console.error(err);
           return stringMap;
         }

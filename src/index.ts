@@ -1,12 +1,34 @@
 import 'reflect-metadata';
-import { ApolloServer } from 'apollo-server';
+import { createServer } from 'http';
+
+import express from 'express';
+import { ApolloServer, AuthenticationError } from 'apollo-server-express';
+import { execute, subscribe } from 'graphql';
 import { buildSchema } from 'type-graphql';
 import { Container } from 'typedi';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import cors from 'cors';
 
-import { DISABLE_PLAYGROUND, PORT, ENABLE_TRACING, DISABLE_AUTH } from './config';
-import kibanaAuthorisationContext from './context/kibana-auth';
+import { PORT, DISABLE_AUTH } from './config';
+import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
 
 async function bootstrap() {
+  const app = express();
+
+  app.use(
+    cors({
+      origin() {
+        if (process.env.NODE_ENV !== 'production') {
+          return true;
+        }
+
+        return false;
+      },
+    })
+  );
+
+  const httpServer = createServer(app);
+
   // Build the schema by pulling in all the resolvers from the resolvers folder
   const schema = await buildSchema({
     resolvers: [`${__dirname}/resolvers/*.{js,ts}`],
@@ -16,16 +38,33 @@ async function bootstrap() {
   // Create the GraphQL server
   const server = new ApolloServer({
     schema,
-    playground: !DISABLE_PLAYGROUND,
-    tracing: ENABLE_TRACING,
     context: !DISABLE_AUTH ? kibanaAuthorisationContext : undefined,
   });
 
-  // Start the server on the port specified in the config.
-  const { url } = await server.listen(PORT);
+  await server.start();
 
-  // eslint-disable-next-line no-console
-  console.log(`Server is running, GraphQL Playground available at ${url}`);
+  server.applyMiddleware({ app });
+
+  SubscriptionServer.create(
+    {
+      schema,
+      execute,
+      subscribe,
+      async onConnect(connectionParams: any) {
+        if (DISABLE_AUTH) return;
+
+        if (!connectionParams.authToken) {
+          throw new AuthenticationError('Missing auth token!');
+        }
+
+        await checkKibanaToken(connectionParams.authToken);
+      },
+    },
+    { server: httpServer, path: server.graphqlPath }
+  );
+
+  // Start the server on the port specified in the config.
+  httpServer.listen(PORT, () => console.log(`Server is now running on http://localhost:${PORT}/graphql`));
 }
 
 bootstrap();

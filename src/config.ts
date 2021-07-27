@@ -42,16 +42,6 @@ export const PORT = parseInt(process.env.PORT ?? '4000');
 export const DISABLE_TEXT_SEARCH = Boolean(process.env.DISABLE_TEXT_SEARCH);
 
 /**
- * Used to disable the GraphQL Playground in production environments
- */
-export const DISABLE_PLAYGROUND = Boolean(process.env.DISABLE_PLAYGROUND);
-
-/**
- * Whether to enable Apollo Server's tracing features.
- */
-export const ENABLE_TRACING = Boolean(process.env.ENABLE_TRACING);
-
-/**
  * Whether to disable the authorisation layer.
  */
 export const DISABLE_AUTH = Boolean(process.env.DISABLE_AUTH);

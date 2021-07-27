@@ -39,7 +39,6 @@ module.exports = {
     'handle-callback-err': 'error',
     'no-array-constructor': 'error',
     'no-buffer-constructor': 'error',
-    'no-console': 'error',
     'no-duplicate-imports': 'error',
     'no-else-return': 'error',
     'no-empty-function': 'error',

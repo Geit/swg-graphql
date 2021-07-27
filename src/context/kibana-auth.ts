@@ -1,5 +1,4 @@
-import { AuthenticationError } from 'apollo-server';
-import type { ApolloServerExpressConfig } from 'apollo-server-express';
+import { AuthenticationError, ApolloServerExpressConfig } from 'apollo-server-express';
 import got from 'got';
 
 import { DISABLE_AUTH, ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC_SEARCH_URL } from '../config';
@@ -14,29 +13,10 @@ interface ElasticHasPrivlagesResponse {
   has_all_requested?: boolean;
 }
 
-/**
- * Verifies that the incoming request has an authorisation header attached, and then forwards
- * the request to Elastic to verify that the user has the required permission to query the GraphQL
- * Server.
- *
- * This is _very_ basic auth. If using this in production, you should consider maintaining an operation registry
- * and validating that the incoming client has permissions to execute the operations.
- *
- * @returns undefined if successful.
- * @throws AuthenticationError
- */
-const kibanaAuthorisationContext: ApolloServerExpressConfig['context'] = async params => {
-  if (DISABLE_AUTH) {
-    return;
-  }
-
-  if (!params.req.headers.authorization) {
-    throw new AuthenticationError('Authorization required.');
-  }
-
+export const checkKibanaToken = async (token: string) => {
   const result = await got<ElasticHasPrivlagesResponse>(`${ELASTIC_SEARCH_URL}_security/user/_has_privileges`, {
     headers: {
-      authorization: params.req.headers.authorization,
+      authorization: token,
     },
     allowGetBody: true,
     json: {
@@ -50,7 +30,6 @@ const kibanaAuthorisationContext: ApolloServerExpressConfig['context'] = async p
     },
     responseType: 'json',
   }).catch(err => {
-    // eslint-disable-next-line no-console
     console.error(err);
     throw new AuthenticationError('Error while confirming authorization');
   });
@@ -60,4 +39,25 @@ const kibanaAuthorisationContext: ApolloServerExpressConfig['context'] = async p
   }
 };
 
-export default kibanaAuthorisationContext;
+/**
+ * Verifies that the incoming request has an authorisation header attached, and then forwards
+ * the request to Elastic to verify that the user has the required permission to query the GraphQL
+ * Server.
+ *
+ * This is _very_ basic auth. If using this in production, you should consider maintaining an operation registry
+ * and validating that the incoming client has permissions to execute the operations.
+ *
+ * @returns undefined if successful.
+ * @throws AuthenticationError
+ */
+export const kibanaAuthorisationContext: ApolloServerExpressConfig['context'] = async params => {
+  if (DISABLE_AUTH) {
+    return;
+  }
+
+  if (!params.req.headers.authorization) {
+    throw new AuthenticationError('Authorization required.');
+  }
+
+  await checkKibanaToken(params.req.headers.authorization);
+};

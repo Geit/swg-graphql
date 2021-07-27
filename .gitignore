@@ -28,5 +28,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-data
+data/**/*
+!data/string/en/.gitkeep
+!data/planet-servers.example.json
 dist
