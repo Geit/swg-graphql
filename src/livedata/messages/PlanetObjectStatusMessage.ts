@@ -29,7 +29,7 @@ export interface PlanetObjectStatusMessage extends ISwgNetworkMessageBase {
 
 const PlanetObjectStatusParser = new Parser()
   .endianess('little')
-  .uint64('networkId')
+  .int64('networkId')
   .int32('locationX')
   .int32('locationZ')
   .uint32('authoritativeServer')
@@ -38,7 +38,7 @@ const PlanetObjectStatusParser = new Parser()
   .int32('objectTypeTag')
   .int32('level')
   .int8('hibernating')
-  .uint32('templateCrc')
+  .int32('templateCrc')
   .int32('aiActivity')
   .int32('creationType');
 

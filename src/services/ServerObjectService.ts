@@ -117,11 +117,14 @@ export class ServerObjectService {
             .orderByRaw('SCORE(1) DESC');
         });
       } else {
-        query.where(wb => {
-          wb.where('OBJECT_ID', '=', filters.searchText!)
-            .orWhere('CONTAINED_BY', '=', filters.searchText!)
-            .orWhere('LOAD_WITH', '=', filters.searchText!);
-        });
+        query
+          .where(wb => {
+            wb.where('OBJECT_ID', '=', filters.searchText!)
+              .orWhere('CONTAINED_BY', '=', filters.searchText!)
+              .orWhere('LOAD_WITH', '=', filters.searchText!);
+          })
+          // Poor man's sort to put the actual OID at the top of the results
+          .orderByRaw('case when OBJECT_ID = ? then 1 else 2 end, OBJECT_ID', [filters.searchText!]);
       }
     }
 

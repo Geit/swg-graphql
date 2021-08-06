@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { createServer } from 'http';
+import { randomBytes } from 'crypto';
 
 import express from 'express';
 import { ApolloServer, AuthenticationError } from 'apollo-server-express';
@@ -14,6 +15,22 @@ import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-a
 
 async function bootstrap() {
   const app = express();
+  const websocketAuthTokens = new Set();
+
+  app.post('/websocket_auth', async (req, res) => {
+    if (!req.headers.authorization) {
+      // eslint-disable-next-line no-param-reassign
+      res.statusCode = 404;
+      res.end();
+    }
+
+    await checkKibanaToken(req.headers.authorization!);
+
+    const authToken = randomBytes(32).toString('hex');
+    websocketAuthTokens.add(authToken);
+
+    res.send(`{ "authToken": "${authToken}" }`);
+  });
 
   app.use(
     cors({
@@ -45,14 +62,22 @@ async function bootstrap() {
       schema,
       execute,
       subscribe,
-      async onConnect(connectionParams: any) {
+      onConnect(connectionParams: any, _socket: any, context: any) {
         if (DISABLE_AUTH) return;
 
         if (!connectionParams.authToken) {
           throw new AuthenticationError('Missing auth token!');
         }
 
-        await checkKibanaToken(connectionParams.authToken);
+        if (!websocketAuthTokens.has(connectionParams.authToken)) {
+          throw new AuthenticationError('Not authorised to use websockets!');
+        }
+
+        // eslint-disable-next-line no-param-reassign
+        context.authToken = connectionParams.authToken;
+      },
+      onDisconnect(_socket: any, context: any) {
+        websocketAuthTokens.delete(context.authToken);
       },
     },
     { server: httpServer, path: server.graphqlPath }
