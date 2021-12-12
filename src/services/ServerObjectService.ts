@@ -93,6 +93,8 @@ export class ServerObjectService {
     }
 
     if (filters.searchText) {
+      const searchText = filters.searchText!.trim();
+
       if (ENABLE_TEXT_SEARCH) {
         //
         /*
@@ -110,7 +112,7 @@ export class ServerObjectService {
           PARAMETERS ('DATASTORE object_search_idx SYNC (EVERY "SYSDATE+1/24")') ONLINE PARALLEL 2;
         */
         query.where(wb => {
-          wb.whereRaw('CONTAINS(NAME_STRING_TABLE, ?, 1) > 0', [`${filters.searchText!}%`])
+          wb.whereRaw('CONTAINS(NAME_STRING_TABLE, ?, 1) > 0', [`${searchText}%`])
             .orWhere('OBJECT_ID', '=', `${filters.searchText!}`)
             .orWhere('CONTAINED_BY', '=', `${filters.searchText!}`)
             .orWhere('LOAD_WITH', '=', `${filters.searchText!}`)
@@ -119,9 +121,9 @@ export class ServerObjectService {
       } else {
         query
           .where(wb => {
-            wb.where('OBJECT_ID', '=', filters.searchText!)
-              .orWhere('CONTAINED_BY', '=', filters.searchText!)
-              .orWhere('LOAD_WITH', '=', filters.searchText!);
+            wb.where('OBJECT_ID', '=', searchText)
+              .orWhere('CONTAINED_BY', '=', searchText)
+              .orWhere('LOAD_WITH', '=', searchText);
           })
           // Poor man's sort to put the actual OID at the top of the results
           .orderByRaw('case when OBJECT_ID = ? then 1 else 2 end, OBJECT_ID', [filters.searchText!]);
