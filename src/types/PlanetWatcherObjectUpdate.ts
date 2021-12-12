@@ -5,7 +5,7 @@ import { Location } from './ServerObject';
 @ObjectType()
 export class PlanetWatcherObjectUpdate {
   @Field(() => ID)
-  networkId: String;
+  networkId: string;
 
   @Field(() => [Int])
   location: Location;

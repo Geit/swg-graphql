@@ -9,7 +9,6 @@ import { DISABLE_AUTH, ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-has-privileges.html
  */
 interface ElasticHasPrivlagesResponse {
-  // eslint-disable-next-line camelcase
   has_all_requested?: boolean;
 }
 

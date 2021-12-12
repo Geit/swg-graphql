@@ -6,7 +6,8 @@
     "plugin:promise/recommended",
     "plugin:jest/recommended",
     "plugin:import/errors",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "plugin:@typescript-eslint/recommended"
   ],
   "plugins": ["prettier", "promise", "jest"],
   "parser": "babel-eslint",

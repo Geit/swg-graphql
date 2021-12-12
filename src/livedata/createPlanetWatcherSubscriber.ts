@@ -44,8 +44,9 @@ export const createPlanetWatcherSubscriber = (topic: string) => {
       // Return an asyncIterator
       const asyncIterator = pubsub.asyncIterator(topic);
 
-      if (planetWatcherPool.has(PLANET)) {
-        const existingVal = planetWatcherPool.get(PLANET)!;
+      const existingVal = planetWatcherPool.get(PLANET);
+
+      if (existingVal) {
         planetWatcherPool.set(PLANET, {
           ...existingVal,
           count: existingVal.count + 1,
@@ -73,22 +74,24 @@ export const createPlanetWatcherSubscriber = (topic: string) => {
           return asyncIterator.next();
         },
         return() {
-          if (planetWatcherPool.has(PLANET)) {
-            const existingVal = planetWatcherPool.get(PLANET)!;
+          const poolVal = planetWatcherPool.get(PLANET);
 
-            if (existingVal.count - 1 <= 0) {
-              existingVal.instance.disconnect();
+          if (poolVal) {
+            if (poolVal.count - 1 <= 0) {
+              poolVal.instance.disconnect();
               planetWatcherPool.delete(PLANET);
             } else {
               planetWatcherPool.set(PLANET, {
-                ...existingVal,
-                count: existingVal.count + -1,
+                ...poolVal,
+                count: poolVal.count + -1,
               });
             }
           }
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           return asyncIterator.return!();
         },
-        throw(error: any) {
+        throw(error: Error) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           return asyncIterator.throw!(error);
         },
         [Symbol.asyncIterator]() {

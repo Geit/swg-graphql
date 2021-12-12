@@ -17,7 +17,7 @@ import knexDb from './db';
 // in the Galaxies source code. They are used here to refine the type returned by the ServerObject service
 // which is then in turn used to drive the other resolvers/services in the codebase.
 const TAGIFY = (input: string) => parseInt(Buffer.from(input).toString('hex'), 16);
-const TAG_TO_TYPE_MAP: Record<number, any> = {
+const TAG_TO_TYPE_MAP = {
   [TAGIFY('TANO')]: TangibleObject,
   [TAGIFY('CREO')]: CreatureObject,
   [TAGIFY('WEAO')]: WeaponObject,
@@ -29,7 +29,7 @@ const TAG_TO_TYPE_MAP: Record<number, any> = {
   [TAGIFY('INSO')]: InstallationObject,
   [TAGIFY('MCSO')]: ManfSchematicObject,
   [TAGIFY('PLAY')]: PlayerObject,
-};
+} as const;
 
 /**
  * Derived from objects.tab
@@ -93,7 +93,7 @@ export class ServerObjectService {
     }
 
     if (filters.searchText) {
-      const searchText = filters.searchText!.trim();
+      const searchText = filters.searchText.trim();
 
       if (ENABLE_TEXT_SEARCH) {
         //
@@ -113,9 +113,9 @@ export class ServerObjectService {
         */
         query.where(wb => {
           wb.whereRaw('CONTAINS(NAME_STRING_TABLE, ?, 1) > 0', [`${searchText}%`])
-            .orWhere('OBJECT_ID', '=', `${filters.searchText!}`)
-            .orWhere('CONTAINED_BY', '=', `${filters.searchText!}`)
-            .orWhere('LOAD_WITH', '=', `${filters.searchText!}`)
+            .orWhere('OBJECT_ID', '=', `${searchText}`)
+            .orWhere('CONTAINED_BY', '=', `${searchText}`)
+            .orWhere('LOAD_WITH', '=', `${searchText}`)
             .orderByRaw('SCORE(1) DESC');
         });
       } else {
@@ -126,7 +126,7 @@ export class ServerObjectService {
               .orWhere('LOAD_WITH', '=', searchText);
           })
           // Poor man's sort to put the actual OID at the top of the results
-          .orderByRaw('case when OBJECT_ID = ? then 1 else 2 end, OBJECT_ID', [filters.searchText!]);
+          .orderByRaw('case when OBJECT_ID = ? then 1 else 2 end, OBJECT_ID', [searchText]);
       }
     }
 

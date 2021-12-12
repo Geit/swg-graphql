@@ -2,7 +2,6 @@
 // This data is then transformed within the game into an array of strings for each list_id
 // Property lists are currently unimplemented, but they aren't complicated and should be coming soon!
 
-/* eslint-disable  camelcase */
 export enum PropertyListIds {
   LI_Commands = 0,
   LI_DraftSchematics = 1,
@@ -19,4 +18,3 @@ export enum PropertyListIds {
   LI_Citizens = 13,
   LI_CityStructures = 14,
 }
-/* eslint-enable */

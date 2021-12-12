@@ -3,13 +3,13 @@ import { Field, ID, Int, ObjectType } from 'type-graphql';
 @ObjectType()
 export class PlanetWatcherGameServerStatus {
   @Field(() => Boolean)
-  isOnline: Boolean;
+  isOnline: boolean;
 
   @Field(() => String)
-  ipAddress: String;
+  ipAddress: string;
 
   @Field(() => String)
-  hostName: String;
+  hostName: string;
 
   @Field(() => Int)
   serverId: number;

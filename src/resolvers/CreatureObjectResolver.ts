@@ -66,15 +66,17 @@ export class CreatureObjectResolver implements ResolverInterface<CreatureObject>
 
     if (!creature) return null;
 
-    const attirbutes = [];
+    const attributes: number[] = [];
 
     for (let i = 0; i < Attributes.NumberOfAttributes; i++) {
-      // @ts-ignore Revisit this when Typescript supports computed
-      // template literal properties (TS 4.4?)
-      attirbutes.push(creature[`ATTRIBUTE_${i}`]);
+      const attributeVal = creature[`ATTRIBUTE_${i}`];
+
+      if (typeof attributeVal === 'number') {
+        attributes.push(attributeVal);
+      }
     }
 
-    return attirbutes;
+    return attributes;
   }
 
   @FieldResolver()

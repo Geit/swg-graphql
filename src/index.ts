@@ -13,6 +13,14 @@ import cors from 'cors';
 import { PORT, DISABLE_AUTH } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
 
+interface WebSocketConnectionParameters {
+  authToken?: string;
+}
+
+interface WebSocketContext {
+  authToken: string;
+}
+
 async function bootstrap() {
   const app = express();
   const websocketAuthTokens = new Set();
@@ -21,10 +29,10 @@ async function bootstrap() {
     if (!req.headers.authorization) {
       // eslint-disable-next-line no-param-reassign
       res.statusCode = 404;
-      res.end();
+      return res.end();
     }
 
-    await checkKibanaToken(req.headers.authorization!);
+    await checkKibanaToken(req.headers.authorization);
 
     const authToken = randomBytes(32).toString('hex');
     websocketAuthTokens.add(authToken);
@@ -62,10 +70,10 @@ async function bootstrap() {
       schema,
       execute,
       subscribe,
-      onConnect(connectionParams: any, _socket: any, context: any) {
+      onConnect(connectionParams: WebSocketConnectionParameters, _socket: unknown, context: WebSocketContext) {
         if (DISABLE_AUTH) return;
 
-        if (!connectionParams.authToken) {
+        if (!('authToken' in connectionParams) || !connectionParams.authToken) {
           throw new AuthenticationError('Missing auth token!');
         }
 
@@ -76,7 +84,7 @@ async function bootstrap() {
         // eslint-disable-next-line no-param-reassign
         context.authToken = connectionParams.authToken;
       },
-      onDisconnect(_socket: any, context: any) {
+      onDisconnect(_socket: unknown, context: WebSocketContext) {
         websocketAuthTokens.delete(context.authToken);
       },
     },

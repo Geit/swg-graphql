@@ -18,14 +18,14 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   }
 
   @FieldResolver()
-  // @ts-ignore Typescript is unhappy that this won't return objvar/contents, but that kind of nesting
+  // @ts-expect-error Typescript is unhappy that this won't return objvar/contents, but that kind of nesting
   // will be handled by gql recurisively calling this resolver.
   objVars(@Root() object: IServerObject) {
     return this.objvarService.getObjVarsForObject(object.id);
   }
 
   @FieldResolver()
-  // @ts-ignore Typescript is unhappy that this won't return objvar/contents, but that kind of nesting
+  // @ts-expect-error Typescript is unhappy that this won't return objvar/contents, but that kind of nesting
   // will be handled by gql recurisively calling this resolver.
   contents(
     @Root() object: IServerObject,
