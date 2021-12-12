@@ -75,13 +75,13 @@ export class WeaponObjectResolver implements ResolverInterface<WeaponObject> {
   @FieldResolver()
   async minRange(@Root() object: IServerObject) {
     const wep = await this.weaponObjectService.load(object.id);
-    return wep?.MIN_DAMAGE ?? null;
+    return wep?.MAX_DAMAGE ?? null;
   }
 
   @FieldResolver()
   async maxRange(@Root() object: IServerObject) {
     const wep = await this.weaponObjectService.load(object.id);
-    return wep?.MAX_DAMAGE ?? null;
+    return wep?.MAX_RANGE ?? null;
   }
 
   @FieldResolver()
