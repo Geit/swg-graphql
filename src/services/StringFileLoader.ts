@@ -72,34 +72,38 @@ export class StringFileLoader {
         let offset = 9; // Skip the first 9 bytes of the file, they contain magic numbers and stuff we don't care about.
         const numEntries = file.readUInt32LE(offset);
         offset += 4; // We read 4 bytes with readUInt32LE, so we advance the offset. The offset is not managed for us anywhere in this block.
-        const stringText = new Array(numEntries);
+        const stringText = new Map<number, string>();
 
         // We can now loop over the string text block
         for (let i = 0; i < numEntries; i++) {
-          // We skip the first 8 bytes of every string name entry, it simply contains an ID and CRC.
-          offset += 8;
+          const id = file.readUInt32LE(offset);
+          offset += 4;
+          // We skip the next 4 bytes of every string name entry, it simply contains the CRC.
+          offset += 4;
 
           // Buf length is the length of the string in characters.
           const bufLength = file.readUInt32LE(offset);
           offset += 4;
 
           // In UTF 16, each character is 2 bytes, so we multiply the character length of the string by 2.
-          stringText[i] = file.toString('utf16le', offset, offset + bufLength * 2);
+          const text = file.toString('utf16le', offset, offset + bufLength * 2);
           offset += bufLength * 2;
+          stringText.set(id, text);
         }
 
         // Then we loop over the string names block
         for (let i = 0; i < numEntries; i++) {
-          // Again for each block - we can skip the ID.
+          const id = file.readUInt32LE(offset);
           offset += 4;
           const bufLength = file.readUInt32LE(offset);
           offset += 4;
-          const id = file.toString('ascii', offset, offset + bufLength);
+          const stringId = file.toString('ascii', offset, offset + bufLength);
           offset += bufLength;
 
-          // While the format suggests that you might have to match by the "ID" fields (which we ignored).
-          // In practice, all string files are in order.
-          stringMap[id] = stringText[i];
+          const text = stringText.get(id);
+          if (text) {
+            stringMap[stringId] = text;
+          }
         }
 
         return stringMap;
