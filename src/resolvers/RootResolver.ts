@@ -1,7 +1,10 @@
+import { promises as dns } from 'dns';
+
 import { Arg, Int, Query, Resolver, Subscription, Root, Args } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { PubSubPayload, createPlanetWatcherSubscriber } from '../livedata/createPlanetWatcherSubscriber';
+import { FrameEndData } from '../livedata/messages/FrameEndMessage';
 import { GameServerStatusData } from '../livedata/messages/GameServerStatus';
 import { PlanetNodeStatusData } from '../livedata/messages/PlanetNodeStatusMessage';
 import { PlanetObjectStatus } from '../livedata/messages/PlanetObjectStatusMessage';
@@ -9,6 +12,7 @@ import PlanetWatcher from '../livedata/PlanetWatcher';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { IServerObject } from '../types';
 import { PlanetWatcherArgs } from '../types/PlanetWatcherArgs';
+import { PlanetWatcherFrameEnd } from '../types/PlanetWatcherFrameEnd';
 import { PlanetWatcherGameServerStatus } from '../types/PlanetWatcherGameServerStatus';
 import { PlanetWatcherNodeStatusUpdate } from '../types/PlanetWatcherNodeStatusUpdate';
 import { PlanetWatcherObjectUpdate } from '../types/PlanetWatcherObjectUpdate';
@@ -24,6 +28,10 @@ interface NodeStatusUpdatePayload extends PubSubPayload {
 
 interface GameServerStatusPayload extends PubSubPayload {
   data: GameServerStatusData[];
+}
+
+interface FrameEndPayload extends PubSubPayload {
+  data: FrameEndData[];
 }
 
 @Service()
@@ -98,17 +106,38 @@ export class RootResolver {
     subscribe: createPlanetWatcherSubscriber('GAME_SERVER_STATUS'),
   })
   // eslint-disable-next-line class-methods-use-this
-  planetWatcherGameServerStatus(
+  async planetWatcherGameServerStatus(
     @Root() updatePayload: GameServerStatusPayload,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Args() args: PlanetWatcherArgs
-  ): PlanetWatcherGameServerStatus[] {
-    return updatePayload.data.map(gs => ({
-      isOnline: gs.isOnline > 0,
-      ipAddress: gs.ipAddress,
-      serverId: gs.serverId,
-      systemPid: gs.systemPid,
-      sceneId: gs.sceneId,
+  ): Promise<PlanetWatcherGameServerStatus[]> {
+    const results = await Promise.all(
+      updatePayload.data.map(async gs => ({
+        isOnline: gs.isOnline > 0,
+        ipAddress: gs.ipAddress,
+        hostName: (await dns.reverse(gs.ipAddress))[0],
+        serverId: gs.serverId,
+        systemPid: gs.systemPid,
+        sceneId: gs.sceneId,
+      }))
+    );
+
+    return results;
+  }
+
+  @Subscription(() => [PlanetWatcherFrameEnd], {
+    subscribe: createPlanetWatcherSubscriber('FRAME_END'),
+  })
+  // eslint-disable-next-line class-methods-use-this
+  planetWatcherFrameEnd(
+    @Root() updatePayload: FrameEndPayload,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Args() args: PlanetWatcherArgs
+  ): PlanetWatcherFrameEnd[] {
+    return updatePayload.data.map(fe => ({
+      serverId: fe.serverId,
+      frameTime: fe.frameTime,
+      profilerData: fe.profilerData,
     }));
   }
 }

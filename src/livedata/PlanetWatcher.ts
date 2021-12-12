@@ -146,6 +146,14 @@ class PlanetWatcher {
         break;
       }
 
+      case 'FrameEndMessage': {
+        this.pubsub.publish('FRAME_END', {
+          planet: this.sceneName,
+          data: [msg.data],
+        });
+        break;
+      }
+
       default:
         // Do nothing?
         break;

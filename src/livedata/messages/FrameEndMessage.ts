@@ -2,11 +2,8 @@ import { Parser } from 'binary-parser';
 
 import { ISwgNetworkMessageBase } from './ISwgNetworkMessage';
 
-interface FrameEndData {
-  pid: number;
-  /**
-   * Hello.
-   */
+export interface FrameEndData {
+  serverId: number;
   frameTime: number;
   profilerDataLen: number;
   profilerData: string;
@@ -19,7 +16,7 @@ export interface FrameEndMessage extends ISwgNetworkMessageBase {
 
 export const FrameEndMessageParser = new Parser()
   .endianess('little')
-  .uint32('pid')
+  .uint32('serverId')
   .uint32('frameTime')
   .uint16('profilerDataLen')
   .string('profilerData', { length: 'dataLen' });

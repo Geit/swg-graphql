@@ -8,6 +8,9 @@ export class PlanetWatcherGameServerStatus {
   @Field(() => String)
   ipAddress: String;
 
+  @Field(() => String)
+  hostName: String;
+
   @Field(() => Int)
   serverId: number;
 
