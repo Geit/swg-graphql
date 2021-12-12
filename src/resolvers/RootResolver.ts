@@ -61,7 +61,6 @@ export class RootResolver {
   @Subscription(() => [PlanetWatcherObjectUpdate], {
     subscribe: createPlanetWatcherSubscriber('OBJECT_UPDATE'),
   })
-  // eslint-disable-next-line class-methods-use-this
   planetWatcherObject(
     @Root() updatePayload: ObjectUpdatePayload,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -85,7 +84,6 @@ export class RootResolver {
   @Subscription(() => [PlanetWatcherNodeStatusUpdate], {
     subscribe: createPlanetWatcherSubscriber('NODE_STATUS_UPDATE'),
   })
-  // eslint-disable-next-line class-methods-use-this
   planetWatcherNodeStatus(
     @Root() updatePayload: NodeStatusUpdatePayload,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -105,7 +103,6 @@ export class RootResolver {
   @Subscription(() => [PlanetWatcherGameServerStatus], {
     subscribe: createPlanetWatcherSubscriber('GAME_SERVER_STATUS'),
   })
-  // eslint-disable-next-line class-methods-use-this
   async planetWatcherGameServerStatus(
     @Root() updatePayload: GameServerStatusPayload,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -128,7 +125,6 @@ export class RootResolver {
   @Subscription(() => [PlanetWatcherFrameEnd], {
     subscribe: createPlanetWatcherSubscriber('FRAME_END'),
   })
-  // eslint-disable-next-line class-methods-use-this
   planetWatcherFrameEnd(
     @Root() updatePayload: FrameEndPayload,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,13 +1,10 @@
-import { Field, ID, ObjectType, Float, Int } from 'type-graphql';
+import { Field, ObjectType, Float, Int } from 'type-graphql';
 
 import { IServerObject } from './ServerObject';
 import { ITangibleObject } from './TangibleObject';
 
 @ObjectType({ implements: [ITangibleObject, IServerObject] })
 export class ManfSchematicObject extends ITangibleObject {
-  @Field(() => ID, { nullable: true, description: 'The Object ID of the creator of this manufacturing schematic' })
-  creatorId: string | null;
-
   @Field(() => String, { nullable: true, description: 'The name of the creator of this manufacturing schematic' })
   creatorName: string | null;
 

@@ -225,7 +225,6 @@ export class PlayerObjectResolver implements ResolverInterface<PlayerObject> {
   }
 
   @FieldResolver(() => String)
-  // eslint-disable-next-line class-methods-use-this
   resolvedName() {
     // Player objects never have a name.
     return 'Player Object';
