@@ -9,6 +9,7 @@ import { buildSchema } from 'type-graphql';
 import { Container } from 'typedi';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
+import { ApolloServerPluginInlineTrace } from 'apollo-server-core';
 
 import { PORT, DISABLE_AUTH } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
@@ -59,6 +60,7 @@ async function bootstrap() {
   const server = new ApolloServer({
     schema,
     context: !DISABLE_AUTH ? kibanaAuthorisationContext : undefined,
+    plugins: [ApolloServerPluginInlineTrace()],
   });
 
   await server.start();

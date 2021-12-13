@@ -23,7 +23,7 @@
   "scripts": {
     "start-dev": "yarn ts-node-dev src/index.ts",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
-    "build-dist": "rimraf build && yarn run tsc && pkg ."
+    "build-dist": "rimraf build && yarn run tsc && npx pkg ."
   },
   "dependencies": {
     "@graphql-tools/schema": "^8.3.1",

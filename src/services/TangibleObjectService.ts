@@ -8,7 +8,7 @@ import knexDb from './db';
  *
  * See {@link ITangibleObject} for descriptions of each field.
  */
-interface TangibleObjectRecord {
+export interface TangibleObjectRecord {
   OBJECT_ID: string;
   MAX_HIT_POINTS: number;
   OWNER_ID: string;

@@ -36,10 +36,13 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   }
 
   @FieldResolver()
-  async resolvedName(@Root() object: IServerObject): Promise<string> {
+  async resolvedName(
+    @Root() object: IServerObject,
+    @Arg('resolveCustomNames', { defaultValue: true }) resolveCustomNames: boolean
+  ): Promise<string> {
     const trimmedName = object.name?.trim();
 
-    if (trimmedName) return trimmedName;
+    if (resolveCustomNames && trimmedName) return trimmedName;
 
     if (object.staticItemName) {
       const strings = await this.stringFileService.load('static_item_n');

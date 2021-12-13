@@ -13,12 +13,6 @@ export class ManfSchematicObjectResolver {
   }
 
   @FieldResolver()
-  async creatorId(@Root() object: IServerObject) {
-    const rc = await this.manfschematicObjectService.load(object.id);
-    return rc?.CREATOR_ID;
-  }
-
-  @FieldResolver()
   async creatorName(@Root() object: IServerObject) {
     const rc = await this.manfschematicObjectService.load(object.id);
     return rc?.CREATOR_NAME;

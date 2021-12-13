@@ -7,11 +7,13 @@ import { CellObject } from '../types/CellObject';
 import { HarvesterInstallationObject } from '../types/HarvesterInstallationObject';
 import { InstallationObject } from '../types/InstallationObject';
 import { ManfSchematicObject } from '../types/ManfSchematicObject';
+import { PlayerCreatureObject } from '../types/PlayerCreatureObject';
 import { PlayerObject } from '../types/PlayerObject';
 import { ResourceContainerObject } from '../types/ResourceContainerObject';
 import { ShipObject } from '../types/ShipObject';
 
 import knexDb from './db';
+import { TangibleObjectRecord } from './TangibleObjectService';
 
 // The TYPE_ID field is a magic number defined by the respective Template Definition Format files
 // in the Galaxies source code. They are used here to refine the type returned by the ServerObject service
@@ -79,6 +81,9 @@ interface GetManyFilters {
   limit?: number;
   containedById: string;
   searchText: string;
+  objectIds: string[];
+  ownedBy: string[];
+  objectTypes: number[];
 }
 
 @Service()
@@ -90,6 +95,20 @@ export class ServerObjectService {
 
     if (filters.containedById) {
       query.andWhere('CONTAINED_BY', '=', filters.containedById);
+    }
+
+    if (filters.objectIds) {
+      query.whereIn('OBJECT_ID', filters.objectIds);
+    }
+
+    if (filters.ownedBy) {
+      query
+        .innerJoin<TangibleObjectRecord>('TANGIBLE_OBJECTS', 'OBJECTS.OBJECT_ID', 'TANGIBLE_OBJECTS.OBJECT_ID')
+        .whereIn('OWNER_ID', filters.ownedBy);
+    }
+
+    if (filters.objectTypes) {
+      query.whereIn('TYPE_ID', filters.objectTypes);
     }
 
     if (filters.searchText) {
@@ -131,7 +150,7 @@ export class ServerObjectService {
     }
 
     if (filters.excludeDeleted) {
-      query.where('DELETED', '=', 0);
+      query.whereNull('DELETED_DATE');
     }
 
     return query;
@@ -163,7 +182,11 @@ export class ServerObjectService {
 
   private static convertRecordToObject(record: ServerObjectRecord): Omit<ServerObject, 'contents' | 'objVars'> {
     // Refine the type based on the TYPE_ID column.
-    const objectSubClass = (record.TYPE_ID && TAG_TO_TYPE_MAP[record.TYPE_ID]) || ServerObject;
+    let objectSubClass = (record.TYPE_ID && TAG_TO_TYPE_MAP[record.TYPE_ID]) || ServerObject;
+
+    if (record.TYPE_ID === TAGIFY('CREO') && record.PLAYER_CONTROLLED === 'Y') {
+      objectSubClass = PlayerCreatureObject;
+    }
 
     return Object.assign(new objectSubClass(), {
       id: record.OBJECT_ID,

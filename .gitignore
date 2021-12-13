@@ -23,6 +23,7 @@ packages/tile-server/planets/tiles/*
 !packages/tile-server/tiles/.gitkeep
 
 /notes
+notes.txt
 
 npm-debug.log*
 yarn-debug.log*

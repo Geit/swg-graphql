@@ -1,4 +1,4 @@
-import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { Arg, FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { PlayerObjectService } from '../services/PlayerObjectService';
@@ -225,7 +225,12 @@ export class PlayerObjectResolver implements ResolverInterface<PlayerObject> {
   }
 
   @FieldResolver(() => String)
-  resolvedName() {
+  resolvedName(
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    @Root() object: IServerObject,
+    @Arg('resolveCustomNames', { defaultValue: false }) _resolveCustomNames: boolean
+    /* eslint-enable */
+  ) {
     // Player objects never have a name.
     return 'Player Object';
   }

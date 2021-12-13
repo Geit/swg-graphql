@@ -1,4 +1,4 @@
-import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { Arg, FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { CellObjectService } from '../services/CellObjectService';
@@ -25,7 +25,11 @@ export class CellObjectResolver implements ResolverInterface<CellObject> {
   }
 
   @FieldResolver(() => String)
-  async resolvedName(@Root() object: IServerObject) {
+  async resolvedName(
+    @Root() object: IServerObject,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Arg('resolveCustomNames', { defaultValue: false }) _resolveCustomNames: boolean
+  ) {
     const rc = await this.cellObjectService.load(object.id);
 
     if (!rc || !rc.CELL_NUMBER) {
