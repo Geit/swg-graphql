@@ -11,8 +11,9 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { ApolloServerPluginInlineTrace } from 'apollo-server-core';
 
-import { PORT, DISABLE_AUTH } from './config';
+import { PORT, DISABLE_AUTH, ENABLE_TEXT_SEARCH, SEARCH_INDEXER_INTERVAL } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
+import { indexRecentLogins, initialSearchIndexSetup } from './elasticSearchIndex/searchIndexer';
 
 interface WebSocketConnectionParameters {
   authToken?: string;
@@ -97,4 +98,15 @@ async function bootstrap() {
   httpServer.listen(PORT, () => console.log(`Server is now running on http://localhost:${PORT}/graphql`));
 }
 
-bootstrap();
+(async () => {
+  await bootstrap();
+
+  if (ENABLE_TEXT_SEARCH) {
+    await initialSearchIndexSetup();
+
+    // Run once on startup, then every 10 minutes.
+
+    await indexRecentLogins();
+    setInterval(() => indexRecentLogins(), SEARCH_INDEXER_INTERVAL);
+  }
+})();

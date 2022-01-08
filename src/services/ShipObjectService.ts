@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link HarvesterInstallationObject} for descriptions of each field.
  */
 interface ShipObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   SLIDE_DAMPENER: number | null;
   CURRENT_CHASSIS_HIT_POINTS: number | null;
   MAXIMUM_CHASSIS_HIT_POINTS: number | null;
@@ -71,6 +71,6 @@ export class ShipObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<ShipObjectRecord>('SHIP_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

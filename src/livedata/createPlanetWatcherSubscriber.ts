@@ -3,7 +3,7 @@ import path from 'path';
 
 import { PubSub, withFilter } from 'graphql-subscriptions';
 
-import { PlanetWatcherArgs } from '../types/PlanetWatcherArgs';
+import { PlanetWatcherArgs } from '../types';
 
 import PlanetWatcher from './PlanetWatcher';
 

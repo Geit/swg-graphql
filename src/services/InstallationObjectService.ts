@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link IInstallationObject} for descriptions of each field.
  */
 interface InstallationObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   INSTALLATION_TYPE: number | null;
   ACTIVATED: string | null;
   TICK_COUNT: number | null;
@@ -29,6 +29,6 @@ export class InstallationObjectService {
       .from<InstallationObjectRecord>('INSTALLATION_OBJECTS')
       .whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

@@ -33,3 +33,5 @@ data/**/*
 !data/string/en/.gitkeep
 !data/planet-servers.example.json
 dist
+
+start.sh

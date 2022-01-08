@@ -26,4 +26,10 @@ export class PlayerCreatureObject extends CreatureObject {
 
   @Field(() => Account, { nullable: true, description: 'Information on the Account that owns this player' })
   account: UnenrichedAccount | null;
+
+  @Field(() => String, { nullable: true, description: 'Time when this character last logged in' })
+  lastLoginTime: string | null;
+
+  @Field(() => String, { nullable: true, description: 'Time when this character was created' })
+  createdTime: string | null;
 }

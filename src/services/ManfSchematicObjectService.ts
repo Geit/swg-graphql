@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link ManfSchematicObject} for descriptions of each field.
  */
 interface ManfSchematicObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   CREATOR_ID: string | null;
   CREATOR_NAME: string | null;
   ITEMS_PER_CONTAINER: number | null;
@@ -25,6 +25,6 @@ export class ManfSchematicObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<ManfSchematicObjectRecord>('MANF_SCHEMATIC').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

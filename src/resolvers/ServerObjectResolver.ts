@@ -5,6 +5,7 @@ import { ServerObjectService } from '../services/ServerObjectService';
 import { ObjVarService } from '../services/ObjVarService';
 import { StringFileLoader } from '../services/StringFileLoader';
 import { IServerObject, ServerObject, UnenrichedServerObject } from '../types/ServerObject';
+import { NameResolutionService } from '../services/NameResolutionService';
 
 @Resolver(() => IServerObject)
 @Service()
@@ -12,7 +13,8 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   constructor(
     private readonly objvarService: ObjVarService,
     private readonly objectService: ServerObjectService,
-    private readonly stringFileService: StringFileLoader
+    private readonly stringFileService: StringFileLoader,
+    private readonly nameResolutionService: NameResolutionService
   ) {
     // Do nothing
   }
@@ -36,27 +38,14 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   }
 
   @FieldResolver()
-  async resolvedName(
+  resolvedName(
     @Root() object: IServerObject,
     @Arg('resolveCustomNames', { defaultValue: true }) resolveCustomNames: boolean
   ): Promise<string> {
-    const trimmedName = object.name?.trim();
-
-    if (resolveCustomNames && trimmedName) return trimmedName;
-
-    if (object.staticItemName) {
-      const strings = await this.stringFileService.load('static_item_n');
-
-      return strings[object.staticItemName] || `@static_item_n:${object.staticItemName}`;
-    }
-
-    if (object.nameStringTable && object.nameStringText) {
-      const strings = await this.stringFileService.load(object.nameStringTable);
-
-      return strings[object.nameStringText] || `@${object.nameStringTable}:${object.nameStringText}`;
-    }
-    // TODO: Come up with some better default name (perhaps based on the object type or template?)
-    return 'UNKNOWN';
+    return this.nameResolutionService.resolveName(object, {
+      resolveCustomNames,
+      stringFileService: this.stringFileService,
+    });
   }
 
   @FieldResolver()

@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link WeaponObject} for descriptions of each field.
  */
 interface WeaponObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   MIN_DAMAGE: number;
   MAX_DAMAGE: number;
   DAMAGE_TYPE: number;
@@ -32,6 +32,6 @@ export class WeaponObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<WeaponObjectRecord>('WEAPON_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

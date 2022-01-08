@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link ITangibleObject} for descriptions of each field.
  */
 export interface TangibleObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   MAX_HIT_POINTS: number;
   OWNER_ID: string;
   VISIBLE: string;
@@ -33,6 +33,6 @@ export class TangibleObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<TangibleObjectRecord>('TANGIBLE_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

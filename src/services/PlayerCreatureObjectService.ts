@@ -5,7 +5,7 @@ import db from './db';
 /**
  * Derived from the PLAYERS table.
  */
-interface PlayerRecord {
+export interface PlayerRecord {
   CHARACTER_OBJECT: string;
   STATION_ID: number | null;
   CREATE_TIME: Date | null;
@@ -23,5 +23,14 @@ export class PlayerCreatureObjectService {
       .where('CHARACTER_OBJECT', id);
 
     return player;
+  }
+
+  async getRecentlyLoggedInCharacters(withinLastMs: number) {
+    const players = await this.db
+      .from<PlayerRecord>('PLAYERS')
+      .select()
+      .where('LAST_LOGIN_TIME', '>=', new Date(Date.now() - withinLastMs));
+
+    return players;
   }
 }

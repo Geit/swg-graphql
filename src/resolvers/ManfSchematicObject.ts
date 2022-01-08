@@ -2,8 +2,7 @@ import { FieldResolver, Resolver, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { ManfSchematicObjectService } from '../services/ManfSchematicObjectService';
-import { ManfSchematicObject } from '../types/ManfSchematicObject';
-import { IServerObject } from '../types/ServerObject';
+import { ManfSchematicObject, IServerObject } from '../types';
 
 @Resolver(() => ManfSchematicObject)
 @Service()

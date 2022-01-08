@@ -2,8 +2,7 @@ import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { HarvesterInstallationObjectService } from '../services/HarvesterInstallationObjectService';
-import { HarvesterInstallationObject } from '../types/HarvesterInstallationObject';
-import { IServerObject } from '../types/ServerObject';
+import { HarvesterInstallationObject, IServerObject } from '../types';
 
 @Resolver(() => HarvesterInstallationObject)
 @Service()

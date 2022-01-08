@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link CreatureObject} for descriptions of each field.
  */
 interface CreatureObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   SCALE_FACTOR: number | null;
   STATES: number | null;
   POSTURE: number | null;
@@ -33,6 +33,6 @@ export class CreatureObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<CreatureObjectRecord>('CREATURE_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

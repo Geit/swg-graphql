@@ -1,45 +1,18 @@
-import { promises as dns } from 'dns';
-
-import { Arg, Int, Query, Resolver, Subscription, Root, Args } from 'type-graphql';
+import { Arg, Int, Query, Resolver } from 'type-graphql';
 import { Service } from 'typedi';
 
-import { PubSubPayload, createPlanetWatcherSubscriber } from '../livedata/createPlanetWatcherSubscriber';
-import { FrameEndData } from '../livedata/messages/FrameEndMessage';
-import { GameServerStatusData } from '../livedata/messages/GameServerStatus';
-import { PlanetNodeStatusData } from '../livedata/messages/PlanetNodeStatusMessage';
-import { PlanetObjectStatus } from '../livedata/messages/PlanetObjectStatusMessage';
-import PlanetWatcher from '../livedata/PlanetWatcher';
+import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { IServerObject } from '../types';
-import { PlanetWatcherArgs } from '../types/PlanetWatcherArgs';
-import { PlanetWatcherFrameEnd } from '../types/PlanetWatcherFrameEnd';
-import { PlanetWatcherGameServerStatus } from '../types/PlanetWatcherGameServerStatus';
-import { PlanetWatcherNodeStatusUpdate } from '../types/PlanetWatcherNodeStatusUpdate';
-import { PlanetWatcherObjectUpdate } from '../types/PlanetWatcherObjectUpdate';
-import { UnenrichedServerObject } from '../types/ServerObject';
-
-interface ObjectUpdatePayload extends PubSubPayload {
-  data: PlanetObjectStatus[];
-}
-
-interface NodeStatusUpdatePayload extends PubSubPayload {
-  data: PlanetNodeStatusData[];
-}
-
-interface GameServerStatusPayload extends PubSubPayload {
-  data: GameServerStatusData[];
-}
-
-interface FrameEndPayload extends PubSubPayload {
-  data: FrameEndData[];
-}
+import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account } from '../types';
+import { isPresent } from '../utils/utility-types';
 
 @Service()
 @Resolver()
 export class RootResolver {
   constructor(
     // constructor injection of a service
-    private readonly objectService: ServerObjectService
+    private readonly objectService: ServerObjectService,
+    private readonly searchService: SearchService
   ) {
     // Do nothing
   }
@@ -58,82 +31,48 @@ export class RootResolver {
     return this.objectService.getMany({ searchText, limit, excludeDeleted });
   }
 
-  @Subscription(() => [PlanetWatcherObjectUpdate], {
-    subscribe: createPlanetWatcherSubscriber('OBJECT_UPDATE'),
-  })
-  planetWatcherObject(
-    @Root() updatePayload: ObjectUpdatePayload,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Args() args: PlanetWatcherArgs
-  ): PlanetWatcherObjectUpdate[] {
-    return updatePayload.data.map(obj => ({
-      networkId: obj.networkId.toString(),
-      location: [obj.locationX, 0, obj.locationZ],
-      authoritativeServer: obj.authoritativeServer,
-      interestRadius: obj.interestRadius,
-      deleteObject: obj.deleteObject,
-      objectTypeTag: obj.objectTypeTag,
-      level: obj.level,
-      hibernating: obj.hibernating,
-      templateCrc: obj.templateCrc,
-      aiActivity: obj.aiActivity,
-      creationType: obj.creationType,
-    }));
+  @Query(() => Account, { nullable: true })
+  account(@Arg('stationId', { nullable: false }) accountId: string) {
+    return Object.assign(new Account(), {
+      id: parseInt(accountId),
+    });
   }
 
-  @Subscription(() => [PlanetWatcherNodeStatusUpdate], {
-    subscribe: createPlanetWatcherSubscriber('NODE_STATUS_UPDATE'),
-  })
-  planetWatcherNodeStatus(
-    @Root() updatePayload: NodeStatusUpdatePayload,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Args() args: PlanetWatcherArgs
-  ): PlanetWatcherNodeStatusUpdate[] {
-    return updatePayload.data.map(node => ({
-      cellIndex: PlanetWatcher.getPlanetCellIndex(node.locationX, node.locationZ),
-      location: [node.locationX, 0, node.locationZ],
-      isLoaded: node.isLoaded > 0,
-      serverCount: node.serverCount,
-      serverIds: node.serverIds,
-      subscriptionCount: node.subscriptionCount,
-      subscriptions: node.subscriptions,
-    }));
-  }
+  @Query(() => SearchResultDetails, { nullable: false })
+  async search(
+    @Arg('searchText', { nullable: false }) searchText: string,
+    @Arg('from', () => Int, { defaultValue: 0 }) from: number,
+    @Arg('size', () => Int, { defaultValue: 25 }) size: number
+  ): Promise<SearchResultDetails> {
+    const rawResults = await this.searchService.search({ searchText, from, size });
 
-  @Subscription(() => [PlanetWatcherGameServerStatus], {
-    subscribe: createPlanetWatcherSubscriber('GAME_SERVER_STATUS'),
-  })
-  async planetWatcherGameServerStatus(
-    @Root() updatePayload: GameServerStatusPayload,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Args() args: PlanetWatcherArgs
-  ): Promise<PlanetWatcherGameServerStatus[]> {
+    if (!rawResults)
+      return {
+        totalResultCount: 0,
+        results: null,
+      };
+
     const results = await Promise.all(
-      updatePayload.data.map(async gs => ({
-        isOnline: gs.isOnline > 0,
-        ipAddress: gs.ipAddress,
-        hostName: (await dns.reverse(gs.ipAddress))[0],
-        serverId: gs.serverId,
-        systemPid: gs.systemPid,
-        sceneId: gs.sceneId,
-      }))
+      rawResults.hits.hits.map(result => {
+        if (result._source.type === 'Object') {
+          return this.objectService.getOne(result._source.id);
+        }
+
+        if (result._source.type === 'Account') {
+          return Object.assign(new Account(), {
+            id: parseInt(result._source.id),
+          });
+        }
+
+        return null;
+      })
     );
 
-    return results;
-  }
+    const presentResults = results.filter(isPresent);
 
-  @Subscription(() => [PlanetWatcherFrameEnd], {
-    subscribe: createPlanetWatcherSubscriber('FRAME_END'),
-  })
-  planetWatcherFrameEnd(
-    @Root() updatePayload: FrameEndPayload,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Args() args: PlanetWatcherArgs
-  ): PlanetWatcherFrameEnd[] {
-    return updatePayload.data.map(fe => ({
-      serverId: fe.serverId,
-      frameTime: fe.frameTime,
-      profilerData: fe.profilerData,
-    }));
+    return {
+      totalResultCount: rawResults.hits.total.value,
+      results: presentResults,
+    };
   }
 }

@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link BuildingObject} for descriptions of each field.
  */
 interface BuildingObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   MAINTENANCE_COST: number | null;
   TIME_LAST_CHECKED: number | null;
   IS_PUBLIC: string | null;
@@ -24,6 +24,6 @@ export class BuildingObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<BuildingObjectRecord>('BUILDING_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

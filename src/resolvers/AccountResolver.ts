@@ -3,7 +3,7 @@ import { Service } from 'typedi';
 
 import { AccountService } from '../services/AccountService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { Account, UnenrichedAccount } from '../types/Account';
+import { Account, UnenrichedAccount } from '../types';
 
 @Resolver(() => Account)
 @Service()
@@ -17,10 +17,15 @@ export class AccountResolver implements ResolverInterface<Account> {
     @Root() account: UnenrichedAccount,
     @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean
   ) {
-    const characters = await this.accountService.getAllCharactersForAccount(account.stationId);
+    const characters = await this.accountService.getAllCharactersForAccount(account.id);
 
     const characterIds = characters.map(char => char.CHARACTER_OBJECT);
 
     return this.objectService.getMany({ excludeDeleted, objectIds: characterIds });
+  }
+
+  @FieldResolver()
+  accountName(@Root() account: UnenrichedAccount) {
+    return this.accountService.getAccountNameFromStationId(account.id);
   }
 }

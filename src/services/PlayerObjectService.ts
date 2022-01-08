@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link PlayerObject} for descriptions of each field.
  */
 export interface PlayerObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   STATION_ID: number;
   PERSONAL_PROFILE_ID: string;
   CHARACTER_PROFILE_ID: string;
@@ -57,6 +57,6 @@ export class PlayerObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<PlayerObjectRecord>('PLAYER_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

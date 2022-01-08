@@ -2,8 +2,7 @@ import { Arg, FieldResolver, Resolver, ResolverInterface, Root } from 'type-grap
 import { Service } from 'typedi';
 
 import { PlayerObjectService } from '../services/PlayerObjectService';
-import { PlayerObject } from '../types/PlayerObject';
-import { IServerObject } from '../types/ServerObject';
+import { PlayerObject, IServerObject } from '../types';
 
 @Resolver(() => PlayerObject)
 @Service()

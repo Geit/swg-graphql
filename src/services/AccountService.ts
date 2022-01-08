@@ -1,4 +1,7 @@
 import { Service } from 'typedi';
+import got from 'got';
+
+import { STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL } from '../config';
 
 import db from './db';
 
@@ -12,6 +15,8 @@ interface PlayerRecord {
   LAST_LOGIN_TIME: Date | null;
 }
 
+const StationIdAccountNameMap = new Map<number, Promise<string | null>>();
+
 @Service()
 export class AccountService {
   private db = db;
@@ -23,5 +28,23 @@ export class AccountService {
       .where('STATION_ID', stationId);
 
     return characters;
+  }
+
+  getAccountNameFromStationId(stationId: number) {
+    if (!STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL) {
+      return null;
+    }
+
+    if (!StationIdAccountNameMap.has(stationId)) {
+      const endpoint = STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL.replace('{STATION_ID}', stationId.toString());
+
+      const newPromise = got(endpoint).then(res => (res.body === 'NULL' ? null : res.body));
+
+      StationIdAccountNameMap.set(stationId, newPromise);
+
+      return newPromise;
+    }
+
+    return StationIdAccountNameMap.get(stationId) ?? null;
   }
 }

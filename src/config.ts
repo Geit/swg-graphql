@@ -50,6 +50,10 @@ export const DISABLE_AUTH = Boolean(process.env.DISABLE_AUTH);
  * Elastic HTTP host, used by the authorisation layer to validate incoming requests.
  */
 export const ELASTIC_SEARCH_URL = process.env.ELASTIC_SEARCH_URL ?? 'http://localhost:9200/';
+export const ELASTIC_SEARCH_AUTH =
+  process.env.ELASTIC_SEARCH_AUTH ?? '{ "username": "elastic", "password": "changeme" }';
+
+export const ELASTIC_SEARCH_INDEX_NAME = process.env.ELASTIC_SEARCH_INDEX_NAME ?? 'object_search_index';
 
 /**
  * Required Elastic privilege the requesters must have in order to make queries.
@@ -60,3 +64,8 @@ export const ELASTIC_REQUIRED_PRIVILEGE = process.env.ELASTIC_REQUIRED_PRIVILEGE
  * The index to check for privleges within.
  */
 export const ELASTIC_KIBANA_INDEX = process.env.elasticKibanaIndex ?? '.kibana';
+
+export const STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL = process.env.STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL;
+export const SEARCH_INDEXER_RECENT_LOGGED_IN_TIME =
+  parseInt(process.env.SEARCH_INDEXER_RECENT_LOGGED_IN_TIME ?? '0') || 1000 * 60 * 60 * 1;
+export const SEARCH_INDEXER_INTERVAL = parseInt(process.env.SEARCH_INDEXER_INTERVAL ?? '0') || 1000 * 60 * 10;

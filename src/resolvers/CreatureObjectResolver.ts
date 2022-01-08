@@ -2,8 +2,7 @@ import { FieldResolver, Float, Resolver, ResolverInterface, Root } from 'type-gr
 import { Service } from 'typedi';
 
 import { CreatureObjectService } from '../services/CreatureObjectService';
-import { CreatureObject, Attributes } from '../types/CreatureObject';
-import { IServerObject, Location } from '../types/ServerObject';
+import { CreatureObject, Attributes, IServerObject, Location } from '../types';
 
 @Resolver(() => CreatureObject)
 @Service()

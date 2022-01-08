@@ -2,8 +2,7 @@ import { FieldResolver, Resolver, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { ResourceContainerObjectService } from '../services/ResourceContainerObjectService';
-import { ResourceContainerObject } from '../types/ResourceContainerObject';
-import { IServerObject } from '../types/ServerObject';
+import { ResourceContainerObject, IServerObject } from '../types';
 
 @Resolver(() => ResourceContainerObject)
 @Service()

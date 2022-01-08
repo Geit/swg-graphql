@@ -2,8 +2,7 @@ import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { InstallationObjectService } from '../services/InstallationObjectService';
-import { IInstallationObject } from '../types/InstallationObject';
-import { IServerObject } from '../types/ServerObject';
+import { IInstallationObject, IServerObject } from '../types';
 
 @Resolver(() => IInstallationObject)
 @Service()

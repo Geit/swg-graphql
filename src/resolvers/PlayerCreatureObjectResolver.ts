@@ -3,7 +3,7 @@ import { Service } from 'typedi';
 
 import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { PlayerCreatureObject } from '../types/PlayerCreatureObject';
+import { PlayerCreatureObject } from '../types';
 
 @Resolver(() => PlayerCreatureObject)
 @Service()
@@ -39,7 +39,21 @@ export class PlayerCreatureObjectResolver implements ResolverInterface<PlayerCre
     }
 
     return {
-      stationId: playerRecord.STATION_ID,
+      id: playerRecord.STATION_ID,
     };
+  }
+
+  @FieldResolver()
+  async lastLoginTime(@Root() object: PlayerCreatureObject) {
+    const playerRecord = await this.playerCreatureObjectService.getPlayerRecordForCharacter(object.id);
+
+    return playerRecord?.LAST_LOGIN_TIME?.toISOString() ?? null;
+  }
+
+  @FieldResolver()
+  async createdTime(@Root() object: PlayerCreatureObject) {
+    const playerRecord = await this.playerCreatureObjectService.getPlayerRecordForCharacter(object.id);
+
+    return playerRecord?.CREATE_TIME?.toISOString() ?? null;
   }
 }

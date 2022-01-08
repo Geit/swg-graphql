@@ -3,7 +3,7 @@ import { ArgsType, Field, ID } from 'type-graphql';
 @ArgsType()
 export class PlanetWatcherArgs {
   @Field(() => ID, {
-    description: 'The planet to watch for object updates on',
+    description: 'The planet to watch for updates on',
   })
   planet: string;
   @Field(() => ID, {

@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link ResourceContainerObject} for descriptions of each field.
  */
 interface ResourceContainerObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   RESOURCE_TYPE: string | null;
   QUANTITY: number | null;
   SOURCE: string | null;
@@ -26,6 +26,6 @@ export class ResourceContainerObjectService {
       .from<ResourceContainerObjectRecord>('RESOURCE_CONTAINER_OBJECTS')
       .whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

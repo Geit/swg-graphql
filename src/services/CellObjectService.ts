@@ -9,7 +9,7 @@ import knexDb from './db';
  * See {@link CellObject} for descriptions of each field.
  */
 interface CellObjectRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   CELL_NUMBER: number | null;
   IS_PUBLIC: string | null;
 }
@@ -22,6 +22,6 @@ export class CellObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<CellObjectRecord>('CELL_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => result.OBJECT_ID === key));
+    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
   }
 }

@@ -10,7 +10,7 @@ import db from './db';
  * See {@link ObjVarUnion} for more.
  */
 interface ObjectVariablesRecord {
-  OBJECT_ID: string;
+  OBJECT_ID: number;
   NAME: string;
   TYPE: number;
   VALUE: string;
