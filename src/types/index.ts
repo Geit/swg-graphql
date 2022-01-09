@@ -18,6 +18,9 @@ import { PlanetWatcherFrameEnd } from './PlanetWatcherFrameEnd';
 import { PlanetWatcherGameServerStatus } from './PlanetWatcherGameServerStatus';
 import { PlanetWatcherNodeStatusUpdate } from './PlanetWatcherNodeStatusUpdate';
 import { PlanetWatcherObjectUpdate } from './PlanetWatcherObjectUpdate';
+import { UniverseObject, IUniverseObject } from './UniverseObject';
+import { GuildObject } from './GuildObject';
+import { Guild } from './Guild';
 
 // The TYPE_ID field is a magic number defined by the respective Template Definition Format files
 // in the Galaxies source code. They are used here to refine the type returned by the ServerObject service
@@ -36,6 +39,8 @@ export const TAG_TO_TYPE_MAP = {
   [TAGIFY('MCSO')]: ManfSchematicObject,
   [TAGIFY('PLAY')]: PlayerObject,
   [TAGIFY('SWOO')]: ServerObject,
+  [TAGIFY('UNIO')]: UniverseObject,
+  [TAGIFY('GILD')]: GuildObject,
 } as const;
 
 export {
@@ -67,4 +72,8 @@ export {
   PlanetWatcherGameServerStatus,
   PlanetWatcherNodeStatusUpdate,
   PlanetWatcherObjectUpdate,
+  UniverseObject,
+  IUniverseObject,
+  GuildObject,
+  Guild,
 };

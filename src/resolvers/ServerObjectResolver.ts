@@ -6,6 +6,8 @@ import { ObjVarService } from '../services/ObjVarService';
 import { StringFileLoader } from '../services/StringFileLoader';
 import { IServerObject, ServerObject, UnenrichedServerObject } from '../types/ServerObject';
 import { NameResolutionService } from '../services/NameResolutionService';
+import { PropertyListService } from '../services/PropertyListService';
+import { PropertyListIds } from '../types/PropertyList';
 
 @Resolver(() => IServerObject)
 @Service()
@@ -14,7 +16,8 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
     private readonly objvarService: ObjVarService,
     private readonly objectService: ServerObjectService,
     private readonly stringFileService: StringFileLoader,
-    private readonly nameResolutionService: NameResolutionService
+    private readonly nameResolutionService: NameResolutionService,
+    private readonly propertyListService: PropertyListService
   ) {
     // Do nothing
   }
@@ -51,5 +54,15 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   @FieldResolver()
   containedItemCount(@Root() object: IServerObject) {
     return this.objectService.countMany({ containedById: object.id, excludeDeleted: true });
+  }
+
+  @FieldResolver()
+  async propertyLists(
+    @Root() object: IServerObject,
+    @Arg('listId', () => PropertyListIds, { nullable: true }) listId: PropertyListIds | null
+  ) {
+    const pLists = await this.propertyListService.load({ objectId: object.id, listId });
+
+    return pLists ?? null;
   }
 }

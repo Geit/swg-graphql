@@ -2,19 +2,35 @@
 // This data is then transformed within the game into an array of strings for each list_id
 // Property lists are currently unimplemented, but they aren't complicated and should be coming soon!
 
+import { Field, ObjectType, registerEnumType } from 'type-graphql';
+
 export enum PropertyListIds {
-  LI_Commands = 0,
-  LI_DraftSchematics = 1,
-  // removed: LI_PvpEnemies=2,
-  LI_Allowed = 3,
-  LI_Banned = 4,
-  LI_GuildNames = 5,
-  LI_GuildAbbrevs = 6,
-  LI_GuildMembers = 7,
-  LI_GuildEnemies = 8,
-  LI_GuildLeaders = 10,
-  LI_Skills = 11,
-  LI_Cities = 12,
-  LI_Citizens = 13,
-  LI_CityStructures = 14,
+  Commands = 0,
+  DraftSchematics = 1,
+  // removed: PvpEnemies=2,
+  Allowed = 3,
+  Banned = 4,
+  GuildNames = 5,
+  GuildAbbrevs = 6,
+  GuildMembers = 7,
+  GuildEnemies = 8,
+  GuildLeaders = 10,
+  Skills = 11,
+  Cities = 12,
+  Citizens = 13,
+  CityStructures = 14,
+}
+
+registerEnumType(PropertyListIds, {
+  name: 'PropertyListIds',
+  description: 'SWG Property List IDs',
+});
+
+@ObjectType()
+export class PropertyListEntry {
+  @Field(() => PropertyListIds, { description: 'List ID for the property list entry' })
+  listId: PropertyListIds;
+
+  @Field(() => String, { description: 'Value stored within this property list entry', nullable: true })
+  value: string;
 }

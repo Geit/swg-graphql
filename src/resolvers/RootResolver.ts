@@ -1,9 +1,10 @@
 import { Arg, Int, Query, Resolver } from 'type-graphql';
 import { Service } from 'typedi';
 
+import { GuildService } from '../services/GuildService';
 import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account } from '../types';
+import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account, Guild } from '../types';
 import { isPresent } from '../utils/utility-types';
 
 @Service()
@@ -12,7 +13,8 @@ export class RootResolver {
   constructor(
     // constructor injection of a service
     private readonly objectService: ServerObjectService,
-    private readonly searchService: SearchService
+    private readonly searchService: SearchService,
+    private readonly guildService: GuildService
   ) {
     // Do nothing
   }
@@ -74,5 +76,11 @@ export class RootResolver {
       totalResultCount: rawResults.hits.total.value,
       results: presentResults,
     };
+  }
+
+  @Query(() => [Guild], { nullable: true })
+  async guilds() {
+    const guilds = await this.guildService.getAllGuilds();
+    return guilds ? [...guilds].map(([, val]) => val) : null;
   }
 }

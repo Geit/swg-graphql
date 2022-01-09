@@ -15,6 +15,21 @@ export enum Attributes {
   NumberOfAttributes,
 }
 
+@ObjectType()
+export class Skill {
+  @Field(() => String, { description: 'ID of the skill', nullable: true })
+  id: string;
+
+  @Field(() => String, { nullable: true, description: 'Resolved name of the skill' })
+  name: string | null;
+
+  @Field(() => String, { nullable: true, description: 'Resolved string of the title of the skill' })
+  title: string | null;
+
+  @Field(() => String, { nullable: true, description: 'Resolved string description of the skill' })
+  description: string | null;
+}
+
 /**
  * Player Creature Object isn't a real SWG thing, but allows us to do type refinement and grant access
  * to additional fields for players.
@@ -32,4 +47,7 @@ export class PlayerCreatureObject extends CreatureObject {
 
   @Field(() => String, { nullable: true, description: 'Time when this character was created' })
   createdTime: string | null;
+
+  @Field(() => [Skill], { description: 'Skills the player has' })
+  skills: Skill[];
 }

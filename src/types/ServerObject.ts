@@ -1,6 +1,7 @@
 import { Field, InterfaceType, ID, Float, Int, ObjectType } from 'type-graphql';
 
 import { ObjVarUnion } from './ObjVar';
+import { PropertyListEntry } from './PropertyList';
 
 export type Location = [x: number, y: number, z: number];
 
@@ -128,6 +129,12 @@ export class IServerObject {
     description: 'Computed property representing the number of items stored within this item',
   })
   containedItemCount: number;
+
+  @Field(() => [PropertyListEntry], {
+    description: 'Property List values for an object',
+    nullable: true,
+  })
+  propertyLists: PropertyListEntry[] | null;
 }
 
 @ObjectType({ implements: IServerObject })
