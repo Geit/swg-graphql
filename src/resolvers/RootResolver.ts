@@ -2,9 +2,10 @@ import { Arg, Int, Query, Resolver } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { GuildService } from '../services/GuildService';
+import { CityService } from '../services/CityService';
 import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account, Guild } from '../types';
+import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account, Guild, City } from '../types';
 import { isPresent } from '../utils/utility-types';
 
 @Service()
@@ -14,7 +15,8 @@ export class RootResolver {
     // constructor injection of a service
     private readonly objectService: ServerObjectService,
     private readonly searchService: SearchService,
-    private readonly guildService: GuildService
+    private readonly guildService: GuildService,
+    private readonly cityService: CityService
   ) {
     // Do nothing
   }
@@ -82,5 +84,25 @@ export class RootResolver {
   async guilds() {
     const guilds = await this.guildService.getAllGuilds();
     return guilds ? [...guilds].map(([, val]) => val) : null;
+  }
+
+  @Query(() => Guild, { nullable: true })
+  async guild(@Arg('id', { nullable: false }) id: string) {
+    const guilds = await this.guildService.getAllGuilds();
+
+    return guilds?.get(id) ?? null;
+  }
+
+  @Query(() => [City], { nullable: true })
+  async cities() {
+    const cities = await this.cityService.getAllCities();
+    return cities ? [...cities].map(([, val]) => val) : null;
+  }
+
+  @Query(() => City, { nullable: true })
+  async city(@Arg('id', { nullable: false }) id: string) {
+    const cities = await this.cityService.getAllCities();
+
+    return cities?.get(id) ?? null;
   }
 }

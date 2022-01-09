@@ -1,4 +1,3 @@
-import e from 'express';
 import { Service } from 'typedi';
 
 import { Guild } from '../types';

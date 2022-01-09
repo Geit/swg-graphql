@@ -20,7 +20,9 @@ import { PlanetWatcherNodeStatusUpdate } from './PlanetWatcherNodeStatusUpdate';
 import { PlanetWatcherObjectUpdate } from './PlanetWatcherObjectUpdate';
 import { UniverseObject, IUniverseObject } from './UniverseObject';
 import { GuildObject } from './GuildObject';
-import { Guild } from './Guild';
+import { Guild, GuildEnemy, GuildMember } from './Guild';
+import { CityObject } from './CityObject';
+import { City } from './City';
 
 // The TYPE_ID field is a magic number defined by the respective Template Definition Format files
 // in the Galaxies source code. They are used here to refine the type returned by the ServerObject service
@@ -41,6 +43,7 @@ export const TAG_TO_TYPE_MAP = {
   [TAGIFY('SWOO')]: ServerObject,
   [TAGIFY('UNIO')]: UniverseObject,
   [TAGIFY('GILD')]: GuildObject,
+  [TAGIFY('CITY')]: CityObject,
 } as const;
 
 export {
@@ -76,4 +79,8 @@ export {
   IUniverseObject,
   GuildObject,
   Guild,
+  GuildEnemy,
+  GuildMember,
+  CityObject,
+  City,
 };

@@ -1,7 +1,5 @@
 import { Field, ID, Int, ObjectType } from 'type-graphql';
 
-import { PlayerCreatureObject } from '.';
-
 @ObjectType()
 export class GuildMember {
   @Field(() => ID, { description: 'OID of the Guild Member' })

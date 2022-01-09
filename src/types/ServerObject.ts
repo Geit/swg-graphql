@@ -4,6 +4,7 @@ import { ObjVarUnion } from './ObjVar';
 import { PropertyListEntry } from './PropertyList';
 
 export type Location = [x: number, y: number, z: number];
+export type LocationXZ = [x: number, z: number];
 
 @InterfaceType({
   description: 'Basic object which all other objects tend to inherit from.',
