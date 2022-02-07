@@ -1,4 +1,4 @@
-import { Arg, Int, Query, Resolver } from 'type-graphql';
+import { Arg, Int, Query, Resolver, ID } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { GuildService } from '../services/GuildService';
@@ -28,11 +28,12 @@ export class RootResolver {
 
   @Query(() => [IServerObject], { nullable: true })
   objects(
-    @Arg('searchText', { nullable: false }) searchText: string,
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
-    @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean
+    @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean,
+    @Arg('objectIds', () => [ID], { nullable: true }) objectIds?: string[],
+    @Arg('searchText', { nullable: true }) searchText?: string
   ): Promise<Partial<UnenrichedServerObject[]> | null> {
-    return this.objectService.getMany({ searchText, limit, excludeDeleted });
+    return this.objectService.getMany({ searchText, limit, excludeDeleted, objectIds });
   }
 
   @Query(() => Account, { nullable: true })
@@ -80,29 +81,31 @@ export class RootResolver {
     };
   }
 
-  @Query(() => [Guild], { nullable: true })
+  @Query(() => [Guild])
   async guilds() {
     const guilds = await this.guildService.getAllGuilds();
-    return guilds ? [...guilds].map(([, val]) => val) : null;
+
+    const guildsArr = [...guilds].map(([, val]) => val);
+
+    return guildsArr;
   }
 
   @Query(() => Guild, { nullable: true })
-  async guild(@Arg('id', { nullable: false }) id: string) {
-    const guilds = await this.guildService.getAllGuilds();
-
-    return guilds?.get(id) ?? null;
+  guild(@Arg('guildId', { nullable: false }) id: string) {
+    return this.guildService.getGuild(id);
   }
 
-  @Query(() => [City], { nullable: true })
+  @Query(() => [City])
   async cities() {
     const cities = await this.cityService.getAllCities();
-    return cities ? [...cities].map(([, val]) => val) : null;
+
+    const citiesArr = [...cities].map(([, val]) => val);
+
+    return citiesArr;
   }
 
   @Query(() => City, { nullable: true })
-  async city(@Arg('id', { nullable: false }) id: string) {
-    const cities = await this.cityService.getAllCities();
-
-    return cities?.get(id) ?? null;
+  city(@Arg('cityId', { nullable: false }) id: string) {
+    return this.cityService.getCity(id);
   }
 }

@@ -45,10 +45,7 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
     @Root() object: IServerObject,
     @Arg('resolveCustomNames', { defaultValue: true }) resolveCustomNames: boolean
   ): Promise<string> {
-    return this.nameResolutionService.resolveName(object, {
-      resolveCustomNames,
-      stringFileService: this.stringFileService,
-    });
+    return this.nameResolutionService.resolveName(object, resolveCustomNames);
   }
 
   @FieldResolver()

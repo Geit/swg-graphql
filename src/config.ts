@@ -67,5 +67,15 @@ export const ELASTIC_KIBANA_INDEX = process.env.elasticKibanaIndex ?? '.kibana';
 
 export const STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL = process.env.STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL;
 export const SEARCH_INDEXER_RECENT_LOGGED_IN_TIME =
-  parseInt(process.env.SEARCH_INDEXER_RECENT_LOGGED_IN_TIME ?? '0') || 1000 * 60 * 60 * 1;
-export const SEARCH_INDEXER_INTERVAL = parseInt(process.env.SEARCH_INDEXER_INTERVAL ?? '0') || 1000 * 60 * 10;
+  parseInt(process.env.SEARCH_INDEXER_RECENT_LOGGED_IN_TIME ?? '0') || 1000 * 60 * 11; // 11 minutes
+export const SEARCH_INDEXER_INTERVAL = parseInt(process.env.SEARCH_INDEXER_INTERVAL ?? '0') || 1000 * 60 * 10; // 10 minutes
+
+/**
+ * Frequency (in ms) at which to update swg-graphql's internal guild representation.
+ */
+export const GUILD_UPDATE_INTERVAL = parseInt(process.env.GUILD_UPDATE_INTERVAL ?? '0') || 60 * 1000;
+
+/**
+ * Frequency (in ms) at which to update swg-graphql's internal city representation.
+ */
+export const CITY_UPDATE_INTERVAL = parseInt(process.env.CITY_UPDATE_INTERVAL ?? '0') || 60 * 1000;

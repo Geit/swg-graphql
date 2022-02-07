@@ -6,7 +6,7 @@ import db from './db';
  * Derived from the PLAYERS table.
  */
 export interface PlayerRecord {
-  CHARACTER_OBJECT: string;
+  CHARACTER_OBJECT: number;
   STATION_ID: number | null;
   CREATE_TIME: Date | null;
   LAST_LOGIN_TIME: Date | null;

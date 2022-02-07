@@ -51,7 +51,9 @@ import { Service } from 'typedi';
 //     length: 'numEntries',
 //   });
 
-@Service()
+@Service({
+  global: true,
+})
 export class StringFileLoader {
   private dataloader = new DataLoader(StringFileLoader.batchFunction);
   load = this.dataloader.load.bind(this.dataloader);

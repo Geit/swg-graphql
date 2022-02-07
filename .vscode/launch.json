@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Dev with Debugger",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "node",
+      "envFile": "${workspaceFolder}/.env",
+      "runtimeArgs": ["--inspect=61000", "--nolazy", "-r", "ts-node/register"],
+      "args": [ "${workspaceFolder}/src/index.ts"],
+
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
+    },
+    {
+      "name": "Launch Build with Debugger",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "node",
+      "envFile": "${workspaceFolder}/.env",
+      "runtimeArgs": ["--inspect=61000", "--nolazy"],
+      "args": [ "${workspaceFolder}/build/index.js"],
+
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
+    },
+  ]
+}

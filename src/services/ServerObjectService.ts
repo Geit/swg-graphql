@@ -56,7 +56,7 @@ interface GetManyFilters {
   limit?: number;
   containedById: string;
   containedByIdRecursive: string;
-  loadsWith: string;
+  loadsWith: string | number;
   searchText: string;
   objectIds: string[];
   ownedBy: string[];

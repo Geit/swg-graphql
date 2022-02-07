@@ -1,11 +1,13 @@
 import { Arg, FieldResolver, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
+import { CityService } from '../services/CityService';
+import { GuildService } from '../services/GuildService';
 import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
 import { PropertyListService } from '../services/PropertyListService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { StringFileLoader } from '../services/StringFileLoader';
-import { PlayerCreatureObject } from '../types';
+import { City, Guild, PlayerCreatureObject } from '../types';
 import { PropertyListIds } from '../types/PropertyList';
 
 @Resolver(() => PlayerCreatureObject)
@@ -15,7 +17,9 @@ export class PlayerCreatureObjectResolver implements ResolverInterface<PlayerCre
     private readonly playerCreatureObjectService: PlayerCreatureObjectService,
     private readonly objectService: ServerObjectService,
     private readonly propertyListService: PropertyListService,
-    private readonly stringFileService: StringFileLoader
+    private readonly stringFileService: StringFileLoader,
+    private readonly cityService: CityService,
+    private readonly guildService: GuildService
   ) {
     // Do nothing
   }
@@ -81,5 +85,15 @@ export class PlayerCreatureObjectResolver implements ResolverInterface<PlayerCre
     });
 
     return skills;
+  }
+
+  @FieldResolver(() => City, { nullable: true, description: 'The City the player is Resident in' })
+  city(@Root() object: PlayerCreatureObject) {
+    return this.cityService.getCityForPlayer(object.id);
+  }
+
+  @FieldResolver(() => Guild, { nullable: true, description: 'The Guild the player is a member of' })
+  guild(@Root() object: PlayerCreatureObject) {
+    return this.guildService.getGuildForPlayer(object.id);
   }
 }

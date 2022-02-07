@@ -1,42 +1,108 @@
 import { Service } from 'typedi';
 
-import { City } from '../types';
+import { CITY_UPDATE_INTERVAL } from '../config';
+import { City, Citizen, CityStructure } from '../types';
 import { PropertyListIds } from '../types/PropertyList';
 
 import knexDb from './db';
 import { PropertyListService } from './PropertyListService';
 
 /**
- * Derived from property_lists.tab
- *
+ * Derived from city_objects.tab
  */
 interface CityObjectRecord {
   OBJECT_ID: number;
 }
 
-@Service()
+@Service({
+  global: true,
+  eager: true,
+})
 export class CityService {
+  private _cities: Map<string, Partial<City>> = new Map();
+  private _citizenIdToCityId: Map<Citizen['id'], City['id']> = new Map();
+  private _structureIdToCityId: Map<CityStructure['id'], City['id']> = new Map();
+  private _currentUpdateCycle: Promise<void> | null = null;
+
   constructor(private readonly propertyListService: PropertyListService) {
     // Do nothing
+
+    this.updateCities();
+    setInterval(() => this.updateCities(), CITY_UPDATE_INTERVAL);
   }
 
   async getAllCities() {
+    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+
+    return this._cities;
+  }
+
+  async getCity(id: string) {
+    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+
+    return this._cities.get(id) ?? null;
+  }
+
+  async getCityForPlayer(playerId: string) {
+    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+
+    const cityId = this._citizenIdToCityId.get(playerId);
+
+    if (cityId) {
+      return this._cities.get(cityId) ?? null;
+    }
+
+    return null;
+  }
+
+  async getCityForStructure(structureId: string) {
+    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+
+    const cityId = this._structureIdToCityId.get(structureId);
+
+    if (cityId) {
+      return this._cities.get(cityId) ?? null;
+    }
+
+    return null;
+  }
+
+  async dataPopulated() {
+    await this._currentUpdateCycle;
+  }
+
+  async updateCities() {
+    if (!this._currentUpdateCycle) {
+      this._currentUpdateCycle = this._updateCities();
+    }
+
+    await this._currentUpdateCycle;
+
+    this._currentUpdateCycle = null;
+    console.log('Cities Updated');
+  }
+
+  private async _updateCities() {
     const results = await knexDb.first().from<CityObjectRecord>('CITY_OBJECTS');
 
     if (!results) {
-      return null;
+      return;
     }
 
     // This should give us
     const pLists = await this.propertyListService.load({ objectId: String(results.OBJECT_ID) });
 
-    const cities: Map<string, Partial<City>> = new Map();
-
+    const cities = new Map();
+    const citizenIdToCityId: Map<Citizen['id'], City['id']> = new Map();
+    const structureIdToCityId: Map<CityStructure['id'], City['id']> = new Map();
     const updateCityData = (data: Partial<City> & Pick<City, 'id'>) => {
       const cityToUpdate = cities.get(data.id);
 
       if (cityToUpdate) {
-        Object.assign(cityToUpdate, data);
+        cities.set(data.id, {
+          ...cityToUpdate,
+          ...data,
+        });
       } else {
         cities.set(data.id, data);
       }
@@ -55,12 +121,12 @@ export class CityService {
               id,
               name,
               cityHallId,
-              cityPlanet,
+              planet,
               locX,
               locZ,
               radius,
               creationTime,
-              leaderId,
+              mayorId,
               incomeTax,
               propertyTax,
               salesTax,
@@ -77,17 +143,17 @@ export class CityService {
               cloneRespawnZ,
               cloneRespawnCellId,
               cloneId,
-            ] = pList.value.split(',');
+            ] = pList.value.split(':');
 
             updateCityData({
               id,
               name,
               cityHallId,
-              cityPlanet,
-              cityLocation: [parseInt(locX), parseInt(locZ)],
+              planet,
+              location: [parseInt(locX), parseInt(locZ)],
               radius: parseInt(radius),
               creationTime: parseInt(creationTime),
-              leaderId,
+              mayorId,
               incomeTax: parseInt(incomeTax),
               propertyTax: parseInt(propertyTax),
               salesTax: parseInt(salesTax),
@@ -105,11 +171,11 @@ export class CityService {
               id,
               name,
               cityHallId,
-              cityPlanet,
+              planet,
               locX,
               locZ,
               radius,
-              leaderId,
+              mayorId,
               incomeTax,
               propertyTax,
               salesTax,
@@ -126,17 +192,17 @@ export class CityService {
               cloneRespawnZ,
               cloneRespawnCellId,
               cloneId,
-            ] = pList.value.split(',');
+            ] = pList.value.split(':');
 
             updateCityData({
               id,
               name,
               cityHallId,
-              cityPlanet,
-              cityLocation: [parseInt(locX), parseInt(locZ)],
+              planet,
+              location: [parseInt(locX), parseInt(locZ)],
               radius: parseInt(radius),
               creationTime: null,
-              leaderId,
+              mayorId,
               incomeTax: parseInt(incomeTax),
               propertyTax: parseInt(propertyTax),
               salesTax: parseInt(salesTax),
@@ -159,7 +225,7 @@ export class CityService {
 
           if (pList.value.startsWith('v3:')) {
             // V3 is chronicler data. I don't know why these are in the city object's PList.
-            break;
+            // Do nothing
           } else if (pList.value.startsWith('v2:')) {
             const [, id, citizenId, name, skillTemplate, level, title, allegiance, permissions, rank] =
               pList.value.split(':');
@@ -176,16 +242,18 @@ export class CityService {
               rank,
             });
 
+            citizenIdToCityId.set(citizenId, id);
             updateCityData({
               id,
               citizens,
             });
           } else {
-            const [, id, citizenId, name, allegiance, permissions] = pList.value.split(':');
+            const [id, citizenId, name, allegiance, permissions] = pList.value.split(':');
             const citizens = cities.get(id)?.citizens ?? [];
 
             citizens.push({
-              id: citizenId,
+              id,
+              citizenId,
               name,
               skillTemplate: null,
               level: null,
@@ -195,6 +263,7 @@ export class CityService {
               rank: null,
             });
 
+            citizenIdToCityId.set(citizenId, id);
             updateCityData({
               id,
               citizens,
@@ -214,6 +283,7 @@ export class CityService {
             isValid: Boolean(valid),
           });
 
+          structureIdToCityId.set(structureId, id);
           updateCityData({
             id,
             structures,
@@ -225,12 +295,8 @@ export class CityService {
       }
     });
 
-    return cities;
-  }
-
-  async getCity(id: string) {
-    const cities = await this.getAllCities();
-
-    return cities?.get(id) ?? null;
+    this._cities = cities;
+    this._citizenIdToCityId = citizenIdToCityId;
+    this._structureIdToCityId = structureIdToCityId;
   }
 }

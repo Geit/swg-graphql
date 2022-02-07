@@ -56,9 +56,6 @@ export class BuildingObjectResolver implements ResolverInterface<BuildingObject>
       if (structureName) return structureName.value.toString();
     }
 
-    return this.nameResolutionService.resolveName(object, {
-      resolveCustomNames,
-      stringFileService: this.stringFileService,
-    });
+    return this.nameResolutionService.resolveName(object, resolveCustomNames);
   }
 }

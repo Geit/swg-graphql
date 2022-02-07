@@ -54,10 +54,10 @@ export class City {
   cityHallId: string;
 
   @Field(() => ID, { description: 'Scene ID the City is located in' })
-  cityPlanet: string;
+  planet: string;
 
   @Field(() => [Int], { description: 'XZ Location of the City' })
-  cityLocation: LocationXZ;
+  location: LocationXZ;
 
   @Field(() => Int, { description: 'Radius of the City in Meters' })
   radius: number;
@@ -66,7 +66,7 @@ export class City {
   creationTime: number | null;
 
   @Field(() => ID, { description: 'OID of the current Mayor of the City' })
-  leaderId: string;
+  mayorId: string;
 
   @Field(() => Int, { description: 'The rate of income tax in the City' })
   incomeTax: number;

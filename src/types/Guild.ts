@@ -69,7 +69,7 @@ export class Guild {
   electionNextEndTime: number | null;
 
   @Field(() => Int, { nullable: true, description: 'CRC of the faction the guild is declared to' })
-  faction: number | null;
+  factionCrc: number | null;
 
   @Field(() => Int, { nullable: true, description: 'When the guild last went neutral from its previous faction' })
   timeLeftGuildFaction: number | null;

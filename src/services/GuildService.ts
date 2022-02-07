@@ -1,46 +1,99 @@
 import { Service } from 'typedi';
 
-import { Guild } from '../types';
+import { GUILD_UPDATE_INTERVAL } from '../config';
+import { Guild, GuildMember } from '../types';
 import { PropertyListIds } from '../types/PropertyList';
 
 import knexDb from './db';
 import { PropertyListService } from './PropertyListService';
 
 /**
- * Derived from property_lists.tab
- *
+ * Derived from guild_objects.tab
  */
 interface GuildObjectRecord {
   OBJECT_ID: number;
 }
 
-@Service()
+@Service({
+  global: true,
+  eager: true,
+})
 export class GuildService {
+  private _guilds: Map<string, Partial<Guild>> = new Map();
+  private _memberIdToGuildId: Map<GuildMember['id'], Guild['id']> = new Map();
+  private _currentUpdateCycle: Promise<void> | null = null;
+
   constructor(private readonly propertyListService: PropertyListService) {
     // Do nothing
+
+    this.updateGuilds();
+    setInterval(() => this.updateGuilds(), GUILD_UPDATE_INTERVAL);
   }
 
   async getAllGuilds() {
-    const results = await knexDb.first().from<GuildObjectRecord>('GUILD_OBJECTS');
+    if (this._currentUpdateCycle) await this._currentUpdateCycle;
 
-    if (!results) {
-      return null;
+    return this._guilds;
+  }
+
+  async getGuild(id: string) {
+    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+
+    return this._guilds?.get(id) ?? null;
+  }
+
+  async getGuildForPlayer(playerId: string) {
+    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+
+    const cityId = this._memberIdToGuildId.get(playerId);
+
+    if (cityId) {
+      return this._guilds.get(cityId) ?? null;
     }
 
-    // This should give us
-    const pLists = await this.propertyListService.load({ objectId: String(results.OBJECT_ID) });
+    return null;
+  }
+
+  async dataPopulated() {
+    await this._currentUpdateCycle;
+  }
+
+  async updateGuilds() {
+    if (!this._currentUpdateCycle) {
+      this._currentUpdateCycle = this._updateGuilds();
+    }
+
+    await this._currentUpdateCycle;
+
+    this._currentUpdateCycle = null;
+    console.log('Guilds Updated');
+  }
+
+  private async _updateGuilds() {
+    const results = await knexDb.first().from<GuildObjectRecord>('GUILD_OBJECTS');
 
     const guilds: Map<string, Partial<Guild>> = new Map();
+    const memberIdToGuildId: Map<GuildMember['id'], Guild['id']> = new Map();
 
     const updateGuildData = (data: Partial<Guild> & Pick<Guild, 'id'>) => {
       const guildToUpdate = guilds.get(data.id);
 
       if (guildToUpdate) {
-        Object.assign(guildToUpdate, data);
+        guilds.set(data.id, {
+          ...guildToUpdate,
+          ...data,
+        });
       } else {
         guilds.set(data.id, data);
       }
     };
+
+    if (!results) {
+      return;
+    }
+
+    // This should give us
+    const pLists = await this.propertyListService.load({ objectId: String(results.OBJECT_ID) });
 
     pLists.forEach(pList => {
       switch (pList.listId) {
@@ -57,7 +110,7 @@ export class GuildService {
               name,
               electionPreviousEndTime,
               electionNextEndTime,
-              faction,
+              factionCrc,
               timeLeftGuildFaction,
               gcwDefenderRegion,
               timeJoinedGcwDefenderRegion,
@@ -69,7 +122,7 @@ export class GuildService {
               name,
               electionPreviousEndTime: parseInt(electionPreviousEndTime),
               electionNextEndTime: parseInt(electionNextEndTime),
-              faction: parseInt(faction),
+              factionCrc: parseInt(factionCrc),
               timeLeftGuildFaction: parseInt(timeLeftGuildFaction),
               gcwDefenderRegion,
               timeJoinedGcwDefenderRegion: parseInt(timeJoinedGcwDefenderRegion),
@@ -168,7 +221,7 @@ export class GuildService {
               allegianceOid: allegiance,
               rank,
             });
-
+            memberIdToGuildId.set(memberId, id);
             updateGuildData({
               id,
               members,
@@ -188,6 +241,7 @@ export class GuildService {
               rank: null,
             });
 
+            memberIdToGuildId.set(memberId, id);
             updateGuildData({
               id,
               members,
@@ -201,12 +255,7 @@ export class GuildService {
       }
     });
 
-    return guilds;
-  }
-
-  async getGuild(id: string) {
-    const guilds = await this.getAllGuilds();
-
-    return guilds?.get(id) ?? null;
+    this._guilds = guilds;
+    this._memberIdToGuildId = memberIdToGuildId;
   }
 }

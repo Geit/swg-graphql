@@ -4,26 +4,25 @@ import { UnenrichedServerObject } from '../types/ServerObject';
 
 import { StringFileLoader } from './StringFileLoader';
 
-interface ResolveNameOptions {
-  resolveCustomNames: boolean;
-  stringFileService: StringFileLoader;
-}
-
 @Service()
 export class NameResolutionService {
-  async resolveName(object: UnenrichedServerObject, { resolveCustomNames, stringFileService }: ResolveNameOptions) {
+  constructor(private readonly stringFileService: StringFileLoader) {
+    // Do nothing
+  }
+
+  async resolveName(object: UnenrichedServerObject, resolveCustomNames = true) {
     const trimmedName = object.name?.trim();
 
     if (resolveCustomNames && trimmedName) return trimmedName;
 
     if (object.staticItemName) {
-      const strings = await stringFileService.load('static_item_n');
+      const strings = await this.stringFileService.load('static_item_n');
 
       return strings[object.staticItemName] || `@static_item_n:${object.staticItemName}`;
     }
 
     if (object.nameStringTable && object.nameStringText) {
-      const strings = await stringFileService.load(object.nameStringTable);
+      const strings = await this.stringFileService.load(object.nameStringTable);
 
       return strings[object.nameStringText] || `@${object.nameStringTable}:${object.nameStringText}`;
     }

@@ -16,7 +16,7 @@ interface BaseDocument {
   id: string;
   lastSeen: string;
 
-  relevancyBump: number;
+  relevancyBump?: number;
 }
 
 interface ObjectDocument extends BaseDocument {
@@ -126,7 +126,7 @@ export async function indexRecentLogins() {
 
 const objectService = new ServerObjectService();
 const stringFileService = new StringFileLoader();
-const nameResolutionService = new NameResolutionService();
+const nameResolutionService = new NameResolutionService(stringFileService);
 const playerCreatureService = new PlayerCreatureObjectService();
 const accountService = new AccountService();
 
@@ -142,19 +142,18 @@ async function produceDocumentsForPlayerContents(character: PlayerRecord): Promi
 
   if (objects.length > 0) {
     const documentPromises: Promise<ObjectDocument>[] = objects.map(async object => {
+      const [objectName, basicName] = await Promise.all([
+        nameResolutionService.resolveName(object),
+        nameResolutionService.resolveName(object, false),
+      ]);
+
       const document: ObjectDocument = {
         type: 'Object',
         id: object.id,
-        objectName: await nameResolutionService.resolveName(object, {
-          resolveCustomNames: true,
-          stringFileService,
-        }),
-        basicName: await nameResolutionService.resolveName(object, {
-          resolveCustomNames: false,
-          stringFileService,
-        }),
+        objectName,
+        basicName,
         lastSeen: new Date().toISOString(),
-        relevancyBump: object.typeId === TAGIFY('CREO') ? 10 : 0,
+        ...(object.typeId === TAGIFY('CREO') ? { relevancyBump: 10 } : {}),
       };
 
       return document;

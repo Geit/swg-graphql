@@ -22,8 +22,10 @@
   },
   "scripts": {
     "start-dev": "yarn ts-node-dev src/index.ts",
+    "start-dev-sh": "./start.sh",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
-    "build-dist": "rimraf build && yarn run tsc && npx pkg ."
+    "build": "rimraf build && yarn run tsc",
+    "build-dist": "npm run build && npx pkg ."
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.15.0",
