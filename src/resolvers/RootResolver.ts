@@ -7,6 +7,8 @@ import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account, Guild, City } from '../types';
 import { isPresent } from '../utils/utility-types';
+import { ResourceType } from '../types/ResourceType';
+import { ResourceTypeService } from '../services/ResourceTypeService';
 
 @Service()
 @Resolver()
@@ -16,7 +18,8 @@ export class RootResolver {
     private readonly objectService: ServerObjectService,
     private readonly searchService: SearchService,
     private readonly guildService: GuildService,
-    private readonly cityService: CityService
+    private readonly cityService: CityService,
+    private readonly resourceTypeService: ResourceTypeService
   ) {
     // Do nothing
   }
@@ -107,5 +110,18 @@ export class RootResolver {
   @Query(() => City, { nullable: true })
   city(@Arg('cityId', { nullable: false }) id: string) {
     return this.cityService.getCity(id);
+  }
+
+  @Query(() => [ResourceType])
+  resources(
+    @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
+    @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
+  ) {
+    return this.resourceTypeService.getMany({ limit, offset });
+  }
+
+  @Query(() => ResourceType, { nullable: true })
+  resource(@Arg('resourceId', { nullable: false }) id: string) {
+    return this.resourceTypeService.getOne(id);
   }
 }
