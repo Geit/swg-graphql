@@ -30,6 +30,7 @@
   "dependencies": {
     "@elastic/elasticsearch": "^7.15.0",
     "@graphql-tools/schema": "^8.3.1",
+    "apollo-server-core": "^3.6.5",
     "apollo-server-express": "^3.5.0",
     "binary-parser": "^2.0.2",
     "class-validator": "^0.13.2",

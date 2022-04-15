@@ -1,4 +1,5 @@
-import { AuthenticationError, ApolloServerExpressConfig } from 'apollo-server-express';
+import { AuthenticationError } from 'apollo-server-express';
+import type { ContextFunction } from 'apollo-server-core';
 import got from 'got';
 
 import { DISABLE_AUTH, ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC_SEARCH_URL } from '../config';
@@ -28,8 +29,7 @@ export const checkKibanaToken = async (token: string) => {
       ],
     },
     responseType: 'json',
-  }).catch(err => {
-    console.error(err);
+  }).catch(() => {
     throw new AuthenticationError('Error while confirming authorization');
   });
 
@@ -49,9 +49,9 @@ export const checkKibanaToken = async (token: string) => {
  * @returns undefined if successful.
  * @throws AuthenticationError
  */
-export const kibanaAuthorisationContext: ApolloServerExpressConfig['context'] = async params => {
+export const kibanaAuthorisationContext: ContextFunction = async params => {
   if (DISABLE_AUTH) {
-    return;
+    return {};
   }
 
   if (!params.req.headers.authorization) {
@@ -59,4 +59,6 @@ export const kibanaAuthorisationContext: ApolloServerExpressConfig['context'] = 
   }
 
   await checkKibanaToken(params.req.headers.authorization);
+
+  return {};
 };

@@ -1,0 +1,6 @@
+{
+  "thisIsTheApiKey": {
+    "enabled": true,
+    "purpose": "Sample API Key"
+  }
+}

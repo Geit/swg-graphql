@@ -9,11 +9,12 @@ import { buildSchema } from 'type-graphql';
 import { Container } from 'typedi';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
-import { ApolloServerPluginInlineTrace } from 'apollo-server-core';
+import { ApolloServerPluginInlineTrace, ContextFunction } from 'apollo-server-core';
 
 import { PORT, DISABLE_AUTH, ENABLE_TEXT_SEARCH, SEARCH_INDEXER_INTERVAL } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
 import { indexRecentLogins, initialSearchIndexSetup } from './elasticSearchIndex/searchIndexer';
+import { apiKeyAuth } from './context/api-key-auth';
 
 interface WebSocketConnectionParameters {
   authToken?: string;
@@ -22,6 +23,14 @@ interface WebSocketConnectionParameters {
 interface WebSocketContext {
   authToken: string;
 }
+
+const serverContext: ContextFunction = async params => {
+  if (typeof params.req.headers.authorization === 'string' && params.req.headers.authorization.startsWith('ApiKey-')) {
+    await apiKeyAuth(params);
+  } else {
+    await kibanaAuthorisationContext(params);
+  }
+};
 
 async function bootstrap() {
   const app = express();
@@ -60,7 +69,7 @@ async function bootstrap() {
   // Create the GraphQL server
   const server = new ApolloServer({
     schema,
-    context: !DISABLE_AUTH ? kibanaAuthorisationContext : undefined,
+    context: serverContext,
     plugins: [ApolloServerPluginInlineTrace()],
   });
 
@@ -102,11 +111,17 @@ async function bootstrap() {
   await bootstrap();
 
   if (ENABLE_TEXT_SEARCH) {
-    await initialSearchIndexSetup();
+    try {
+      await initialSearchIndexSetup();
 
-    // Run once on startup, then every 10 minutes.
+      // Run once on startup, then every 10 minutes.
 
-    await indexRecentLogins();
-    setInterval(() => indexRecentLogins(), SEARCH_INDEXER_INTERVAL);
+      await indexRecentLogins();
+      setInterval(() => indexRecentLogins(), SEARCH_INDEXER_INTERVAL);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(`Failed to start search indexer with error: ${err.message}`);
+      }
+    }
   }
 })();

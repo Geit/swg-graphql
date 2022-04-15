@@ -44,7 +44,7 @@ export const ENABLE_TEXT_SEARCH = Boolean(process.env.ENABLE_TEXT_SEARCH);
 /**
  * Whether to disable the authorisation layer.
  */
-export const DISABLE_AUTH = Boolean(process.env.DISABLE_AUTH);
+export const DISABLE_AUTH = process.env.DISABLE_AUTH === '1';
 
 /**
  * Elastic HTTP host, used by the authorisation layer to validate incoming requests.
