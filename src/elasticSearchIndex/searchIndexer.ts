@@ -1,83 +1,65 @@
-import type { MappingFieldType } from '@elastic/elasticsearch/api/types';
-import pLimit from 'p-limit';
+import { MappingProperty } from '@elastic/elasticsearch/lib/api/types';
 
-import { ELASTIC_SEARCH_INDEX_NAME, SEARCH_INDEXER_RECENT_LOGGED_IN_TIME } from '../config';
-import { AccountService } from '../services/AccountService';
-import { NameResolutionService } from '../services/NameResolutionService';
-import { PlayerCreatureObjectService, PlayerRecord } from '../services/PlayerCreatureObjectService';
-import { ServerObjectService } from '../services/ServerObjectService';
-import { StringFileLoader } from '../services/StringFileLoader';
-import TAGIFY from '../utils/tagify';
+import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH, SEARCH_INDEXER_INTERVAL } from '../config';
 
-import { elasticClient } from './elastic';
-
-interface BaseDocument {
-  type: unknown;
-  id: string;
-  lastSeen: string;
-
-  relevancyBump?: number;
-}
-
-interface ObjectDocument extends BaseDocument {
-  type: 'Object';
-  ownerId?: string;
-
-  objectName?: string;
-  basicName: string;
-
-  // Only for Character Objects
-  accountName?: string;
-  stationId?: string;
-}
-
-interface AccountDocument extends BaseDocument {
-  type: 'Account';
-  accountName?: string;
-  stationId: string;
-}
-
-export type SearchDocument = AccountDocument | ObjectDocument;
-type KeysOfUnion<T> = T extends T ? keyof T : never;
+import { elasticClient } from './utils/elasticClient';
+import { SearchDocument } from './types';
+import { indexRecentLogins } from './jobs/indexRecentLogins';
+import { indexResources } from './jobs/indexResources';
 
 /**
  * Just a little helper type to make sure that we're mapping every field in our desired document layout.
  */
-interface currentMappingType {
-  properties: Record<KeysOfUnion<SearchDocument>, { type: MappingFieldType }>;
-}
 
-const currentMapping: currentMappingType = {
-  properties: {
-    type: { type: 'keyword' },
-    id: { type: 'keyword' },
-    lastSeen: { type: 'date' },
-    ownerId: { type: 'keyword' },
+const currentMappingProperties: Record<string, MappingProperty> = {
+  type: { type: 'keyword' },
+  id: { type: 'keyword' },
+  lastSeen: { type: 'date' },
+  ownerId: { type: 'keyword' },
 
-    objectName: { type: 'text' },
-    basicName: { type: 'text' },
-    stationId: { type: 'keyword' },
-    accountName: { type: 'text' },
+  objectName: { type: 'text' },
+  basicName: { type: 'text' },
+  stationId: { type: 'keyword' },
+  accountName: { type: 'text' },
 
-    relevancyBump: { type: 'rank_feature' },
-  },
+  relevancyBump: { type: 'rank_feature' },
+  resourceName: { type: 'text' },
+  resourceClass: { type: 'keyword' },
+  resourceClassId: { type: 'keyword' },
+  resourcePlanets: { type: 'keyword' },
+  resourceDepletedTime: { type: 'date' },
+  'resourceAttributes.res_cold_resist': { type: 'short' },
+  'resourceAttributes.res_conductivity': { type: 'short' },
+  'resourceAttributes.res_decay_resist': { type: 'short' },
+  'resourceAttributes.entangle_resistance': { type: 'short' },
+  'resourceAttributes.res_flavor': { type: 'short' },
+  'resourceAttributes.res_heat_resist': { type: 'short' },
+  'resourceAttributes.res_malleability': { type: 'short' },
+  'resourceAttributes.res_quality': { type: 'short' },
+  'resourceAttributes.res_potential_energy': { type: 'short' },
+  'resourceAttributes.res_shock_resistance': { type: 'short' },
+  'resourceAttributes.res_toughness': { type: 'short' },
 } as const;
 
 export async function initialSearchIndexSetup() {
   console.log(`Attempting to setup the ${ELASTIC_SEARCH_INDEX_NAME} index in Elastic`);
-  const { body: indexExists } = await elasticClient.indices.exists({ index: ELASTIC_SEARCH_INDEX_NAME });
+  const indexExists = await elasticClient.indices.exists({ index: ELASTIC_SEARCH_INDEX_NAME });
 
   try {
     if (indexExists) {
       await elasticClient.indices.putMapping({
         index: ELASTIC_SEARCH_INDEX_NAME,
-        body: currentMapping,
+        body: {
+          properties: currentMappingProperties,
+        },
       });
     } else {
       await elasticClient.indices.create({
         index: ELASTIC_SEARCH_INDEX_NAME,
         body: {
-          mappings: currentMapping,
+          mappings: {
+            properties: currentMappingProperties,
+          },
         },
       });
     }
@@ -86,113 +68,20 @@ export async function initialSearchIndexSetup() {
   }
 }
 
-export async function indexRecentLogins() {
-  console.time('Producing docs');
+export async function startIndexer() {
+  if (!ENABLE_TEXT_SEARCH) return;
 
-  console.log('Finding recently logged in characters');
-  console.time('Finding recently logged in characters');
-  const characters = await playerCreatureService.getRecentlyLoggedInCharacters(SEARCH_INDEXER_RECENT_LOGGED_IN_TIME);
-  console.timeEnd('Finding recently logged in characters');
-
-  console.log(`Producing documents for ${characters.length} characters`);
-  const limit = pLimit(10);
-
-  const documentPromises = characters.map(character =>
-    limit(async () => {
-      const slug = `Processing OID ${character.CHARACTER_OBJECT}`;
-      console.time(slug);
-      const documentsToCommit = await produceDocumentsRelatedToPlayer(character);
-      console.log(
-        `Processing OID ${character.CHARACTER_OBJECT} resulted in ${documentsToCommit.length} documents being produced`
-      );
-
-      if (documentsToCommit.length > 0) {
-        const body = documentsToCommit.flatMap(doc => [
-          { index: { _index: ELASTIC_SEARCH_INDEX_NAME, _id: `${doc.type}:${doc.id}` } },
-          doc,
-        ]);
-
-        await elasticClient.bulk({ body });
-      }
-
-      console.timeEnd(slug);
-    })
-  );
-
-  await Promise.all(documentPromises);
-
-  console.timeEnd('Producing docs');
-}
-
-const objectService = new ServerObjectService();
-const stringFileService = new StringFileLoader();
-const nameResolutionService = new NameResolutionService(stringFileService);
-const playerCreatureService = new PlayerCreatureObjectService();
-const accountService = new AccountService();
-
-async function produceDocumentsForPlayerContents(character: PlayerRecord): Promise<Promise<SearchDocument>[]> {
-  // We're going to recursively get the object, and anything that loads with it.
-  // This probably won't include stuff that's in demand-loaded containers, like the bank,
-  // so it may be worth adding those manually at some point.
-  const objects = await objectService.getMany({
-    loadsWith: character.CHARACTER_OBJECT,
-    excludeDeleted: true,
-    limit: 10000,
-  });
-
-  if (objects.length > 0) {
-    const documentPromises: Promise<ObjectDocument>[] = objects.map(async object => {
-      const [objectName, basicName] = await Promise.all([
-        nameResolutionService.resolveName(object),
-        nameResolutionService.resolveName(object, false),
-      ]);
-
-      const document: ObjectDocument = {
-        type: 'Object',
-        id: object.id,
-        objectName,
-        basicName,
-        lastSeen: new Date().toISOString(),
-        ...(object.typeId === TAGIFY('CREO') ? { relevancyBump: 10 } : {}),
-      };
-
-      return document;
-    });
-
-    return documentPromises;
+  try {
+    await initialSearchIndexSetup();
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error(`Failed to start search indexer with error: ${err.message}`);
+    }
   }
 
-  return [];
-}
+  setTimeout(() => indexResources(), 0);
+  setInterval(() => indexResources(), 1000 * 60 * 30);
 
-async function produceAccountDocumentForPlayer(character: PlayerRecord): Promise<SearchDocument[]> {
-  if (!character || !character.STATION_ID) {
-    return [];
-  }
-
-  const [accountName] = await Promise.all([accountService.getAccountNameFromStationId(character.STATION_ID)]);
-
-  const document: AccountDocument = {
-    type: 'Account',
-    id: character.STATION_ID.toString(),
-    stationId: character.STATION_ID.toString(),
-    lastSeen: new Date().toISOString(),
-    relevancyBump: 30,
-    accountName: accountName ?? '',
-  };
-
-  return [document];
-}
-
-export async function produceDocumentsRelatedToPlayer(character: PlayerRecord): Promise<SearchDocument[]> {
-  const fetchers = await Promise.all([
-    produceDocumentsForPlayerContents(character),
-    produceAccountDocumentForPlayer(character),
-  ]);
-
-  const documents = await Promise.all(fetchers.flat());
-
-  // If the initial object was a PC creature, we're also going to find all their strucutures and add them to the processing queue.
-
-  return documents;
+  setTimeout(() => indexRecentLogins(), 0);
+  setInterval(() => indexRecentLogins(), SEARCH_INDEXER_INTERVAL);
 }

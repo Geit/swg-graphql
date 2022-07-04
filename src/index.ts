@@ -11,10 +11,10 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { ApolloServerPluginInlineTrace, ContextFunction } from 'apollo-server-core';
 
-import { PORT, DISABLE_AUTH, ENABLE_TEXT_SEARCH, SEARCH_INDEXER_INTERVAL } from './config';
+import { PORT, DISABLE_AUTH } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
-import { indexRecentLogins, initialSearchIndexSetup } from './elasticSearchIndex/searchIndexer';
 import { apiKeyAuth } from './context/api-key-auth';
+import { startIndexer } from './elasticSearchIndex/searchIndexer';
 
 interface WebSocketConnectionParameters {
   authToken?: string;
@@ -105,23 +105,16 @@ async function bootstrap() {
 
   // Start the server on the port specified in the config.
   httpServer.listen(PORT, () => console.log(`Server is now running on http://localhost:${PORT}/graphql`));
+
+  startIndexer()
+    .then(() => {
+      console.log('Search indexer started');
+
+      return undefined;
+    })
+    .catch(err => {
+      console.error('Search indexer failed to start with error ', err);
+    });
 }
 
-(async () => {
-  await bootstrap();
-
-  if (ENABLE_TEXT_SEARCH) {
-    try {
-      await initialSearchIndexSetup();
-
-      // Run once on startup, then every 10 minutes.
-
-      await indexRecentLogins();
-      setInterval(() => indexRecentLogins(), SEARCH_INDEXER_INTERVAL);
-    } catch (err) {
-      if (err instanceof Error) {
-        console.error(`Failed to start search indexer with error: ${err.message}`);
-      }
-    }
-  }
-})();
+bootstrap();
