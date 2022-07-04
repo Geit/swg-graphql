@@ -25,12 +25,14 @@ export class PlayerCreatureObjectService {
     return player;
   }
 
-  async getRecentlyLoggedInCharacters(withinLastMs: number) {
-    const players = await this.db
+  getRecentlyLoggedInCharacters(withinLastSeconds: number) {
+    const query = this.db
       .from<PlayerRecord>('PLAYERS')
       .select()
-      .where('LAST_LOGIN_TIME', '>=', new Date(Date.now() - withinLastMs));
+      .whereRaw('LAST_LOGIN_TIME >= SYSDATE - ? * (1/24/60/60)', withinLastSeconds);
 
-    return players;
+    console.log(query.toQuery());
+
+    return query;
   }
 }
