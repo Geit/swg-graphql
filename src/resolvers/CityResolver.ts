@@ -143,7 +143,7 @@ export class CityStructureResolver /* implements ResolverInterface<Citizen> */ {
     // Do nothing
   }
 
-  @FieldResolver(() => BuildingObject, { description: 'Object for the structure' })
+  @FieldResolver(() => BuildingObject, { description: 'Object for the structure', nullable: true })
   object(@Root() structure: CityStructure) {
     return this.objectService.getOne(structure.id);
   }
