@@ -1,7 +1,7 @@
 import DataLoader from 'dataloader';
 import { Service } from 'typedi';
 
-import { ResourceType, ResourceTypeAttribute, ResourceTypeFractalData } from '../types/ResourceType';
+import { ResourceType, ResourceTypeAttribute, ResourceTypePlanetDistribution } from '../types/ResourceType';
 
 import knexDb from './db';
 
@@ -67,9 +67,10 @@ export class ResourceTypeService {
       : null;
 
     // 10000016 1138858556:10000016 1138858556:
-    const fractalData: ResourceTypeFractalData[] | null = record.FRACTAL_SEEDS
-      ? record.FRACTAL_SEEDS.split(':')
-          .filter(Boolean)
+    const planetDistribution: ResourceTypePlanetDistribution[] | null = record.FRACTAL_SEEDS
+      ? record.FRACTAL_SEEDS.trim()
+          .split(':')
+          .filter(part => Boolean(part) && part !== ';')
           .map(attr => {
             const [planetId, seed] = attr.split(' ');
 
@@ -83,17 +84,14 @@ export class ResourceTypeService {
     return {
       id: String(record.RESOURCE_ID),
       name: record.RESOURCE_NAME,
-      resourceClassId: record.RESOURCE_CLASS,
-      depletedTime:
-        record.DEPLETED_TIMESTAMP && record.DEPLETED_TIMESTAMP >= 0
-          ? new Date(record.DEPLETED_TIMESTAMP * 1000).toISOString()
-          : null,
+      classId: record.RESOURCE_CLASS,
+      depletedTime: record.DEPLETED_TIMESTAMP,
       attributes,
-      fractalData,
+      planetDistribution,
     };
   }
 
-  private dataloader = new DataLoader(ResourceTypeService.batchFunction, { cache: false });
+  private dataloader = new DataLoader(ResourceTypeService.batchFunction, { cache: false, maxBatchSize: 999 });
   getOne = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

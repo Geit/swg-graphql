@@ -1,31 +1,28 @@
 import { Service } from 'typedi';
+import esb, { Query } from 'elastic-builder';
 
 import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '../config';
-import { elasticClient } from '../elasticSearchIndex/elastic';
-import { SearchDocument } from '../elasticSearchIndex/searchIndexer';
+import { elasticClient } from '../elasticSearchIndex/utils/elasticClient';
+import { SearchDocument } from '../elasticSearchIndex/types';
+
+interface IntRangeQueryWithCustomKey {
+  key: string;
+  gte?: number;
+  lte?: number;
+}
+
+interface StringRangeQuery {
+  gte?: string;
+  lte?: string;
+}
 
 interface SearchFilters {
   searchText: string;
+  types?: string[]; // SearchDocument['type'][];
+  resourceAttributes?: IntRangeQueryWithCustomKey[];
+  resourceDepletionDate?: StringRangeQuery;
   from: number;
   size: number;
-}
-
-interface ElasticSearchResult<SearchHitType> {
-  took: number;
-  timed_out: boolean;
-  hits: {
-    total: {
-      value: number;
-      relation: string;
-    };
-    hits: {
-      _index: string;
-      _type: string;
-      _id: string;
-      _score: number;
-      _source: SearchHitType;
-    }[];
-  };
 }
 
 @Service()
@@ -39,50 +36,75 @@ export class SearchService {
       return null;
     }
 
-    /* eslint-disable camelcase */
-    const { body: elasticResponse } = await this.elastic.search<ElasticSearchResult<SearchDocument>>({
+    const elasticBody = esb.requestBodySearch();
+
+    const mustQueries: Query[] = [];
+    const shouldQueries: Query[] = [
+      esb
+        .functionScoreQuery()
+        .query(esb.matchAllQuery())
+        .functions([
+          esb.weightScoreFunction().filter(esb.matchQuery('type', 'Account')).weight(30),
+          esb.weightScoreFunction().filter(esb.existsQuery('stationId')).weight(10),
+        ])
+        .boostMode('multiply'),
+    ];
+    const filterQueries: Query[] = [];
+
+    if (filters.types) {
+      filters.types.forEach(t => mustQueries.push(esb.termQuery('type', t)));
+    }
+
+    if (searchText) {
+      mustQueries.push(
+        esb
+          .disMaxQuery()
+          .queries([
+            esb
+              .multiMatchQuery()
+              .query(searchText)
+              .type('phrase_prefix')
+              .fields(['basicName^2', 'objectName^3', 'accountName^3', 'resourceName']),
+            esb
+              .multiMatchQuery()
+              .query(searchText)
+              .fuzziness('AUTO')
+              .fields(['id^5', 'stationId', 'accountName^3', 'resourceName', 'resourceClass', 'resourceClassId']),
+          ])
+          .tieBreaker(1.0)
+      );
+    }
+
+    if (filters.resourceAttributes) {
+      filters.resourceAttributes.forEach(ra => {
+        const query = esb.rangeQuery(`resourceAttributes.${ra.key}`);
+
+        if (ra.gte) query.gte(ra.gte);
+        if (ra.lte) query.lte(ra.lte);
+
+        filterQueries.push(query);
+      });
+    }
+
+    if (filters.resourceDepletionDate) {
+      const rdd = filters.resourceDepletionDate;
+
+      const query = esb.rangeQuery(`resourceDepletedTime`);
+
+      if (rdd.gte) query.gte(rdd.gte);
+      if (rdd.lte) query.lte(rdd.lte);
+
+      filterQueries.push(query);
+    }
+
+    elasticBody.query(esb.boolQuery().must(mustQueries).filter(filterQueries).should(shouldQueries));
+
+    const elasticResponse = await this.elastic.search<SearchDocument>({
       index: ELASTIC_SEARCH_INDEX_NAME,
       size: filters.size,
       from: filters.from,
-      body: {
-        query: {
-          bool: {
-            must: [
-              {
-                dis_max: {
-                  queries: [
-                    {
-                      multi_match: {
-                        query: searchText,
-                        type: 'phrase_prefix',
-                        fields: ['basicName^2', 'objectName^3', 'accountName^3'],
-                      },
-                    },
-                    {
-                      multi_match: {
-                        query: searchText,
-                        fuzziness: 'AUTO',
-                        fields: ['id^5', 'stationId', 'accountName^3'],
-                      },
-                    },
-                  ],
-                  tie_breaker: 1.0,
-                },
-              },
-            ],
-            should: [
-              {
-                rank_feature: {
-                  field: 'relevancyBump',
-                  linear: {},
-                },
-              },
-            ],
-          },
-        },
-      },
+      body: elasticBody.toJSON(),
     });
-    /* eslint-enable */
 
     return elasticResponse;
   }

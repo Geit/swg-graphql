@@ -7,8 +7,9 @@ import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account, Guild, City } from '../types';
 import { isPresent } from '../utils/utility-types';
-import { ResourceType } from '../types/ResourceType';
+import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
 import { ResourceTypeService } from '../services/ResourceTypeService';
+import { DateRangeInput, IntRangeInput } from '../types/SearchResult';
 
 @Service()
 @Resolver()
@@ -50,9 +51,19 @@ export class RootResolver {
   async search(
     @Arg('searchText', { nullable: false }) searchText: string,
     @Arg('from', () => Int, { defaultValue: 0 }) from: number,
-    @Arg('size', () => Int, { defaultValue: 25 }) size: number
+    @Arg('size', () => Int, { defaultValue: 25 }) size: number,
+    @Arg('types', () => [String], { nullable: true }) types?: string[],
+    @Arg('resourceAttributes', () => [IntRangeInput], { nullable: true }) resourceAttributes?: IntRangeInput[],
+    @Arg('resourceDepletionDate', () => DateRangeInput, { nullable: true }) resourceDepletionDate?: DateRangeInput
   ): Promise<SearchResultDetails> {
-    const rawResults = await this.searchService.search({ searchText, from, size });
+    const rawResults = await this.searchService.search({
+      searchText,
+      from,
+      size,
+      types,
+      resourceAttributes,
+      resourceDepletionDate,
+    });
 
     if (!rawResults)
       return {
@@ -61,9 +72,15 @@ export class RootResolver {
       };
 
     const results = await Promise.all(
-      rawResults.hits.hits.map(result => {
+      rawResults.hits.hits.flatMap(result => {
+        if (!result._source || !result._source.id) return [];
+
         if (result._source.type === 'Object') {
           return this.objectService.getOne(result._source.id);
+        }
+
+        if (result._source.type === 'ResourceType') {
+          return this.resourceTypeService.getOne(result._source.id);
         }
 
         if (result._source.type === 'Account') {
@@ -78,8 +95,11 @@ export class RootResolver {
 
     const presentResults = results.filter(isPresent);
 
+    const total = rawResults?.hits?.total;
+    const totalResultCount = (typeof total === 'object' ? total.value : total) ?? 0;
+
     return {
-      totalResultCount: rawResults.hits.total.value,
+      totalResultCount,
       results: presentResults,
     };
   }
@@ -112,12 +132,22 @@ export class RootResolver {
     return this.cityService.getCity(id);
   }
 
-  @Query(() => [ResourceType])
-  resources(
+  @Query(() => ResourceTypeResult)
+  async resources(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
   ) {
-    return this.resourceTypeService.getMany({ limit, offset });
+    const filters = { limit, offset };
+
+    const [count, results] = await Promise.all([
+      this.resourceTypeService.countMany(filters),
+      this.resourceTypeService.getMany(filters),
+    ]);
+
+    return {
+      totalResults: count,
+      results,
+    };
   }
 
   @Query(() => ResourceType, { nullable: true })
