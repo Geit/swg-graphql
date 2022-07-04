@@ -3,11 +3,11 @@ import { Service } from 'typedi';
 
 import { ServerObjectService } from '../services/ServerObjectService';
 import { ObjVarService } from '../services/ObjVarService';
-import { StringFileLoader } from '../services/StringFileLoader';
 import { IServerObject, ServerObject, UnenrichedServerObject } from '../types/ServerObject';
 import { NameResolutionService } from '../services/NameResolutionService';
 import { PropertyListService } from '../services/PropertyListService';
 import { PropertyListIds } from '../types/PropertyList';
+import { CrcLookupService } from '../services/CrcLookupService';
 
 @Resolver(() => IServerObject)
 @Service()
@@ -15,9 +15,9 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   constructor(
     private readonly objvarService: ObjVarService,
     private readonly objectService: ServerObjectService,
-    private readonly stringFileService: StringFileLoader,
     private readonly nameResolutionService: NameResolutionService,
-    private readonly propertyListService: PropertyListService
+    private readonly propertyListService: PropertyListService,
+    private readonly crcLookup: CrcLookupService
   ) {
     // Do nothing
   }
@@ -38,6 +38,13 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
     @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean
   ): Promise<UnenrichedServerObject[]> {
     return this.objectService.getMany({ containedById: object.id, limit, excludeDeleted });
+  }
+
+  @FieldResolver(() => String, { nullable: true })
+  template(@Root() object: IServerObject) {
+    if (!object.templateId) return null;
+
+    return this.crcLookup.lookupCrc(object.templateId >>> 0);
   }
 
   @FieldResolver()
@@ -61,5 +68,19 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
     const pLists = await this.propertyListService.load({ objectId: object.id, listId });
 
     return pLists ?? null;
+  }
+
+  @FieldResolver(() => IServerObject, { nullable: true })
+  container(@Root() object: IServerObject) {
+    if (!object.containedById || parseInt(object.containedById) < 0) return null;
+
+    return this.objectService.getOne(object.containedById);
+  }
+
+  @FieldResolver(() => IServerObject, { nullable: true })
+  loadsWith(@Root() object: IServerObject) {
+    if (!object.loadWithId || parseInt(object.loadWithId) < 0) return null;
+
+    return this.objectService.getOne(object.loadWithId);
   }
 }
