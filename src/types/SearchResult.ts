@@ -1,14 +1,39 @@
-import { createUnionType, Field, Int, ObjectType } from 'type-graphql';
+import { createUnionType, Field, InputType, Int, ObjectType } from 'type-graphql';
 
 import { PlayerCreatureObject } from './PlayerCreatureObject';
 import { UnenrichedServerObject } from './ServerObject';
+import { ResourceType } from './ResourceType';
 
 import { Account, TAG_TO_TYPE_MAP, UnenrichedAccount } from '.';
 
-export const SearchResultUnion: UnenrichedServerObject | UnenrichedAccount = createUnionType({
+@InputType()
+export class IntRangeInput {
+  @Field()
+  key: string;
+
+  @Field(() => Int, { nullable: true })
+  gte?: number;
+
+  @Field(() => Int, { nullable: true })
+  lte?: number;
+}
+
+@InputType()
+export class DateRangeInput {
+  @Field(() => String, { nullable: true })
+  gte?: string;
+
+  @Field(() => String, { nullable: true })
+  lte?: string;
+}
+
+export const SearchResultUnion: UnenrichedServerObject | UnenrichedAccount | ResourceType = createUnionType({
   name: 'SearchResult',
-  types: () => [Account, PlayerCreatureObject, ...Object.values(TAG_TO_TYPE_MAP)] as const,
-  resolveType: value => value.constructor.name,
+  types: () => [Account, PlayerCreatureObject, ...Object.values(TAG_TO_TYPE_MAP), ResourceType] as const,
+  resolveType: value => {
+    if ('classId' in value) return 'ResourceType';
+    return value.constructor.name;
+  },
 });
 
 @ObjectType()
