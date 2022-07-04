@@ -21,7 +21,7 @@ interface HarvesterInstallationObjectRecord {
 
 @Service()
 export class HarvesterInstallationObjectService {
-  private dataloader = new DataLoader(HarvesterInstallationObjectService.batchFunction);
+  private dataloader = new DataLoader(HarvesterInstallationObjectService.batchFunction, { maxBatchSize: 999 });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

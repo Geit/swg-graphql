@@ -20,7 +20,7 @@ interface InstallationObjectRecord {
 
 @Service()
 export class InstallationObjectService {
-  private dataloader = new DataLoader(InstallationObjectService.batchFunction);
+  private dataloader = new DataLoader(InstallationObjectService.batchFunction, { maxBatchSize: 999 });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

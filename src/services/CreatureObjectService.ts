@@ -27,7 +27,7 @@ interface CreatureObjectRecord {
 
 @Service()
 export class CreatureObjectService {
-  private dataloader = new DataLoader(CreatureObjectService.batchFunction);
+  private dataloader = new DataLoader(CreatureObjectService.batchFunction, { maxBatchSize: 999 });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

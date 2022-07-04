@@ -22,7 +22,7 @@ interface PropertyListArgs {
 
 @Service()
 export class PropertyListService {
-  private dataloader = new DataLoader(PropertyListService.batchFunction, { cache: false });
+  private dataloader = new DataLoader(PropertyListService.batchFunction, { cache: false, maxBatchSize: 999 });
   load = this.dataloader.load.bind(this.dataloader);
 
   private static convertRecordToObject(record: PropertyListRecord): PropertyListEntry {

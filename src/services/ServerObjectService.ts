@@ -174,14 +174,14 @@ export class ServerObjectService {
     });
   }
 
-  private dataloader = new DataLoader(ServerObjectService.batchFunction, { cache: false });
+  private dataloader = new DataLoader(ServerObjectService.batchFunction, { cache: false, maxBatchSize: 999 });
   getOne = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<ServerObjectRecord>('OBJECTS').whereIn('OBJECT_ID', keys);
 
     return keys.map(key => {
-      const foundRecord = results.find(result => String(result.OBJECT_ID) === key);
+      const foundRecord = results.find(result => String(result.OBJECT_ID) === String(key));
 
       return foundRecord ? ServerObjectService.convertRecordToObject(foundRecord) : null;
     });

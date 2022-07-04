@@ -17,7 +17,7 @@ interface ResourceContainerObjectRecord {
 
 @Service()
 export class ResourceContainerObjectService {
-  private dataloader = new DataLoader(ResourceContainerObjectService.batchFunction);
+  private dataloader = new DataLoader(ResourceContainerObjectService.batchFunction, { maxBatchSize: 999 });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {
