@@ -2,13 +2,17 @@ import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { TangibleObjectService } from '../services/TangibleObjectService';
+import { ServerObjectService } from '../services/ServerObjectService';
 import { ITangibleObject } from '../types';
 import { IServerObject } from '../types/ServerObject';
 
 @Resolver(() => ITangibleObject)
 @Service()
 export class TangibleObjectResolver implements ResolverInterface<ITangibleObject> {
-  constructor(private readonly tangibleObjectService: TangibleObjectService) {
+  constructor(
+    private readonly tangibleObjectService: TangibleObjectService,
+    private readonly objectService: ServerObjectService
+  ) {
     // Do nothing
   }
 
@@ -82,5 +86,27 @@ export class TangibleObjectResolver implements ResolverInterface<ITangibleObject
   async sourceDraftSchematicId(@Root() object: IServerObject) {
     const tangible = await this.tangibleObjectService.load(object.id);
     return tangible?.SOURCE_DRAFT_SCHEMATIC ?? null;
+  }
+
+  @FieldResolver(() => IServerObject, { nullable: true })
+  async owner(@Root() object: IServerObject) {
+    const tangible = await this.tangibleObjectService.load(object.id);
+
+    if (!tangible) {
+      return null;
+    }
+
+    return this.objectService.getOne(tangible.OWNER_ID) ?? null;
+  }
+
+  @FieldResolver(() => IServerObject, { nullable: true })
+  async creator(@Root() object: IServerObject) {
+    const tangible = await this.tangibleObjectService.load(object.id);
+
+    if (!tangible) {
+      return null;
+    }
+
+    return this.objectService.getOne(tangible.CREATOR_ID) ?? null;
   }
 }
