@@ -1,9 +1,9 @@
-import { Parser } from 'binary-parser';
+import { SmartBuffer } from 'smart-buffer';
 
 import { ISwgNetworkMessageBase } from './ISwgNetworkMessage';
 
 export interface PlanetObjectStatus {
-  networkId: BigInt;
+  networkId: bigint;
   locationX: number;
   locationZ: number;
   authoritativeServer: number;
@@ -22,34 +22,59 @@ interface PlanetObjectStatusMessageData {
   objectStatuses: PlanetObjectStatus[];
 }
 
-export interface PlanetObjectStatusMessage extends ISwgNetworkMessageBase {
-  type: 'PlanetObjectStatusMessage';
-  data: PlanetObjectStatusMessageData;
+export class PlanetObjectStatusMessage implements ISwgNetworkMessageBase {
+  public type = 'PlanetObjectStatusMessage' as const;
+
+  public crc: number;
+  public operandCount: number;
+
+  public data: PlanetObjectStatusMessageData;
+
+  static fromBuffer(operandCount: number, crc: number, buf: SmartBuffer) {
+    const posm = new PlanetObjectStatusMessage();
+
+    posm.crc = crc;
+    posm.operandCount = operandCount;
+
+    const objectStatusCount = buf.readUInt32LE();
+
+    const objectStatuses: PlanetObjectStatus[] = [];
+
+    for (let i = 0; i < objectStatusCount; i++) {
+      const networkId = buf.readBigInt64LE();
+      const locationX = buf.readInt32LE();
+      const locationZ = buf.readInt32LE();
+      const authoritativeServer = buf.readUInt32LE();
+      const interestRadius = buf.readInt32LE();
+      const deleteObject = buf.readInt32LE();
+      const objectTypeTag = buf.readInt32LE();
+      const level = buf.readInt32LE();
+      const hibernating = buf.readInt8();
+      const templateCrc = buf.readInt32LE();
+      const aiActivity = buf.readInt32LE();
+      const creationType = buf.readInt32LE();
+
+      objectStatuses.push({
+        networkId,
+        locationX,
+        locationZ,
+        authoritativeServer,
+        interestRadius,
+        deleteObject,
+        objectTypeTag,
+        level,
+        hibernating,
+        templateCrc,
+        aiActivity,
+        creationType,
+      });
+    }
+
+    posm.data = {
+      count: objectStatusCount,
+      objectStatuses,
+    };
+
+    return posm;
+  }
 }
-
-const PlanetObjectStatusParser = new Parser()
-  .endianess('little')
-  .int64('networkId')
-  .int32('locationX')
-  .int32('locationZ')
-  .uint32('authoritativeServer')
-  .int32('interestRadius')
-  .int32('deleteObject')
-  .int32('objectTypeTag')
-  .int32('level')
-  .int8('hibernating')
-  .int32('templateCrc')
-  .int32('aiActivity')
-  .int32('creationType');
-
-export const PlanetObjectStatusMessageParser = new Parser()
-  .endianess('little')
-  .uint32('count')
-  .array('objectStatuses', {
-    length: 'count',
-    type: PlanetObjectStatusParser,
-  });
-
-// Compile the parsers at require time...
-PlanetObjectStatusParser.compile();
-PlanetObjectStatusMessageParser.compile();

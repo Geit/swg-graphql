@@ -2,7 +2,7 @@ import net from 'net';
 
 import { PubSubEngine } from 'graphql-subscriptions';
 
-import { SwgNetworkMessage, MessageNameFromCrc, SwgNetworkMessageType } from './messages';
+import { parse, SBMessageTypes } from './messages';
 import { GameServerStatusData } from './messages/GameServerStatus';
 import { PlanetNodeStatusData } from './messages/PlanetNodeStatusMessage';
 import { PlanetObjectStatus } from './messages/PlanetObjectStatusMessage';
@@ -15,7 +15,7 @@ class PlanetWatcher {
   host: string;
   port: number;
   connection: net.Socket | null;
-  latestObjectStatuses: Map<BigInt, PlanetObjectStatus>;
+  latestObjectStatuses: Map<bigint, PlanetObjectStatus>;
   latestNodeStatuses: Map<number, PlanetNodeStatusData>;
   latestGameServerStatus: Map<number, GameServerStatusData>;
   pubsub: PubSubEngine;
@@ -82,9 +82,12 @@ class PlanetWatcher {
           const msgView = this.queuedMessages.subarray(msgOffset, msgOffset + nextMsgSize);
           msgOffset += nextMsgSize;
 
-          const msg = SwgNetworkMessage.parse(msgView);
+          // const msg = SwgNetworkMessage.parse(msgView);
+          const msg = parse(msgView);
 
-          this.onMessage({ type: MessageNameFromCrc[msg.crc] || 'UNKNOWN', ...msg });
+          if (msg) {
+            this.onMessage(msg);
+          }
         } else {
           // We need to wait for more messages before attempting to read the buffer.
           msgOffset -= 4; // Ensure we don't discard the message size
@@ -102,7 +105,7 @@ class PlanetWatcher {
     }
   }
 
-  onMessage(msg: SwgNetworkMessageType) {
+  onMessage(msg: SBMessageTypes) {
     switch (msg.type) {
       case 'PlanetNodeStatusMessage': {
         msg.data.nodeStatus.forEach(planetNode => {

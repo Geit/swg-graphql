@@ -1,4 +1,4 @@
-import { Parser } from 'binary-parser';
+import { SmartBuffer } from 'smart-buffer';
 
 import { ISwgNetworkMessageBase } from './ISwgNetworkMessage';
 
@@ -12,20 +12,38 @@ export interface GameServerStatusData {
   sceneId: string;
 }
 
-export interface GameServerStatusMessage extends ISwgNetworkMessageBase {
-  type: 'GameServerStatus';
-  data: GameServerStatusData;
+export class GameServerStatusMessage implements ISwgNetworkMessageBase {
+  public type = 'GameServerStatus' as const;
+
+  public crc: number;
+  public operandCount: number;
+
+  public data: GameServerStatusData;
+
+  static fromBuffer(operandCount: number, crc: number, buf: SmartBuffer) {
+    const gssm = new GameServerStatusMessage();
+
+    gssm.crc = crc;
+    gssm.operandCount = operandCount;
+
+    const isOnline = buf.readInt8();
+    const ipAddressLen = buf.readUInt16LE();
+    const ipAddress = buf.readString(ipAddressLen);
+    const serverId = buf.readUInt32LE();
+    const systemPid = buf.readUInt32LE();
+    const sceneIdLen = buf.readUInt16LE();
+    const sceneId = buf.readString(sceneIdLen);
+
+    gssm.data = {
+      isOnline,
+      ipAddressLen,
+      ipAddress,
+      serverId,
+      systemPid,
+      sceneIdLen,
+      sceneId,
+    };
+
+    return gssm;
+  }
 }
-
-export const GameServerStatusParser = new Parser()
-  .endianess('little')
-  .int8('isOnline')
-  .uint16('ipAddressLen')
-  .string('ipAddress', { length: 'ipAddressLen' })
-  .uint32('serverId')
-  .uint32('systemPid')
-  .uint16('sceneIdLen')
-  .string('sceneId', { length: 'sceneIdLen' });
-
-// Compile the parsers at require time...
-GameServerStatusParser.compile();

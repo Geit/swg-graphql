@@ -1,42 +1,40 @@
-import { Parser } from 'binary-parser';
+import { SmartBuffer } from 'smart-buffer';
 
 import getStringCrc from '../../utils/crc';
 
-import { FrameEndMessageParser, FrameEndMessage } from './FrameEndMessage';
-import { GameServerStatusMessage, GameServerStatusParser } from './GameServerStatus';
-import { NoopParser, SwgNetworkMessageUnknown } from './ISwgNetworkMessage';
-import { PlanetNodeStatusMessage, PlanetNodeStatusMessageParser } from './PlanetNodeStatusMessage';
-import { PlanetObjectStatusMessage, PlanetObjectStatusMessageParser } from './PlanetObjectStatusMessage';
+import { FrameEndMessage } from './FrameEndMessage';
+import { GameServerStatusMessage } from './GameServerStatus';
+import { PlanetNodeStatusMessage } from './PlanetNodeStatusMessage';
+import { PlanetObjectStatusMessage } from './PlanetObjectStatusMessage';
 
-export const MessageNameFromCrc: Record<number, string> = {
-  [getStringCrc('FrameEndMessage')]: 'FrameEndMessage',
-  [getStringCrc('PlanetObjectStatusMessage')]: 'PlanetObjectStatusMessage',
-  [getStringCrc('PlanetNodeStatusMessage')]: 'PlanetNodeStatusMessage',
-  [getStringCrc('GameServerStatus')]: 'GameServerStatus',
+const registeredMessageTypes = {
+  [getStringCrc('FrameEndMessage')]: FrameEndMessage,
+  [getStringCrc('GameServerStatus')]: GameServerStatusMessage,
+  [getStringCrc('PlanetNodeStatusMessage')]: PlanetNodeStatusMessage,
+  [getStringCrc('PlanetObjectStatusMessage')]: PlanetObjectStatusMessage,
 };
 
-export type SwgNetworkMessageType =
-  | SwgNetworkMessageUnknown
+export type SBMessageTypes =
   | FrameEndMessage
   | GameServerStatusMessage
-  | PlanetObjectStatusMessage
-  | PlanetNodeStatusMessage;
+  | PlanetNodeStatusMessage
+  | PlanetObjectStatusMessage;
 
-export const SwgNetworkMessage = new Parser()
-  .endianess('little')
-  .uint16('operandCount')
-  .int32('crc')
-  .choice('data', {
-    tag: 'crc',
-    choices: {
-      [getStringCrc('FrameEndMessage')]: FrameEndMessageParser,
-      [getStringCrc('PlanetObjectStatusMessage')]: PlanetObjectStatusMessageParser,
-      [getStringCrc('PlanetNodeStatusMessage')]: PlanetNodeStatusMessageParser,
-      [getStringCrc('GameServerStatus')]: GameServerStatusParser,
-    },
-    defaultChoice: NoopParser,
-  });
+export const parse = (data: Buffer): SBMessageTypes | null => {
+  const sb = SmartBuffer.fromBuffer(data);
 
-SwgNetworkMessage.compile();
+  const operandCount = sb.readUInt16LE();
+  const crc = sb.readInt32LE();
 
-export default SwgNetworkMessage;
+  const handlerClass = registeredMessageTypes[crc];
+
+  if (!handlerClass) {
+    // console.log(`No handler for ${crc} with ${operandCount} operands,`);
+    // console.log('Registered handlers', registeredMessageTypes);
+    return null;
+  }
+
+  const internalData = handlerClass.fromBuffer(operandCount, crc, sb);
+
+  return internalData;
+};
