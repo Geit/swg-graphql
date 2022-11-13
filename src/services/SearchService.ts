@@ -29,12 +29,8 @@ interface SearchFilters {
 export class SearchService {
   private elastic = elasticClient;
 
-  async search(filters: SearchFilters) {
+  private async findElasticRecords(filters: SearchFilters) {
     const searchText = filters.searchText.trim();
-
-    if (!ENABLE_TEXT_SEARCH) {
-      return null;
-    }
 
     const elasticBody = esb.requestBodySearch();
 
@@ -69,7 +65,8 @@ export class SearchService {
               .multiMatchQuery()
               .query(searchText)
               .fuzziness('AUTO')
-              .fields(['id^5', 'stationId', 'accountName^3', 'resourceName', 'resourceClass', 'resourceClassId']),
+              .fields(['accountName^3', 'resourceName', 'resourceClass', 'resourceClassId']),
+            esb.multiMatchQuery().query(searchText).fields(['id^5', 'stationId^5']),
           ])
           .tieBreaker(1.0)
       );
@@ -107,5 +104,15 @@ export class SearchService {
     });
 
     return elasticResponse;
+  }
+
+  async search(filters: SearchFilters) {
+    if (!ENABLE_TEXT_SEARCH) {
+      return null;
+    }
+
+    const results = await this.findElasticRecords(filters);
+
+    return results;
   }
 }

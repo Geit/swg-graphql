@@ -1,14 +1,18 @@
 import { Arg, FieldResolver, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
+import { ENABLE_STRUCTURE_SHORTCUT } from '../config';
 import { CityService } from '../services/CityService';
 import { GuildService } from '../services/GuildService';
+import { ObjVarService } from '../services/ObjVarService';
 import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
 import { PropertyListService } from '../services/PropertyListService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { StringFileLoader } from '../services/StringFileLoader';
 import { City, Guild, PlayerCreatureObject } from '../types';
 import { PropertyListIds } from '../types/PropertyList';
+import { STRUCTURE_TYPE_IDS } from '../utils/tagify';
+import { subsetOf } from '../utils/utility-types';
 
 @Resolver(() => PlayerCreatureObject)
 @Service()
@@ -19,7 +23,8 @@ export class PlayerCreatureObjectResolver implements ResolverInterface<PlayerCre
     private readonly propertyListService: PropertyListService,
     private readonly stringFileService: StringFileLoader,
     private readonly cityService: CityService,
-    private readonly guildService: GuildService
+    private readonly guildService: GuildService,
+    private readonly objvarService: ObjVarService
   ) {
     // Do nothing
   }
@@ -30,6 +35,17 @@ export class PlayerCreatureObjectResolver implements ResolverInterface<PlayerCre
     @Arg('objectTypes', () => [Int]) objectTypes: number[],
     @Arg('excludeDeleted', { defaultValue: true }) excludeDeleted: boolean
   ) {
+    if (ENABLE_STRUCTURE_SHORTCUT && objectTypes && subsetOf(objectTypes, STRUCTURE_TYPE_IDS)) {
+      // If the user is just searching for structures, we can cheat a little and use
+      // the structure objvar on characters.
+      const structureOids = await this.playerCreatureObjectService.getCheapStructuresForCharacter(object.id);
+      return this.objectService.getMany({
+        objectTypes,
+        excludeDeleted,
+        objectIds: structureOids,
+      });
+    }
+
     const ownedObjects = await this.objectService.getMany({
       ownedBy: [object.id],
       objectTypes,

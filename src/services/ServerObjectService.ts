@@ -86,7 +86,7 @@ export class ServerObjectService {
     }
 
     if (filters.objectIds) {
-      query.whereIn('OBJECT_ID', filters.objectIds);
+      query.whereIn('OBJECTS.OBJECT_ID', filters.objectIds);
     }
 
     if (filters.ownedBy) {

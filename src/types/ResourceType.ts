@@ -57,7 +57,7 @@ export class ResourceTypeAttribute {
 
 @ObjectType()
 export class ResourceType {
-  @Field(() => ID, { nullable: true, description: 'ID of the resource type' })
+  @Field(() => ID, { description: 'ID of the resource type' })
   id: string;
 
   @Field(() => String, { nullable: true, description: 'Generated name for this resource type' })

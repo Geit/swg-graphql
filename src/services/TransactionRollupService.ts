@@ -76,13 +76,10 @@ export class TransactionRollupService {
           }
 
           partyToRemoveFrom.itemsReceived.delete(item.oid);
-
-          if (originalOwnershipMap.get(item.oid) !== partyToAddTo.identifier) {
-            partyToAddTo.itemsReceived.set(item.oid, {
-              ...item,
-              wasOriginalOwner: originalOwnershipMap.get(item.oid) === partyToAddTo.identifier,
-            });
-          }
+          partyToAddTo.itemsReceived.set(item.oid, {
+            ...item,
+            wasOriginalOwner: originalOwnershipMap.get(item.oid) === partyToAddTo.identifier,
+          });
         });
       });
     });

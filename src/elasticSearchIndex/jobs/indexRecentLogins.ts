@@ -9,11 +9,13 @@ import TAGIFY from '../../utils/tagify';
 import { saveDocuments } from '../utils/saveDocuments';
 import { AccountDocument, ObjectDocument, SearchDocument } from '../types';
 import { SEARCH_INDEXER_RECENT_LOGGED_IN_TIME } from '../../config';
+import { ObjVarService } from '../../services/ObjVarService';
 
 const objectService = new ServerObjectService();
+const objvarService = new ObjVarService();
 const stringFileService = new StringFileLoader();
 const nameResolutionService = new NameResolutionService(stringFileService);
-const playerCreatureService = new PlayerCreatureObjectService();
+const playerCreatureService = new PlayerCreatureObjectService(objvarService);
 const accountService = new AccountService();
 
 export async function indexRecentLogins() {
@@ -38,7 +40,8 @@ export async function indexRecentLogins() {
       );
 
       if (documentsToCommit.length > 0) {
-        await saveDocuments(documentsToCommit);
+        const documentSaves = saveDocuments(documentsToCommit);
+        await Promise.all(documentSaves);
       }
 
       console.timeEnd(slug);

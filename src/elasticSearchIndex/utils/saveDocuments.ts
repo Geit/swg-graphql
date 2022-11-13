@@ -7,17 +7,6 @@ import { elasticClient } from './elasticClient';
 
 const elasticDocumentSaver = new DataLoader(_saveDocuments);
 
-interface IndexOpReturnType {
-  _index: string;
-  _id: string;
-  _version: number;
-  result: 'updated' | 'created';
-  _shards: unknown;
-  _seq_no: number;
-  _primary_term: number;
-  status: number;
-}
-
 async function _saveDocuments(documents: readonly SearchDocument[]) {
   const body = documents.flatMap(doc => [
     { index: { _index: ELASTIC_SEARCH_INDEX_NAME, _id: `${doc.type}:${doc.id}` } },

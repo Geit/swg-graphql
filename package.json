@@ -22,6 +22,7 @@
     "typescript": "4.7.4"
   },
   "scripts": {
+    "start-built": "yarn node build/index.js",
     "start-dev": "yarn ts-node-dev src/index.ts",
     "start-dev-sh": "./start.sh",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",

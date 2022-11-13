@@ -1,17 +1,46 @@
-import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { FieldResolver, Resolver, ResolverInterface, Root, ObjectType, Float, Field, Int } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { TangibleObjectService } from '../services/TangibleObjectService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { ITangibleObject } from '../types';
 import { IServerObject } from '../types/ServerObject';
+import { ShipPartStatService } from '../services/ShipPartStatService';
+
+@ObjectType()
+export class ShipPartSummary {
+  @Field()
+  isReverseEngineered: boolean;
+
+  @Field(() => Int)
+  reverseEngineeringLevel: number;
+
+  @Field(() => [ShipPartStat])
+  stats: ShipPartStat[];
+
+  @Field(() => Float)
+  headlinePercentile: number;
+}
+
+@ObjectType()
+class ShipPartStat {
+  @Field()
+  name!: string;
+
+  @Field(() => Float)
+  value: number;
+
+  @Field(() => Float, { nullable: true })
+  percentile: number | null;
+}
 
 @Resolver(() => ITangibleObject)
 @Service()
 export class TangibleObjectResolver implements ResolverInterface<ITangibleObject> {
   constructor(
     private readonly tangibleObjectService: TangibleObjectService,
-    private readonly objectService: ServerObjectService
+    private readonly objectService: ServerObjectService,
+    private readonly shipPartStat: ShipPartStatService
   ) {
     // Do nothing
   }
@@ -67,6 +96,7 @@ export class TangibleObjectResolver implements ResolverInterface<ITangibleObject
   @FieldResolver()
   async count(@Root() object: IServerObject) {
     const tangible = await this.tangibleObjectService.load(object.id);
+
     return tangible?.COUNT ?? null;
   }
 
@@ -108,5 +138,12 @@ export class TangibleObjectResolver implements ResolverInterface<ITangibleObject
     }
 
     return this.objectService.getOne(tangible.CREATOR_ID) ?? null;
+  }
+
+  @FieldResolver(() => ShipPartSummary, { nullable: true })
+  shipPartSummary(@Root() object: IServerObject) {
+    if (!object.templateId) return null;
+
+    return this.shipPartStat.lookupShipPartStats(object.id, object.templateId);
   }
 }

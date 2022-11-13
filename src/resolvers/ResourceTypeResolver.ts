@@ -32,6 +32,7 @@ interface ResourceDistributionRow {
   'Fractal Amplitude': number;
   'Fractal Octaves': number;
 }
+
 @Resolver(() => ResourceType)
 @Service()
 export class ResourceTypeResolver {

@@ -1,6 +1,7 @@
 import { Service } from 'typedi';
 
 import db from './db';
+import { ObjVarService } from './ObjVarService';
 
 /**
  * Derived from the PLAYERS table.
@@ -15,6 +16,10 @@ export interface PlayerRecord {
 @Service()
 export class PlayerCreatureObjectService {
   private db = db;
+
+  constructor(private readonly objvarService: ObjVarService) {
+    // Do nothing
+  }
 
   async getPlayerRecordForCharacter(id: string) {
     const player = await this.db
@@ -34,5 +39,20 @@ export class PlayerCreatureObjectService {
     console.log(query.toQuery());
 
     return query;
+  }
+
+  async getCheapStructuresForCharacter(objectId: string) {
+    const characterObjvars = await this.objvarService.getObjVarsForObject(objectId);
+
+    const structureOids: string[] = [];
+    characterObjvars.forEach(ov => {
+      if (ov.name.startsWith('structures.')) {
+        const [, oid] = ov.name.split('.');
+
+        if (oid) structureOids.push(oid);
+      }
+    });
+
+    return structureOids;
   }
 }

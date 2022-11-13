@@ -79,3 +79,44 @@ export const GUILD_UPDATE_INTERVAL = parseInt(process.env.GUILD_UPDATE_INTERVAL 
  * Frequency (in ms) at which to update swg-graphql's internal city representation.
  */
 export const CITY_UPDATE_INTERVAL = parseInt(process.env.CITY_UPDATE_INTERVAL ?? '') || 60 * 1000;
+
+//#region Login Database Connection Details
+/**
+ * Whether to use a seperate DB connection for accessing login related tables
+ */
+export const ENABLE_SEPERATE_LOGIN_DB = Boolean(process.env.ENABLE_SEPERATE_LOGIN_DB) || false;
+
+/**
+ * Connection string used to pass custom properties to the underlying connection.
+ *
+ * By default connections will be recycled after 5 minutes of inactivity.
+ */
+export const ORA_LOGIN_CONN_STRING = process.env.ORA_LOGIN_CONN_STRING ?? '(DESCRIPTION=(EXPIRE_TIME=5))';
+
+/**
+ * Host where the Oracle DB for SWG's Login Tables are.
+ */
+export const ORA_LOGIN_HOST = process.env.ORA_LOGIN_HOST ?? '127.0.0.1';
+
+/**
+ * Username for the Oracle DB with the SWG's Login db.
+ */
+export const ORA_LOGIN_USER = process.env.ORA_LOGIN_USER ?? 'swg';
+
+/**
+ * Password for the Oracle DB for Login
+ */
+export const ORA_LOGIN_PASS = process.env.ORA_LOGIN_PASS ?? 'swg';
+
+/**
+ * Database to use within Oracle for Login.
+ */
+export const ORA_LOGIN_DATABASE = process.env.ORA_LOGIN_DATABASE ?? 'swg';
+
+/**
+ * Domain to use within Oracle for Login.
+ */
+export const ORA_LOGIN_DOMAIN = process.env.ORA_LOGIN_DOMAIN ?? 'swg';
+//#endregion
+
+export const ENABLE_STRUCTURE_SHORTCUT = Boolean(process.env.ENABLE_STRUCTURE_SHORTCUT) || false;

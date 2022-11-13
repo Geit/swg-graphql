@@ -1,4 +1,4 @@
-import { FieldResolver, Resolver, Root } from 'type-graphql';
+import { FieldResolver, Int, Resolver, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { ResourceContainerObjectService } from '../services/ResourceContainerObjectService';
@@ -9,6 +9,12 @@ import { ResourceContainerObject, IServerObject } from '../types';
 export class ResourceContainerObjectResolver {
   constructor(private readonly rcObjectService: ResourceContainerObjectService) {
     // Do nothing
+  }
+
+  @FieldResolver(() => Int)
+  async count(@Root() object: IServerObject) {
+    const rc = await this.rcObjectService.load(object.id);
+    return rc?.QUANTITY;
   }
 
   @FieldResolver()

@@ -3,7 +3,6 @@ import { MappingProperty } from '@elastic/elasticsearch/lib/api/types';
 import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH, SEARCH_INDEXER_INTERVAL } from '../config';
 
 import { elasticClient } from './utils/elasticClient';
-import { SearchDocument } from './types';
 import { indexRecentLogins } from './jobs/indexRecentLogins';
 import { indexResources } from './jobs/indexResources';
 

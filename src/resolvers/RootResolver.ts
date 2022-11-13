@@ -93,6 +93,12 @@ export class RootResolver {
       })
     );
 
+    if (searchText.trim().match(/^\d+$/) && results.length === 0) {
+      const exactOidMatch = await this.objectService.getOne(searchText.trim());
+
+      if (exactOidMatch) results.push(exactOidMatch);
+    }
+
     const presentResults = results.filter(isPresent);
 
     const total = rawResults?.hits?.total;

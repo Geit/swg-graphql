@@ -30,15 +30,13 @@ export class TransactionService {
     const elasticBody = esb
       .requestBodySearch()
       .size(0)
-      .aggregation(esb.termsAggregation(AGGREGATION_NAME, 'parties.stationId.keyword').size(1000));
+      .aggregation(esb.termsAggregation(AGGREGATION_NAME, 'parties.stationId').size(1000));
 
     const filterQueries: Query[] = [];
 
     filterQueries.push(esb.rangeQuery('@timestamp').gte(fromDate).lt(untilDate));
     filterQueries.push(esb.matchQuery('arePartiesSameAccount', 'false'));
-    filterQueries.push(
-      esb.multiMatchQuery(['parties.name', 'parties.stationId', 'parties.oid'], stationId).type('phrase')
-    );
+    filterQueries.push(esb.multiMatchQuery(['parties.name', 'parties.stationId', 'parties.oid'], stationId));
 
     elasticBody.query(esb.boolQuery().filter(filterQueries));
 
@@ -61,7 +59,8 @@ export class TransactionService {
       .size(filters.size)
       .sort(esb.sort(filters.sortField, filters.sortDirection));
 
-    const mustQueries: Query[] = [];
+    const shouldQueries: Query[] = [];
+    let shouldMatch = 0;
     const filterQueries: Query[] = [];
 
     if (filters.arePartiesSameAccount !== null) {
@@ -69,36 +68,34 @@ export class TransactionService {
     }
 
     if (filters.parties) {
-      filterQueries.push(
+      shouldQueries.push(
         ...filters.parties.map(partyId =>
           esb.multiMatchQuery(['parties.name', 'parties.stationId', 'parties.oid'], partyId).type('phrase')
         )
       );
+      shouldMatch = filters.parties.length;
     }
 
     const searchText = filters.searchText?.trim();
     if (searchText) {
-      mustQueries.push(
+      shouldQueries.push(
         esb
           .multiMatchQuery(
-            [
-              'parties.name',
-              'parties.stationId',
-              'parties.oid',
-              'parties.itemsReceived.oid',
-              'parties.itemsReceived.name',
-              'parties.itemsReceived.basicName',
-              'parties.itemsReceived.template',
-            ],
+            ['parties.name', 'parties.itemsReceived.name', 'parties.itemsReceived.basicName'],
             searchText
           )
-          .type('phrase_prefix')
+          .type('phrase_prefix'),
+        esb.multiMatchQuery(
+          ['parties.stationId', 'parties.oid', 'parties.itemsReceived.oid', 'parties.itemsReceived.template'],
+          searchText
+        )
       );
+      shouldMatch += 1;
     }
 
     filterQueries.push(esb.rangeQuery('@timestamp').gte(filters.fromDate).lt(filters.untilDate));
 
-    elasticBody.query(esb.boolQuery().must(mustQueries).filter(filterQueries));
+    elasticBody.query(esb.boolQuery().should(shouldQueries).minimumShouldMatch(shouldMatch).filter(filterQueries));
 
     const elasticResponse = await this.elastic.search<Transaction>({
       index: 'transaction-logging-alias',
