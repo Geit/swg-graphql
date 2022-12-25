@@ -1,11 +1,13 @@
 import { Arg, Int, Query, Resolver, ID } from 'type-graphql';
 import { Service } from 'typedi';
+import { chunk } from 'lodash';
+import { flatMapLimit } from 'async';
 
 import { GuildService } from '../services/GuildService';
 import { CityService } from '../services/CityService';
 import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
+import { PlayerCreatureObjectService, PlayerRecord } from '../services/PlayerCreatureObjectService';
 import { ResourceTypeService } from '../services/ResourceTypeService';
 import {
   IServerObject,
@@ -179,11 +181,19 @@ export class RootResolver {
   ): Promise<PlayerCreatureObject[]> {
     const results = await this.playerCreatureService.getRecentlyLoggedInCharacters(durationSeconds);
 
-    const objects = await this.objectService.getMany({
-      objectIds: results.map(r => r.CHARACTER_OBJECT.toString()),
-      objectTypes: [TAGIFY('CREO')],
-    });
+    const chunkedResults = chunk(results, 1000);
+    const CONCURRENCY_LIMIT = 10;
 
-    return objects as PlayerCreatureObject[];
+    const objects = await flatMapLimit<PlayerRecord[], PlayerCreatureObject, Error>(
+      chunkedResults,
+      CONCURRENCY_LIMIT,
+      playerRecords =>
+        this.objectService.getMany({
+          objectIds: playerRecords.map(r => r.CHARACTER_OBJECT.toString()),
+          objectTypes: [TAGIFY('CREO')],
+        }) as Promise<PlayerCreatureObject[]>
+    );
+
+    return objects;
   }
 }

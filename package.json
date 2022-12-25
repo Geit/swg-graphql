@@ -6,6 +6,8 @@
     "src/modules/*"
   ],
   "devDependencies": {
+    "@types/async": "^3.2.16",
+    "@types/lodash": "^4.14.191",
     "@types/node": "^18.0.1",
     "@typescript-eslint/eslint-plugin": "5.30.5",
     "@typescript-eslint/parser": "5.30.5",
@@ -38,6 +40,7 @@
     "@graphql-tools/schema": "^8.5.0",
     "apollo-server-core": "^3.9.0",
     "apollo-server-express": "^3.9.0",
+    "async": "^3.2.4",
     "binary-parser": "^2.1.0",
     "class-validator": "^0.13.2",
     "cors": "^2.8.5",
@@ -48,6 +51,7 @@
     "graphql": "^15.8.0",
     "graphql-subscriptions": "^2.0.0",
     "knex": "^2.1.0",
+    "lodash": "^4.17.21",
     "oracledb": "^5.4.0",
     "p-limit": "3.1.0",
     "reflect-metadata": "^0.1.13",
