@@ -36,3 +36,4 @@ data/**/*
 dist
 
 start.sh
+*.generated.ts

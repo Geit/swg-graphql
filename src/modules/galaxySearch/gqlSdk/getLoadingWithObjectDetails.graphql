@@ -1,0 +1,27 @@
+query getLoadingWithObjectDetails($loadWithIds: [ID!]!, $limit: Int, $excludeDeleted: Boolean) {
+  objects(loadsWithIds: $loadWithIds, limit: $limit, excludeDeleted: $excludeDeleted) {
+    __typename
+    id
+    name
+    basicName: resolvedName(resolveCustomNames: false)
+    resolvedName
+    staticItemName
+    templateId
+    template
+    location
+    scene
+    ... on ITangibleObject {
+      count
+      owner {
+        id
+
+        ... on PlayerCreatureObject {
+          account {
+            id
+            accountName
+          }
+        }
+      }
+    }
+  }
+}

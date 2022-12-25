@@ -43,25 +43,15 @@ export class TransactionRollupPartyResolver {
   }
 
   @FieldResolver(() => RollupPartyEntity, { nullable: true })
-  async entity(@Root() party: TransactionRollupParty) {
-    const transaction = await this.transactionService.getMany({
-      parties: [party.identifier],
-      fromDate: 'now-180d',
-      size: 1,
-    });
+  entity(@Root() party: TransactionRollupParty) {
+    if (party.identifierType === 'stationId') {
+      const account = new Account();
+      account.id = parseInt(party.identifier);
+      return account;
+    }
 
-    for (const trx of transaction.results) {
-      for (const txParty of trx.parties) {
-        if (txParty.stationId === party.identifier) {
-          const account = new Account();
-          account.id = parseInt(party.identifier);
-          return account;
-        }
-
-        if (txParty.oid === party.identifier) {
-          return this.objectService.getOne(party.identifier);
-        }
-      }
+    if (party.identifierType === 'oid') {
+      return this.objectService.getOne(party.identifier);
     }
 
     return null;

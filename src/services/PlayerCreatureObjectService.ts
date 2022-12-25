@@ -36,8 +36,6 @@ export class PlayerCreatureObjectService {
       .select()
       .whereRaw('LAST_LOGIN_TIME >= SYSDATE - ? * (1/24/60/60)', withinLastSeconds);
 
-    console.log(query.toQuery());
-
     return query;
   }
 

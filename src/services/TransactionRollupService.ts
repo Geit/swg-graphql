@@ -9,6 +9,16 @@ const doesPartyMatchId = (party: TransactionParty, id: string): boolean => {
   return party.stationId === id || party.oid === id || party.name === id;
 };
 
+const getMatchingIdentifierType = (party: TransactionParty, id: string): string => {
+  if (party.stationId === id) return 'stationId';
+
+  if (party.oid === id) return 'oid';
+
+  if (party.name === id) return 'name';
+
+  return 'unknown';
+};
+
 @Service()
 export class TransactionRollupService {
   constructor(
@@ -38,12 +48,14 @@ export class TransactionRollupService {
     const originalOwnershipMap = new Map<string, string>();
 
     const partyA = {
+      identifierType: 'unknown',
       identifier: partyAId,
       itemsReceived: new Map<string, TransactionRollupItem>(),
       creditsReceived: 0,
     };
 
     const partyB = {
+      identifierType: 'unknown',
       identifier: partyBId,
       itemsReceived: new Map<string, TransactionRollupItem>(),
       creditsReceived: 0,
@@ -66,6 +78,9 @@ export class TransactionRollupService {
 
         const partyToRemoveFrom = isPartyA ? partyB : partyA;
         const partyToAddTo = isPartyA ? partyA : partyB;
+
+        if (isPartyA) partyA.identifierType = getMatchingIdentifierType(party, partyAId);
+        else partyB.identifierType = getMatchingIdentifierType(party, partyBId);
 
         partyToRemoveFrom.creditsReceived -= party.creditsReceived;
         partyToAddTo.creditsReceived += party.creditsReceived;

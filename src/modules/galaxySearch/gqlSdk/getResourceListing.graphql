@@ -1,0 +1,25 @@
+
+query getResourceListing($offset: Int, $limit: Int) {
+  resources(offset: $offset, limit: $limit) {
+    totalResults
+    results {
+      id
+      name
+      classId
+      className
+      depletedTimeReal
+      depletedTime
+      planetDistribution {
+        sceneId
+        sceneName
+        planetId
+        seed
+      }
+      attributes {
+        attributeId
+        value
+        attributeName
+      }
+    }
+  }
+}

@@ -14,7 +14,7 @@ import { ApolloServerPluginInlineTrace, ContextFunction } from 'apollo-server-co
 import { PORT, DISABLE_AUTH } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
 import { apiKeyAuth } from './context/api-key-auth';
-import { startIndexer } from './elasticSearchIndex/searchIndexer';
+import { startIndexer } from './modules/galaxySearch';
 
 interface WebSocketConnectionParameters {
   authToken?: string;

@@ -56,7 +56,7 @@ interface GetManyFilters {
   limit?: number;
   containedById: string;
   containedByIdRecursive: string;
-  loadsWith: string | number;
+  loadsWithIds: string[];
   searchText: string;
   objectIds: string[];
   ownedBy: string[];
@@ -81,8 +81,8 @@ export class ServerObjectService {
       );
     }
 
-    if (filters.loadsWith) {
-      query.andWhere('LOAD_WITH', filters.loadsWith);
+    if (filters.loadsWithIds) {
+      query.whereIn('LOAD_WITH', filters.loadsWithIds);
     }
 
     if (filters.objectIds) {

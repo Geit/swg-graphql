@@ -9,9 +9,20 @@ interface BaseDocument {
 export interface ObjectDocument extends BaseDocument {
   type: 'Object';
   ownerId?: string;
+  ownerStationId?: string;
+  ownerAccountName?: string;
 
   objectName?: string;
   basicName: string;
+  templateId: string;
+  template?: string;
+  count?: number;
+  location: {
+    scene: string;
+    x: number;
+    y: number;
+    z: number;
+  };
 
   // Only for Character Objects
   accountName?: string;
@@ -46,6 +57,8 @@ export interface ResourceTypeDocument extends BaseDocument {
 export interface AccountDocument extends BaseDocument {
   type: 'Account';
   accountName?: string;
+  characters: string[];
+  characterIds: string[];
   stationId: string;
 }
 

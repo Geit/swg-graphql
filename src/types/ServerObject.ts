@@ -32,8 +32,8 @@ export class IServerObject {
   @Field(() => Int, { description: 'The Game Object Type ID of the object.', nullable: true })
   typeId: number | null;
 
-  @Field(() => String, { description: 'The planet/scene where the item was last seen.', nullable: true })
-  scene: string | null;
+  @Field(() => String, { description: 'The planet/scene where the item was last seen.', nullable: false })
+  scene: string;
 
   @Field(() => Int, { description: 'The ID of the Object Controller responsible for this object.', nullable: true })
   controllerType: number | null;
@@ -94,8 +94,8 @@ export class IServerObject {
   @Field(() => String, { nullable: true })
   nameStringText: string | null;
 
-  @Field(() => Int, { nullable: true })
-  templateId: number | null;
+  @Field(() => Int, { nullable: false })
+  templateId: number;
 
   @Field(() => String, { nullable: true })
   staticItemName: string;

@@ -1,6 +1,6 @@
 import DataLoader from 'dataloader';
 
-import { ELASTIC_SEARCH_INDEX_NAME } from '../../config';
+import { ELASTIC_SEARCH_INDEX_NAME } from '../../../config';
 import { SearchDocument } from '../types';
 
 import { elasticClient } from './elasticClient';

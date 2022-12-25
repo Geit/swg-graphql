@@ -97,6 +97,8 @@ export class TransactionService {
 
     elasticBody.query(esb.boolQuery().should(shouldQueries).minimumShouldMatch(shouldMatch).filter(filterQueries));
 
+    console.log(elasticBody.toJSON());
+
     const elasticResponse = await this.elastic.search<Transaction>({
       index: 'transaction-logging-alias',
       body: elasticBody.toJSON(),

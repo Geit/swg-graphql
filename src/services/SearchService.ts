@@ -2,8 +2,7 @@ import { Service } from 'typedi';
 import esb, { Query } from 'elastic-builder';
 
 import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '../config';
-import { elasticClient } from '../elasticSearchIndex/utils/elasticClient';
-import { SearchDocument } from '../elasticSearchIndex/types';
+import { elasticClient } from '../utils/elasticClient';
 
 interface IntRangeQueryWithCustomKey {
   key: string;
@@ -96,7 +95,7 @@ export class SearchService {
 
     elasticBody.query(esb.boolQuery().must(mustQueries).filter(filterQueries).should(shouldQueries));
 
-    const elasticResponse = await this.elastic.search<SearchDocument>({
+    const elasticResponse = await this.elastic.search<any>({
       index: ELASTIC_SEARCH_INDEX_NAME,
       size: filters.size,
       from: filters.from,

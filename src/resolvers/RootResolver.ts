@@ -5,11 +5,21 @@ import { GuildService } from '../services/GuildService';
 import { CityService } from '../services/CityService';
 import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { IServerObject, UnenrichedServerObject, SearchResultDetails, Account, Guild, City } from '../types';
-import { isPresent } from '../utils/utility-types';
-import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
+import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
 import { ResourceTypeService } from '../services/ResourceTypeService';
+import {
+  IServerObject,
+  UnenrichedServerObject,
+  SearchResultDetails,
+  Account,
+  Guild,
+  City,
+  PlayerCreatureObject,
+} from '../types';
+import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
 import { DateRangeInput, IntRangeInput } from '../types/SearchResult';
+import { isPresent } from '../utils/utility-types';
+import TAGIFY from '../utils/tagify';
 
 @Service()
 @Resolver()
@@ -20,7 +30,8 @@ export class RootResolver {
     private readonly searchService: SearchService,
     private readonly guildService: GuildService,
     private readonly cityService: CityService,
-    private readonly resourceTypeService: ResourceTypeService
+    private readonly resourceTypeService: ResourceTypeService,
+    private readonly playerCreatureService: PlayerCreatureObjectService
   ) {
     // Do nothing
   }
@@ -35,9 +46,10 @@ export class RootResolver {
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean,
     @Arg('objectIds', () => [ID], { nullable: true }) objectIds?: string[],
+    @Arg('loadsWithIds', () => [ID], { nullable: true }) loadsWithIds?: string[],
     @Arg('searchText', { nullable: true }) searchText?: string
   ): Promise<Partial<UnenrichedServerObject[]> | null> {
-    return this.objectService.getMany({ searchText, limit, excludeDeleted, objectIds });
+    return this.objectService.getMany({ searchText, limit, excludeDeleted, objectIds, loadsWithIds });
   }
 
   @Query(() => Account, { nullable: true })
@@ -159,5 +171,19 @@ export class RootResolver {
   @Query(() => ResourceType, { nullable: true })
   resource(@Arg('resourceId', { nullable: false }) id: string) {
     return this.resourceTypeService.getOne(id);
+  }
+
+  @Query(() => [PlayerCreatureObject])
+  async recentLogins(
+    @Arg('durationSeconds', () => Int, { defaultValue: 10 * 60 }) durationSeconds: number
+  ): Promise<PlayerCreatureObject[]> {
+    const results = await this.playerCreatureService.getRecentlyLoggedInCharacters(durationSeconds);
+
+    const objects = await this.objectService.getMany({
+      objectIds: results.map(r => r.CHARACTER_OBJECT.toString()),
+      objectTypes: [TAGIFY('CREO')],
+    });
+
+    return objects as PlayerCreatureObject[];
   }
 }

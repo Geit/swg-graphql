@@ -40,6 +40,9 @@ export class TransactionRollupParty {
   @Field(() => ID)
   identifier: string;
 
+  @Field()
+  identifierType: string;
+
   @Field(() => [TransactionRollupItem])
   itemsReceived: TransactionRollupItem[];
 

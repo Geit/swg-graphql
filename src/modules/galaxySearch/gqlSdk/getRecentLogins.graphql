@@ -1,0 +1,14 @@
+query getRecentLogins($durationSeconds: Int) {
+  recentLogins(durationSeconds: $durationSeconds) {
+    id
+    resolvedName
+    account {
+      accountName
+      id
+      characters {
+        id
+        name
+      }
+    }
+  }
+}
