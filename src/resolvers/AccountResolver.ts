@@ -82,18 +82,20 @@ export class AccountResolver implements ResolverInterface<Account> {
   @FieldResolver()
   async ownedObjects(
     @Root() account: UnenrichedAccount,
-    @Arg('objectTypes', () => [Int]) objectTypes: number[],
-    @Arg('excludeDeleted', { defaultValue: true }) excludeDeleted: boolean
+    @Arg('objectTypes', () => [Int], { nullable: true }) objectTypes: number[] | null,
+    @Arg('excludeDeleted', { defaultValue: true }) excludeDeleted: boolean,
+    @Arg('structuresOnly', { defaultValue: false }) structuresOnly: boolean
   ) {
+    // eslint-disable-next-line no-param-reassign
+    if (structuresOnly) objectTypes = STRUCTURE_TYPE_IDS;
+
     const characters = await this.accountService.getAllCharactersForAccount(account.id);
 
     const characterIds = characters.map(char => char.CHARACTER_OBJECT);
 
     if (ENABLE_STRUCTURE_SHORTCUT && objectTypes && subsetOf(objectTypes, STRUCTURE_TYPE_IDS)) {
       const structureOids = (
-        await Promise.all(
-          characterIds.map(cOid => this.playerCreatureObjectService.getCheapStructuresForCharacter(cOid))
-        )
+        await Promise.all(characterIds.map(cid => this.playerCreatureObjectService.getCheapStructuresForCharacter(cid)))
       ).flat();
 
       return this.objectService.getMany({

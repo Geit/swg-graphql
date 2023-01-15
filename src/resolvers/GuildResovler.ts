@@ -6,10 +6,7 @@ import { ServerObjectService } from '../services/ServerObjectService';
 import { StringFileLoader } from '../services/StringFileLoader';
 import { PlayerCreatureObject } from '../types';
 import { Guild, GuildEnemy, GuildMember } from '../types/Guild';
-import getStringCrc from '../utils/crc';
-
-const IMPERIAL_CRC = getStringCrc('imperial');
-const REBEL_CRC = getStringCrc('rebel');
+import { getFactionNameFromCrc } from '../utils/getFactionNameFromCrc';
 
 @Resolver(() => Guild)
 @Service()
@@ -35,10 +32,7 @@ export class GuildResolver /* implements ResolverInterface<Guild> */ {
 
   @FieldResolver(() => String, { nullable: true, description: 'Name of the faction the guild represents' })
   faction(@Root() guild: Guild) {
-    if (guild.factionCrc === IMPERIAL_CRC) return 'Imperial';
-    else if (guild.factionCrc === REBEL_CRC) return 'Rebel';
-
-    return null;
+    return getFactionNameFromCrc(guild.factionCrc);
   }
 
   @FieldResolver(() => String, { nullable: true, description: 'Name of the faction the guild represents' })

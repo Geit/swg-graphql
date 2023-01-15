@@ -6,6 +6,7 @@ import { ServerObjectService } from '../services/ServerObjectService';
 import { ITangibleObject } from '../types';
 import { IServerObject } from '../types/ServerObject';
 import { ShipPartStatService } from '../services/ShipPartStatService';
+import { getFactionNameFromCrc } from '../utils/getFactionNameFromCrc';
 
 @ObjectType()
 export class ShipPartSummary {
@@ -79,6 +80,11 @@ export class TangibleObjectResolver implements ResolverInterface<ITangibleObject
   async pvpFaction(@Root() object: IServerObject) {
     const tangible = await this.tangibleObjectService.load(object.id);
     return tangible?.PVP_FACTION ?? null;
+  }
+
+  @FieldResolver(() => String, { nullable: true, description: 'Name of the faction the player is aligned to' })
+  async pvpFactionName(@Root() object: IServerObject) {
+    return getFactionNameFromCrc(await this.pvpFaction(object));
   }
 
   @FieldResolver()

@@ -1,13 +1,11 @@
-import { Arg, Int, Query, Resolver, ID } from 'type-graphql';
+import { Arg, Int, Query, Resolver, ID, Field, ObjectType } from 'type-graphql';
 import { Service } from 'typedi';
-import { chunk } from 'lodash';
-import { flatMapLimit } from 'async';
 
 import { GuildService } from '../services/GuildService';
 import { CityService } from '../services/CityService';
 import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
-import { PlayerCreatureObjectService, PlayerRecord } from '../services/PlayerCreatureObjectService';
+import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
 import { ResourceTypeService } from '../services/ResourceTypeService';
 import {
   IServerObject,
@@ -22,6 +20,15 @@ import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
 import { DateRangeInput, IntRangeInput } from '../types/SearchResult';
 import { isPresent } from '../utils/utility-types';
 import TAGIFY from '../utils/tagify';
+
+@ObjectType()
+class RecentLoginsResult {
+  @Field(() => Int)
+  totalResults: number;
+
+  @Field(() => [PlayerCreatureObject])
+  results: PlayerCreatureObject[];
+}
 
 @Service()
 @Resolver()
@@ -64,6 +71,7 @@ export class RootResolver {
   @Query(() => SearchResultDetails, { nullable: false })
   async search(
     @Arg('searchText', { nullable: false }) searchText: string,
+    @Arg('searchTextIsEsQuery', { defaultValue: false }) searchTextIsEsQuery: boolean,
     @Arg('from', () => Int, { defaultValue: 0 }) from: number,
     @Arg('size', () => Int, { defaultValue: 25 }) size: number,
     @Arg('types', () => [String], { nullable: true }) types?: string[],
@@ -72,6 +80,7 @@ export class RootResolver {
   ): Promise<SearchResultDetails> {
     const rawResults = await this.searchService.search({
       searchText,
+      searchTextIsEsQuery,
       from,
       size,
       types,
@@ -175,25 +184,27 @@ export class RootResolver {
     return this.resourceTypeService.getOne(id);
   }
 
-  @Query(() => [PlayerCreatureObject])
+  @Query(() => RecentLoginsResult)
   async recentLogins(
+    @Arg('limit', () => Int, { defaultValue: 1000 }) limit: number,
+    @Arg('offset', () => Int, { defaultValue: 0 }) offset: number,
     @Arg('durationSeconds', () => Int, { defaultValue: 10 * 60 }) durationSeconds: number
-  ): Promise<PlayerCreatureObject[]> {
+  ): Promise<RecentLoginsResult> {
+    if (limit > 1000 || limit < 0) throw new Error('Bad `limit` argument');
+
     const results = await this.playerCreatureService.getRecentlyLoggedInCharacters(durationSeconds);
 
-    const chunkedResults = chunk(results, 1000);
-    const CONCURRENCY_LIMIT = 10;
+    const limitedResults = results.slice(offset, offset + limit);
 
-    const objects = await flatMapLimit<PlayerRecord[], PlayerCreatureObject, Error>(
-      chunkedResults,
-      CONCURRENCY_LIMIT,
-      playerRecords =>
-        this.objectService.getMany({
-          objectIds: playerRecords.map(r => r.CHARACTER_OBJECT.toString()),
-          objectTypes: [TAGIFY('CREO')],
-        }) as Promise<PlayerCreatureObject[]>
-    );
+    const objects = (await this.objectService.getMany({
+      objectIds: limitedResults.map(r => r.CHARACTER_OBJECT.toString()),
+      objectTypes: [TAGIFY('CREO')],
+      limit,
+    })) as PlayerCreatureObject[];
 
-    return objects;
+    return {
+      totalResults: results.length,
+      results: objects,
+    };
   }
 }

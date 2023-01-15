@@ -6,6 +6,7 @@ enum TransactionType {
   'PickupTrade' = 'PickupTrade',
   'DropTrade' = 'DropTrade',
   'Tip' = 'Tip',
+  'OwnershipTransfer' = 'OwnershipTransfer',
 }
 
 registerEnumType(TransactionType, {

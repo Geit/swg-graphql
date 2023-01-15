@@ -70,7 +70,11 @@ export class TransactionService {
     if (filters.parties) {
       shouldQueries.push(
         ...filters.parties.map(partyId =>
-          esb.multiMatchQuery(['parties.name', 'parties.stationId', 'parties.oid'], partyId).type('phrase')
+          esb
+            .multiMatchQuery()
+            .type('phrase')
+            .fields(['parties.name', 'parties.stationId', 'parties.oid'])
+            .query(partyId)
         )
       );
       shouldMatch = filters.parties.length;
@@ -79,16 +83,8 @@ export class TransactionService {
     const searchText = filters.searchText?.trim();
     if (searchText) {
       shouldQueries.push(
-        esb
-          .multiMatchQuery(
-            ['parties.name', 'parties.itemsReceived.name', 'parties.itemsReceived.basicName'],
-            searchText
-          )
-          .type('phrase_prefix'),
-        esb.multiMatchQuery(
-          ['parties.stationId', 'parties.oid', 'parties.itemsReceived.oid', 'parties.itemsReceived.template'],
-          searchText
-        )
+        esb.multiMatchQuery().query(searchText).type('phrase_prefix'),
+        esb.multiMatchQuery().query(searchText)
       );
       shouldMatch += 1;
     }
@@ -96,8 +92,6 @@ export class TransactionService {
     filterQueries.push(esb.rangeQuery('@timestamp').gte(filters.fromDate).lt(filters.untilDate));
 
     elasticBody.query(esb.boolQuery().should(shouldQueries).minimumShouldMatch(shouldMatch).filter(filterQueries));
-
-    console.log(elasticBody.toJSON());
 
     const elasticResponse = await this.elastic.search<Transaction>({
       index: 'transaction-logging-alias',

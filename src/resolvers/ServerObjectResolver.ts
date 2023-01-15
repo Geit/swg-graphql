@@ -8,6 +8,7 @@ import { NameResolutionService } from '../services/NameResolutionService';
 import { PropertyListService } from '../services/PropertyListService';
 import { PropertyListIds } from '../types/PropertyList';
 import { CrcLookupService } from '../services/CrcLookupService';
+import { StringFileLoader } from '../services/StringFileLoader';
 
 @Resolver(() => IServerObject)
 @Service()
@@ -17,7 +18,8 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
     private readonly objectService: ServerObjectService,
     private readonly nameResolutionService: NameResolutionService,
     private readonly propertyListService: PropertyListService,
-    private readonly crcLookup: CrcLookupService
+    private readonly crcLookup: CrcLookupService,
+    private readonly stringFileService: StringFileLoader
   ) {
     // Do nothing
   }
@@ -35,9 +37,14 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   contents(
     @Root() object: IServerObject,
     @Arg('limit', () => Int, { defaultValue: 500 }) limit: number,
-    @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean
+    @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean,
+    @Arg('recursive', { defaultValue: false }) recursive: boolean
   ): Promise<UnenrichedServerObject[]> {
-    return this.objectService.getMany({ containedById: object.id, limit, excludeDeleted });
+    return this.objectService.getMany({
+      ...(recursive ? { containedByIdRecursive: object.id } : { containedById: object.id }),
+      limit,
+      excludeDeleted,
+    });
   }
 
   @FieldResolver(() => String, { nullable: true })
@@ -82,5 +89,14 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
     if (!object.loadWithId || parseInt(object.loadWithId) < 0) return null;
 
     return this.objectService.getOne(object.loadWithId);
+  }
+
+  @FieldResolver(() => String, { nullable: true })
+  async sceneName(@Root() object: IServerObject) {
+    if (!object.scene) return null;
+
+    const planetNames = await this.stringFileService.load('planet_n');
+
+    return planetNames[object.scene] ?? object.scene;
   }
 }

@@ -10,7 +10,7 @@ import knexDb from './db';
  */
 interface ResourceContainerObjectRecord {
   OBJECT_ID: number;
-  RESOURCE_TYPE: string | null;
+  RESOURCE_TYPE: number | null;
   QUANTITY: number | null;
   SOURCE: string | null;
 }

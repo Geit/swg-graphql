@@ -1,5 +1,5 @@
 import { FieldResolver, Float, Resolver, ResolverInterface, Root } from 'type-graphql';
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 
 import { CreatureObjectService } from '../services/CreatureObjectService';
 import { CreatureObject, Attributes, IServerObject, Location } from '../types';
@@ -7,9 +7,8 @@ import { CreatureObject, Attributes, IServerObject, Location } from '../types';
 @Resolver(() => CreatureObject)
 @Service()
 export class CreatureObjectResolver implements ResolverInterface<CreatureObject> {
-  constructor(private readonly creatureObjectService: CreatureObjectService) {
-    // Do nothing
-  }
+  @Inject()
+  creatureObjectService: CreatureObjectService;
 
   @FieldResolver()
   async scaleFactor(@Root() object: IServerObject) {
@@ -90,7 +89,7 @@ export class CreatureObjectResolver implements ResolverInterface<CreatureObject>
     return creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
   }
 
-  @FieldResolver(() => [Float])
+  @FieldResolver(() => [Float], { nullable: true })
   async location(@Root() object: IServerObject) {
     const creature = await this.creatureObjectService.load(object.id);
     return creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
