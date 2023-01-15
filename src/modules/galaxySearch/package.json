@@ -1,6 +1,7 @@
 {
   "name": "galaxy-search",
   "version": "1.0.0",
+  "license": "MIT",
   "scripts": {
     "codegen": "graphql-codegen --config codegen.yml"
   },
