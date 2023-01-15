@@ -36,6 +36,7 @@
     "caxa:linux": "caxa --input . --exclude dist --output dist/swg-graphql {{caxa}}/node_modules/.bin/node {{caxa}}/build/index.js"
   },
   "dependencies": {
+    "@bull-board/express": "^4.9.0",
     "@elastic/elasticsearch": "^8.2.1",
     "@graphql-tools/schema": "^8.5.0",
     "apollo-server-core": "^3.9.0",

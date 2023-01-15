@@ -3,6 +3,10 @@ import { ResourceTypeDocument } from '../types';
 import { isPresent } from '../../../utils/utility-types';
 import gqlSdk, { GetResourceListingQuery } from '../gqlSdk';
 
+export interface IndexResourcesJob {
+  jobName: 'indexResources';
+}
+
 type ResourceResultType = GetResourceListingQuery['resources']['results'][number];
 
 const RESOURCES_PER_PAGE = 1000;

@@ -120,3 +120,6 @@ export const ORA_LOGIN_DOMAIN = process.env.ORA_LOGIN_DOMAIN ?? 'swg';
 //#endregion
 
 export const ENABLE_STRUCTURE_SHORTCUT = Boolean(process.env.ENABLE_STRUCTURE_SHORTCUT) || false;
+
+export const REDIS_HOST = process.env.REDIS_HOST ?? 'localhost';
+export const REDIS_PORT = parseInt(process.env.REDIS_PORT ?? '') || 6379;

@@ -1,9 +1,8 @@
-import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH, SEARCH_INDEXER_INTERVAL } from '../../config';
+import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '../../config';
 
 import { elasticClient } from './utils/elasticClient';
-import { indexRecentLogins } from './jobs/indexRecentLogins';
-import { indexResources } from './jobs/indexResources';
 import { currentMappingProperties } from './migrations/currentMapping';
+import { startJobs } from './jobs';
 
 export async function initialSearchIndexSetup() {
   console.log(`Attempting to setup the ${ELASTIC_SEARCH_INDEX_NAME} index in Elastic`);
@@ -32,8 +31,8 @@ export async function initialSearchIndexSetup() {
   }
 }
 
-export async function startIndexer() {
-  if (!ENABLE_TEXT_SEARCH) return;
+export async function startModule() {
+  if (!ENABLE_TEXT_SEARCH) return { queues: [] };
 
   try {
     await initialSearchIndexSetup();
@@ -43,9 +42,7 @@ export async function startIndexer() {
     }
   }
 
-  setTimeout(() => indexResources(), 0);
-  setInterval(() => indexResources(), 1000 * 60 * 30);
+  const { queues } = await startJobs();
 
-  setTimeout(() => indexRecentLogins(), 0);
-  setInterval(() => indexRecentLogins(), SEARCH_INDEXER_INTERVAL);
+  return { queues };
 }

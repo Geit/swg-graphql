@@ -10,11 +10,12 @@ import { Container } from 'typedi';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { ApolloServerPluginInlineTrace, ContextFunction } from 'apollo-server-core';
+import { ExpressAdapter, createBullBoard, BullMQAdapter } from '@bull-board/express';
 
 import { PORT, DISABLE_AUTH } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
 import { apiKeyAuth } from './context/api-key-auth';
-import { startIndexer } from './modules/galaxySearch';
+import { startModule as startGalaxySearchModule } from './modules/galaxySearch';
 
 interface WebSocketConnectionParameters {
   authToken?: string;
@@ -34,6 +35,7 @@ const serverContext: ContextFunction = async params => {
 
 async function bootstrap() {
   const app = express();
+  const { queues } = await startGalaxySearchModule();
   const websocketAuthTokens = new Set();
 
   app.post('/websocket_auth', async (req, res) => {
@@ -57,6 +59,16 @@ async function bootstrap() {
       maxAge: 60 * 60,
     })
   );
+
+  const bullExpressAdapter = new ExpressAdapter();
+  bullExpressAdapter.setBasePath('/admin/queues');
+
+  createBullBoard({
+    queues: queues.map(q => new BullMQAdapter(q)),
+    serverAdapter: bullExpressAdapter,
+  });
+
+  app.use('/admin/queues', bullExpressAdapter.getRouter());
 
   const httpServer = createServer(app);
 
@@ -105,16 +117,6 @@ async function bootstrap() {
 
   // Start the server on the port specified in the config.
   httpServer.listen(PORT, () => console.log(`Server is now running on http://localhost:${PORT}/graphql`));
-
-  startIndexer()
-    .then(() => {
-      console.log('Search indexer started');
-
-      return undefined;
-    })
-    .catch(err => {
-      console.error('Search indexer failed to start with error ', err);
-    });
 }
 
 bootstrap();

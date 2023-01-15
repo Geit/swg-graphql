@@ -1,14 +1,12 @@
-query getRecentLogins($durationSeconds: Int) {
-  recentLogins(durationSeconds: $durationSeconds) {
-    id
-    resolvedName
-    account {
-      accountName
+query getRecentLogins($durationSeconds: Int, $limit: Int, $offset: Int) {
+  recentLogins(
+    durationSeconds: $durationSeconds
+    limit: $limit
+    offset: $offset
+  ) {
+    totalResults
+    results {
       id
-      characters {
-        id
-        name
-      }
     }
   }
 }

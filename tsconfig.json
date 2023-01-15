@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["es2020", "esnext.asynciterable"],
+    "target": "ES2021",
+    "lib": ["es2021", "esnext.asynciterable"],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,

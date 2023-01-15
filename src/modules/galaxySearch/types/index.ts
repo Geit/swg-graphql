@@ -27,6 +27,9 @@ export interface ObjectDocument extends BaseDocument {
   // Only for Character Objects
   accountName?: string;
   stationId?: string;
+
+  deletionReason?: number;
+  deletionDate?: string;
 }
 
 type ResourceAttribute =

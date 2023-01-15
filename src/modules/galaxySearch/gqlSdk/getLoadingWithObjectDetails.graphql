@@ -10,17 +10,34 @@ query getLoadingWithObjectDetails($loadWithIds: [ID!]!, $limit: Int, $excludeDel
     template
     location
     scene
+    loadContents
+    deletionDate
+    deletionReason
+
     ... on ITangibleObject {
       count
       owner {
         id
-
         ... on PlayerCreatureObject {
           account {
             id
             accountName
           }
         }
+      }
+    }
+
+    ... on PlayerCreatureObject {
+      account {
+         id
+         accountName
+         characters {
+           id
+           name
+         }
+      }
+      structures: ownedObjects(structuresOnly: true) {
+        id
       }
     }
   }
