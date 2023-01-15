@@ -1,4 +1,4 @@
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 
 import { GUILD_UPDATE_INTERVAL } from '../config';
 import { Guild, GuildMember } from '../types';
@@ -19,31 +19,29 @@ interface GuildObjectRecord {
   eager: true,
 })
 export class GuildService {
+  @Inject()
+  private readonly propertyListService: PropertyListService;
+
   private _guilds: Map<string, Partial<Guild>> = new Map();
   private _memberIdToGuildId: Map<GuildMember['id'], Guild['id']> = new Map();
   private _currentUpdateCycle: Promise<void> | null = null;
+  private lastUpdateTime = 0;
 
-  constructor(private readonly propertyListService: PropertyListService) {
-    // Do nothing
-
-    this.updateGuilds();
-    setInterval(() => this.updateGuilds(), GUILD_UPDATE_INTERVAL);
-  }
 
   async getAllGuilds() {
-    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+    await this.updateGuildsIfNeeded();
 
     return this._guilds;
   }
 
   async getGuild(id: string) {
-    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+    await this.updateGuildsIfNeeded();
 
     return this._guilds?.get(id) ?? null;
   }
 
   async getGuildForPlayer(playerId: string) {
-    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+    await this.updateGuildsIfNeeded();
 
     const cityId = this._memberIdToGuildId.get(playerId);
 
@@ -54,19 +52,17 @@ export class GuildService {
     return null;
   }
 
-  async dataPopulated() {
-    await this._currentUpdateCycle;
-  }
+  async updateGuildsIfNeeded() {
+    const timeDiffFromLastUpdate = Date.now() - this.lastUpdateTime;
 
-  async updateGuilds() {
-    if (!this._currentUpdateCycle) {
+    if (!this._currentUpdateCycle && timeDiffFromLastUpdate > GUILD_UPDATE_INTERVAL) {
       this._currentUpdateCycle = this._updateGuilds();
+      await this._currentUpdateCycle;
+      this._currentUpdateCycle = null;
+      this.lastUpdateTime = Date.now();
     }
 
     await this._currentUpdateCycle;
-
-    this._currentUpdateCycle = null;
-    console.log('Guilds Updated');
   }
 
   private async _updateGuilds() {

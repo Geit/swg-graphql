@@ -1,4 +1,4 @@
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 
 import { CITY_UPDATE_INTERVAL } from '../config';
 import { City, Citizen, CityStructure } from '../types';
@@ -19,32 +19,30 @@ interface CityObjectRecord {
   eager: true,
 })
 export class CityService {
+  @Inject()
+  private readonly propertyListService: PropertyListService;
+
   private _cities: Map<string, Partial<City>> = new Map();
   private _citizenIdToCityId: Map<Citizen['id'], City['id']> = new Map();
   private _structureIdToCityId: Map<CityStructure['id'], City['id']> = new Map();
   private _currentUpdateCycle: Promise<void> | null = null;
+  private lastUpdateTime = 0;
 
-  constructor(private readonly propertyListService: PropertyListService) {
-    // Do nothing
-
-    this.updateCities();
-    setInterval(() => this.updateCities(), CITY_UPDATE_INTERVAL);
-  }
 
   async getAllCities() {
-    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+    await this.updateCitiesIfNeeded();
 
     return this._cities;
   }
 
   async getCity(id: string) {
-    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+    await this.updateCitiesIfNeeded();
 
     return this._cities.get(id) ?? null;
   }
 
   async getCityForPlayer(playerId: string) {
-    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+    await this.updateCitiesIfNeeded();
 
     const cityId = this._citizenIdToCityId.get(playerId);
 
@@ -56,7 +54,7 @@ export class CityService {
   }
 
   async getCityForStructure(structureId: string) {
-    if (this._currentUpdateCycle) await this._currentUpdateCycle;
+    await this.updateCitiesIfNeeded();
 
     const cityId = this._structureIdToCityId.get(structureId);
 
@@ -67,19 +65,17 @@ export class CityService {
     return null;
   }
 
-  async dataPopulated() {
-    await this._currentUpdateCycle;
-  }
+  async updateCitiesIfNeeded() {
+    const timeDiffFromLastUpdate = Date.now() - this.lastUpdateTime;
 
-  async updateCities() {
-    if (!this._currentUpdateCycle) {
+    if (!this._currentUpdateCycle && timeDiffFromLastUpdate > CITY_UPDATE_INTERVAL) {
       this._currentUpdateCycle = this._updateCities();
+      await this._currentUpdateCycle;
+      this._currentUpdateCycle = null;
+      this.lastUpdateTime = Date.now();
     }
 
     await this._currentUpdateCycle;
-
-    this._currentUpdateCycle = null;
-    console.log('Cities Updated');
   }
 
   private async _updateCities() {
