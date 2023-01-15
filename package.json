@@ -6,6 +6,7 @@
     "src/modules/*"
   ],
   "devDependencies": {
+    "@graphql-codegen/introspection": "^2.2.3",
     "@types/async": "^3.2.16",
     "@types/lodash": "^4.14.191",
     "@types/node": "^18.0.1",
@@ -33,6 +34,8 @@
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
     "build": "rimraf build && yarn run tsc",
     "build-dist": "yarn run build && yarn run caxa:linux",
+    "codegen:main": "graphql-codegen --config codegen.yml || echo \"Could not regenerate root schema, server must be running, skipping for now\" && exit 0",
+    "codegen": "yarn codegen:main && yarn workspaces run codegen",
     "caxa:linux": "caxa --input . --exclude dist --output dist/swg-graphql {{caxa}}/node_modules/.bin/node {{caxa}}/build/index.js"
   },
   "dependencies": {
