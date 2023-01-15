@@ -1,9 +1,8 @@
 import DataLoader from 'dataloader';
+import { elasticClient } from '@core/utils/elasticClient';
 
 import { ELASTIC_SEARCH_INDEX_NAME } from '../../../config';
 import { SearchDocument } from '../types';
-
-import { elasticClient } from './elasticClient';
 
 const elasticDocumentSaver = new DataLoader(_saveDocuments);
 

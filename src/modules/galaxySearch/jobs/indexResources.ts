@@ -1,6 +1,7 @@
+import { isPresent } from '@core/utils/utility-types';
+
 import { saveDocument } from '../utils/saveDocuments';
 import { ResourceTypeDocument } from '../types';
-import { isPresent } from '../../../utils/utility-types';
 import gqlSdk, { GetResourceListingQuery } from '../gqlSdk';
 
 export interface IndexResourcesJob {

@@ -100,7 +100,6 @@
     "import/no-self-import": "error", // Prevents a module importing itself
     "import/no-useless-path-segments": "error", // Prevents redundant path sections in imports
     "import/no-unused-modules": "error", // Requires that all imports be used within the file somewhere.
-    "import/no-extraneous-dependencies": "error", // Requires that all used imports appear within the package.json
     "import/first": "error", // Requires that all imports appear at the top of the file
     "import/no-duplicates": "error", // Prevents the same module being imported twice
     "import/newline-after-import": "error", // Enforces seperation between imports and module definition
@@ -121,5 +120,10 @@
         "@typescript-eslint/no-shadow": ["error"]
       }
     }
-  ]
+  ],
+  "settings": {
+    "import/resolver": {
+      "typescript": {} // this loads <rootdir>/tsconfig.json to eslint
+    }
+  }
 }

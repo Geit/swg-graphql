@@ -4,8 +4,7 @@ import z from 'zod';
 
 import { Transaction, TransactionServiceResponse } from '../types/Transaction';
 import { isPresent } from '../utils/utility-types';
-
-import { elasticClient } from './elasticClient';
+import { elasticClient } from '../utils/elasticClient';
 
 const filterSchema = z.object({
   searchText: z.string().nullable().optional(),

@@ -1,10 +1,12 @@
 import { createUnionType, Field, InputType, Int, ObjectType } from 'type-graphql';
-
-import { PlayerCreatureObject } from './PlayerCreatureObject';
-import { UnenrichedServerObject } from './ServerObject';
-import { ResourceType } from './ResourceType';
-
-import { Account, TAG_TO_TYPE_MAP, UnenrichedAccount } from '.';
+import {
+  PlayerCreatureObject,
+  UnenrichedServerObject,
+  Account,
+  TAG_TO_TYPE_MAP,
+  UnenrichedAccount,
+  ResourceType,
+} from '@core/types';
 
 @InputType()
 export class IntRangeInput {

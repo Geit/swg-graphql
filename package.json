@@ -18,6 +18,7 @@
     "caxa": "^3.0.1",
     "eslint": "8.19.0",
     "eslint-config-prettier": "8.5.0",
+    "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-eslint-comments": "3.2.0",
     "eslint-plugin-import": "2.26.0",
     "eslint-plugin-jest": "26.5.3",
@@ -27,11 +28,12 @@
     "prettier": "2.7.1",
     "ts-node": "10.8.2",
     "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.1.2",
     "typescript": "4.7.4"
   },
   "scripts": {
     "start-built": "yarn node build/index.js",
-    "start-dev": "yarn ts-node-dev src/index.ts",
+    "start-dev": "yarn ts-node-dev  -r tsconfig-paths/register src/index.ts",
     "start-dev-sh": "./start.sh",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
     "build": "rimraf build && yarn run tsc",
@@ -42,7 +44,7 @@
   },
   "dependencies": {
     "@bull-board/express": "^4.9.0",
-    "@elastic/elasticsearch": "^8.2.1",
+    "@elastic/elasticsearch": "^8.5.0",
     "@graphql-tools/schema": "^8.5.0",
     "apollo-server-core": "^3.9.0",
     "apollo-server-express": "^3.9.0",

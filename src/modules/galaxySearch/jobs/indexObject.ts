@@ -1,9 +1,9 @@
 import { Job } from 'bullmq';
+import { isPresent } from '@core/utils/utility-types';
 
 import { saveDocuments } from '../utils/saveDocuments';
 import { AccountDocument, ObjectDocument, SearchDocument } from '../types';
 import gqlSdk from '../gqlSdk';
-import { isPresent } from '../../../utils/utility-types';
 import { stripUGCModifiers } from '../utils/stripUgcModifiers';
 
 import { createGalaxySearchQueue, GalaxySearchJobs } from '.';

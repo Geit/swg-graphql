@@ -13,6 +13,10 @@
     "strictPropertyInitialization": false,
     "outDir": "build",
     "esModuleInterop": true,
+    "baseUrl": "src",
+    "paths": {
+      "@core/*": ["*"]
+    }
   },
   "include": [
     "src", "scripts"
@@ -22,6 +26,7 @@
     // same as our --compilerOptions flag and our TS_NODE_COMPILER_OPTIONS environment variable
     "compilerOptions": {
       "module": "CommonJs"
-    }
+    },
+    "require": ["tsconfig-paths/register"]
   },
 }

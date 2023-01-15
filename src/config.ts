@@ -66,9 +66,6 @@ export const ELASTIC_REQUIRED_PRIVILEGE = process.env.ELASTIC_REQUIRED_PRIVILEGE
 export const ELASTIC_KIBANA_INDEX = process.env.elasticKibanaIndex ?? '.kibana';
 
 export const STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL = process.env.STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL;
-export const SEARCH_INDEXER_RECENT_LOGGED_IN_TIME =
-  parseInt(process.env.SEARCH_INDEXER_RECENT_LOGGED_IN_TIME ?? '') || 60 * 11; // 11 minutes
-export const SEARCH_INDEXER_INTERVAL = parseInt(process.env.SEARCH_INDEXER_INTERVAL ?? '') || 1000 * 60 * 10; // 10 minutes
 
 /**
  * Frequency (in ms) at which to update swg-graphql's internal guild representation.

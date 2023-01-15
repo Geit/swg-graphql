@@ -1,12 +1,12 @@
 import { Arg, Int, Query, Resolver } from 'type-graphql';
 import { Inject, Service } from 'typedi';
+import { ServerObjectService } from '@core/services/ServerObjectService';
+import { ResourceTypeService } from '@core/services/ResourceTypeService';
+import { Account } from '@core/types';
+import { isPresent } from '@core/utils/utility-types';
 
+import { SearchResultDetails, DateRangeInput, IntRangeInput } from '../types';
 import { SearchService } from '../services/SearchService';
-import { ServerObjectService } from '../../../services/ServerObjectService';
-import { ResourceTypeService } from '../../../services/ResourceTypeService';
-import { SearchResultDetails, Account } from '../../../types';
-import { DateRangeInput, IntRangeInput } from '../../../types/SearchResult';
-import { isPresent } from '../../../utils/utility-types';
 
 @Service()
 @Resolver()

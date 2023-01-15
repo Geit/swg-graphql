@@ -1,6 +1,7 @@
 import { Queue, Worker } from 'bullmq';
+import { REDIS_HOST, REDIS_PORT } from '@core/config';
 
-import { REDIS_HOST, REDIS_PORT, SEARCH_INDEXER_INTERVAL, SEARCH_INDEXER_RECENT_LOGGED_IN_TIME } from '../../../config';
+import { SEARCH_INDEXER_RECENT_LOGGED_IN_TIME } from '../config';
 
 import { checkRecentLogins, CheckRecentLoginsJob } from './checkRecentLogins';
 import { indexObject, IndexObjectJob } from './indexObject';

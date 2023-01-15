@@ -1,3 +1,5 @@
+import { SearchResultUnion, SearchResultDetails } from '../modules/galaxySearch/types/SearchResult';
+
 import { ITangibleObject, TangibleObject } from './TangibleObject';
 import { CreatureObject, Attributes } from './CreatureObject';
 import { WeaponObject } from './WeaponObject';
@@ -13,7 +15,6 @@ import { IServerObject, ServerObject, Location, UnenrichedServerObject } from '.
 import { Account, UnenrichedAccount } from './Account';
 import { PlayerCreatureObject } from './PlayerCreatureObject';
 import { PlanetWatcherArgs } from './PlanetWatcherArgs';
-import { SearchResultUnion, SearchResultDetails } from './SearchResult';
 import { PlanetWatcherFrameEnd } from './PlanetWatcherFrameEnd';
 import { PlanetWatcherGameServerStatus } from './PlanetWatcherGameServerStatus';
 import { PlanetWatcherNodeStatusUpdate } from './PlanetWatcherNodeStatusUpdate';
@@ -23,6 +24,7 @@ import { GuildObject } from './GuildObject';
 import { Guild, GuildEnemy, GuildMember } from './Guild';
 import { CityObject } from './CityObject';
 import { City, CityStructure, Citizen } from './City';
+import { ResourceType } from './ResourceType';
 
 // The TYPE_ID field is a magic number defined by the respective Template Definition Format files
 // in the Galaxies source code. They are used here to refine the type returned by the ServerObject service
@@ -85,4 +87,5 @@ export {
   City,
   CityStructure,
   Citizen,
+  ResourceType,
 };

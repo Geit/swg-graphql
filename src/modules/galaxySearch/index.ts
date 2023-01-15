@@ -1,6 +1,6 @@
-import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '../../config';
+import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '@core/config';
+import { elasticClient } from '@core/utils/elasticClient';
 
-import { elasticClient } from './utils/elasticClient';
 import { currentMappingProperties } from './migrations/currentMapping';
 import { startJobs } from './jobs';
 

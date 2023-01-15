@@ -66,3 +66,5 @@ export interface AccountDocument extends BaseDocument {
 }
 
 export type SearchDocument = AccountDocument | ObjectDocument | ResourceTypeDocument;
+
+export * from './SearchResult';
