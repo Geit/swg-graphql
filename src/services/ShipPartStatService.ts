@@ -1,4 +1,4 @@
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 
 import { ShipPartSummary } from '../resolvers/TangibleObjectResolver';
 import getStringCrc from '../utils/crc';
@@ -411,18 +411,36 @@ const getZPercentile = (z: number) => {
 
 @Service({ global: true, eager: true })
 export class ShipPartStatService {
+
+  @Inject()
+  private readonly dataTable: DataTableService;
+
+  @Inject()
+  private readonly objvarService: ObjVarService;
+
+  @Inject()
+  private readonly stringService: StringFileLoader
+
   shipPartMap = new Map<number, ShipPart>();
   bestInClassForPartMap = new Map<ShipPartType, StatBestInClassMap>();
 
-  constructor(
-    private readonly dataTable: DataTableService,
-    private readonly objvarService: ObjVarService,
-    private readonly stringService: StringFileLoader
-  ) {
-    this.loadShipParts();
-  }
+  loadingHandle: false | Promise<void> = false;
 
   private async loadShipParts() {
+    if(this.loadingHandle)
+      return this.loadingHandle;
+    
+    try {
+      this.loadingHandle = this.loadShipPartsFromDatatables();
+    } 
+    catch (err)
+    {
+      this.loadingHandle = false;
+      throw err;
+    }
+  }
+
+  private async loadShipPartsFromDatatables() {
     for (const [className, classData] of Object.entries(COMPONENT_CLASS_DATA)) {
       const components = (await this.dataTable.load(`ship/components/${className}.iff`)) as Record<
         string,
@@ -475,11 +493,15 @@ export class ShipPartStatService {
     }
   }
 
-  isShipPart(crc: number): boolean {
+  async isShipPart(crc: number): Promise<boolean> {
+    await this.loadShipParts();
+
     return this.shipPartMap.has(crc);
   }
 
   async lookupShipPartStats(objectId: string, crc: number): Promise<ShipPartSummary | null> {
+    await this.loadShipParts();
+
     const part = this.shipPartMap.get(crc);
 
     if (!part) return null;
