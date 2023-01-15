@@ -2,7 +2,7 @@
   "name": "swg-graphql",
   "version": "0.1.0",
   "private": true,
-  "license": "MIT",
+  "license": "ISC",
   "workspaces": [
     "src/modules/*"
   ],
