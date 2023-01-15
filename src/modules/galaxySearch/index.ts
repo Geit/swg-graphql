@@ -32,7 +32,7 @@ export async function initialSearchIndexSetup() {
 }
 
 export async function startModule() {
-  if (!ENABLE_TEXT_SEARCH) return { queues: [] };
+  if (!ENABLE_TEXT_SEARCH) return { queues: [], resolvers: [] };
 
   try {
     await initialSearchIndexSetup();
@@ -44,5 +44,7 @@ export async function startModule() {
 
   const { queues } = await startJobs();
 
-  return { queues };
+  const resolvers = [`${__dirname}/resolvers/*.{js,ts}`];
+
+  return { queues, resolvers };
 }

@@ -2,8 +2,8 @@ import { Service } from 'typedi';
 import esb, { Query } from 'elastic-builder';
 import { mergeWith } from 'lodash';
 
-import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '../config';
-import { elasticClient } from '../utils/elasticClient';
+import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '../../../config';
+import { elasticClient } from '../../../utils/elasticClient';
 
 function concatIfArray(objValue: any, srcValue: any) {
   if (Array.isArray(objValue)) {

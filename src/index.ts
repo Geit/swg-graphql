@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto';
 import express from 'express';
 import { ApolloServer, AuthenticationError } from 'apollo-server-express';
 import { execute, subscribe } from 'graphql';
-import { buildSchema } from 'type-graphql';
+import { buildSchema, NonEmptyArray } from 'type-graphql';
 import { Container } from 'typedi';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
@@ -35,7 +35,7 @@ const serverContext: ContextFunction = async params => {
 
 async function bootstrap() {
   const app = express();
-  const { queues } = await startGalaxySearchModule();
+  const { queues, resolvers: galaxySearchResolvers } = await startGalaxySearchModule();
   const websocketAuthTokens = new Set();
 
   app.post('/websocket_auth', async (req, res) => {
@@ -73,8 +73,10 @@ async function bootstrap() {
   const httpServer = createServer(app);
 
   // Build the schema by pulling in all the resolvers from the resolvers folder
+  const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`, ...galaxySearchResolvers];
+
   const schema = await buildSchema({
-    resolvers: [`${__dirname}/resolvers/*.{js,ts}`],
+    resolvers,
     container: Container,
   });
 

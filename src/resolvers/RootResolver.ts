@@ -1,24 +1,13 @@
 import { Arg, Int, Query, Resolver, ID, Field, ObjectType } from 'type-graphql';
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 
 import { GuildService } from '../services/GuildService';
 import { CityService } from '../services/CityService';
-import { SearchService } from '../services/SearchService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
 import { ResourceTypeService } from '../services/ResourceTypeService';
-import {
-  IServerObject,
-  UnenrichedServerObject,
-  SearchResultDetails,
-  Account,
-  Guild,
-  City,
-  PlayerCreatureObject,
-} from '../types';
+import { IServerObject, UnenrichedServerObject, Account, Guild, City, PlayerCreatureObject } from '../types';
 import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
-import { DateRangeInput, IntRangeInput } from '../types/SearchResult';
-import { isPresent } from '../utils/utility-types';
 import TAGIFY from '../utils/tagify';
 
 @ObjectType()
@@ -33,17 +22,16 @@ class RecentLoginsResult {
 @Service()
 @Resolver()
 export class RootResolver {
-  constructor(
-    // constructor injection of a service
-    private readonly objectService: ServerObjectService,
-    private readonly searchService: SearchService,
-    private readonly guildService: GuildService,
-    private readonly cityService: CityService,
-    private readonly resourceTypeService: ResourceTypeService,
-    private readonly playerCreatureService: PlayerCreatureObjectService
-  ) {
-    // Do nothing
-  }
+  @Inject()
+  private readonly objectService: ServerObjectService;
+  @Inject()
+  private readonly guildService: GuildService;
+  @Inject()
+  private readonly cityService: CityService;
+  @Inject()
+  private readonly resourceTypeService: ResourceTypeService;
+  @Inject()
+  private readonly playerCreatureService: PlayerCreatureObjectService;
 
   @Query(() => IServerObject, { nullable: true })
   object(@Arg('objectId', { nullable: false }) objectId: string): Promise<Partial<IServerObject> | null> {
@@ -66,71 +54,6 @@ export class RootResolver {
     return Object.assign(new Account(), {
       id: parseInt(accountId),
     });
-  }
-
-  @Query(() => SearchResultDetails, { nullable: false })
-  async search(
-    @Arg('searchText', { nullable: false }) searchText: string,
-    @Arg('searchTextIsEsQuery', { defaultValue: false }) searchTextIsEsQuery: boolean,
-    @Arg('from', () => Int, { defaultValue: 0 }) from: number,
-    @Arg('size', () => Int, { defaultValue: 25 }) size: number,
-    @Arg('types', () => [String], { nullable: true }) types?: string[],
-    @Arg('resourceAttributes', () => [IntRangeInput], { nullable: true }) resourceAttributes?: IntRangeInput[],
-    @Arg('resourceDepletionDate', () => DateRangeInput, { nullable: true }) resourceDepletionDate?: DateRangeInput
-  ): Promise<SearchResultDetails> {
-    const rawResults = await this.searchService.search({
-      searchText,
-      searchTextIsEsQuery,
-      from,
-      size,
-      types,
-      resourceAttributes,
-      resourceDepletionDate,
-    });
-
-    if (!rawResults)
-      return {
-        totalResultCount: 0,
-        results: null,
-      };
-
-    const results = await Promise.all(
-      rawResults.hits.hits.flatMap(result => {
-        if (!result._source || !result._source.id) return [];
-
-        if (result._source.type === 'Object') {
-          return this.objectService.getOne(result._source.id);
-        }
-
-        if (result._source.type === 'ResourceType') {
-          return this.resourceTypeService.getOne(result._source.id);
-        }
-
-        if (result._source.type === 'Account') {
-          return Object.assign(new Account(), {
-            id: parseInt(result._source.id),
-          });
-        }
-
-        return null;
-      })
-    );
-
-    if (searchText.trim().match(/^\d+$/) && results.length === 0) {
-      const exactOidMatch = await this.objectService.getOne(searchText.trim());
-
-      if (exactOidMatch) results.push(exactOidMatch);
-    }
-
-    const presentResults = results.filter(isPresent);
-
-    const total = rawResults?.hits?.total;
-    const totalResultCount = (typeof total === 'object' ? total.value : total) ?? 0;
-
-    return {
-      totalResultCount,
-      results: presentResults,
-    };
   }
 
   @Query(() => [Guild])

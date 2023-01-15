@@ -28,7 +28,6 @@ export class CityService {
   private _currentUpdateCycle: Promise<void> | null = null;
   private lastUpdateTime = 0;
 
-
   async getAllCities() {
     await this.updateCitiesIfNeeded();
 

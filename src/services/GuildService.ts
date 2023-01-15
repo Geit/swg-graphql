@@ -27,7 +27,6 @@ export class GuildService {
   private _currentUpdateCycle: Promise<void> | null = null;
   private lastUpdateTime = 0;
 
-
   async getAllGuilds() {
     await this.updateGuildsIfNeeded();
 
