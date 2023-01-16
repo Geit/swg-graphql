@@ -4,7 +4,8 @@ import { Service } from 'typedi';
 import { TransactionRollupService } from '../services/TransactionRollupService';
 import { TransactionService } from '../services/TransactionService';
 import { TransactionRollup } from '../types/TransactionRollup';
-import { isPresent } from '../utils/utility-types';
+
+import { isPresent } from '@core/utils/utility-types';
 
 @Service()
 @Resolver()

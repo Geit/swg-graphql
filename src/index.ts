@@ -16,6 +16,7 @@ import { PORT, DISABLE_AUTH } from './config';
 import { kibanaAuthorisationContext, checkKibanaToken } from './context/kibana-auth';
 import { apiKeyAuth } from './context/api-key-auth';
 import { startModule as startGalaxySearchModule } from './modules/galaxySearch';
+import { startModule as startTransactionsModule } from './modules/transactions';
 
 interface WebSocketConnectionParameters {
   authToken?: string;
@@ -36,6 +37,7 @@ const serverContext: ContextFunction = async params => {
 async function bootstrap() {
   const app = express();
   const { queues, resolvers: galaxySearchResolvers } = await startGalaxySearchModule();
+  const { resolvers: transactionResolvers } = startTransactionsModule();
   const websocketAuthTokens = new Set();
 
   app.post('/websocket_auth', async (req, res) => {
@@ -73,7 +75,11 @@ async function bootstrap() {
   const httpServer = createServer(app);
 
   // Build the schema by pulling in all the resolvers from the resolvers folder
-  const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`, ...galaxySearchResolvers];
+  const resolvers: NonEmptyArray<string> = [
+    `${__dirname}/resolvers/*.{js,ts}`,
+    ...galaxySearchResolvers,
+    ...transactionResolvers,
+  ];
 
   const schema = await buildSchema({
     resolvers,

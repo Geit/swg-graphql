@@ -1,21 +1,18 @@
 import { Arg, Query, Resolver, FieldResolver, Root } from 'type-graphql';
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 
-import { Account } from '../types';
 import { TransactionRollupService } from '../services/TransactionRollupService';
 import { TransactionService } from '../services/TransactionService';
-import { ServerObjectService } from '../services/ServerObjectService';
 import { TransactionRollup, TransactionRollupParty, RollupPartyEntity } from '../types/TransactionRollup';
+
+import { ServerObjectService } from '@core/services/ServerObjectService';
+import { Account } from '@core/types';
 
 @Service()
 @Resolver()
 export class RootResolver {
-  constructor(
-    // constructor injection of a service
-    private readonly rollupService: TransactionRollupService
-  ) {
-    // Do nothing
-  }
+  @Inject()
+  private readonly rollupService: TransactionRollupService;
 
   @Query(() => TransactionRollup, { nullable: true })
   transactionRollup(

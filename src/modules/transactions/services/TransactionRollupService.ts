@@ -1,4 +1,4 @@
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 
 import { TransactionParty } from '../types/Transaction';
 import { TransactionRollup, TransactionRollupParty, TransactionRollupItem } from '../types/TransactionRollup';
@@ -21,12 +21,8 @@ const getMatchingIdentifierType = (party: TransactionParty, id: string): string 
 
 @Service()
 export class TransactionRollupService {
-  constructor(
-    // constructor injection of a service
-    private readonly transactionService: TransactionService
-  ) {
-    // Do nothing
-  }
+  @Inject()
+  private readonly transactionService: TransactionService;
 
   async getRollupBetweenParties(
     partyAId: string,

@@ -3,8 +3,9 @@ import esb, { Query } from 'elastic-builder';
 import z from 'zod';
 
 import { Transaction, TransactionServiceResponse } from '../types/Transaction';
-import { isPresent } from '../utils/utility-types';
-import { elasticClient } from '../utils/elasticClient';
+
+import { isPresent } from '@core/utils/utility-types';
+import { elasticClient } from '@core/utils/elasticClient';
 
 const filterSchema = z.object({
   searchText: z.string().nullable().optional(),
