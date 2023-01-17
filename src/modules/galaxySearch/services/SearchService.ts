@@ -4,7 +4,9 @@ import { mergeWith } from 'lodash';
 import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '@core/config';
 import { elasticClient } from '@core/utils/elasticClient';
 
-function concatIfArray(objValue: any, srcValue: any) {
+import { SearchDocument } from '../types';
+
+function concatIfArray<T>(objValue: T, srcValue: T) {
   if (Array.isArray(objValue)) {
     return objValue.concat(srcValue);
   }
@@ -101,7 +103,7 @@ export class SearchService {
       filterQueries.push(query);
     }
 
-    let elasticQuery: any = scoreFunctionQuery
+    let elasticQuery = scoreFunctionQuery
       .query(esb.boolQuery().must(mustQueries).filter(filterQueries).should(shouldQueries))
       .toJSON();
 
@@ -137,7 +139,7 @@ export class SearchService {
       }
     }
 
-    const elasticResponse = await this.elastic.search<any>({
+    const elasticResponse = await this.elastic.search<SearchDocument>({
       index: ELASTIC_SEARCH_INDEX_NAME,
       size: filters.size,
       from: filters.from,

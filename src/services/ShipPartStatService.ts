@@ -411,7 +411,6 @@ const getZPercentile = (z: number) => {
 
 @Service({ global: true, eager: true })
 export class ShipPartStatService {
-
   @Inject()
   private readonly dataTable: DataTableService;
 
@@ -419,22 +418,19 @@ export class ShipPartStatService {
   private readonly objvarService: ObjVarService;
 
   @Inject()
-  private readonly stringService: StringFileLoader
+  private readonly stringService: StringFileLoader;
 
   shipPartMap = new Map<number, ShipPart>();
   bestInClassForPartMap = new Map<ShipPartType, StatBestInClassMap>();
 
   loadingHandle: false | Promise<void> = false;
 
-  private async loadShipParts() {
-    if(this.loadingHandle)
-      return this.loadingHandle;
-    
+  private loadShipParts() {
+    if (this.loadingHandle) return this.loadingHandle;
+
     try {
       this.loadingHandle = this.loadShipPartsFromDatatables();
-    } 
-    catch (err)
-    {
+    } catch (err) {
       this.loadingHandle = false;
       throw err;
     }
