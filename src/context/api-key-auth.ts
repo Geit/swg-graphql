@@ -1,10 +1,11 @@
 import path from 'path';
 import { readFileSync } from 'fs';
 
-import { AuthenticationError } from 'apollo-server-express';
-import type { ContextFunction } from 'apollo-server-core';
+import { GraphQLError } from 'graphql';
 
 import { DISABLE_AUTH } from '../config';
+
+import { SWGGraphqlContextFunction } from './types';
 
 interface ApiKeysDocument {
   enabled: boolean;
@@ -15,19 +16,30 @@ const apiKeys: Record<string, ApiKeysDocument | undefined> = JSON.parse(
   readFileSync(serverConfigFile, { encoding: 'ascii' })
 );
 
-export const apiKeyAuth: ContextFunction = params => {
+// eslint-disable-next-line require-await
+export const apiKeyAuth: SWGGraphqlContextFunction = async params => {
   if (DISABLE_AUTH) {
     return {};
   }
 
   if (!params.req.headers.authorization) {
-    throw new AuthenticationError('Authorization required.');
+    throw new GraphQLError('Authorization required.', {
+      extensions: {
+        code: 'FORBIDDEN',
+        myExtension: 'swg-graphql',
+      },
+    });
   }
 
   const apiKey = apiKeys[params.req.headers.authorization.replace('ApiKey-', '')];
 
   if (!apiKey || !apiKey.enabled) {
-    throw new AuthenticationError('Invalid API Key');
+    throw new GraphQLError('Invalid API Key', {
+      extensions: {
+        code: 'FORBIDDEN',
+        myExtension: 'swg-graphql',
+      },
+    });
   }
 
   return {};

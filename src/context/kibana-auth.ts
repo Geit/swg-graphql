@@ -1,8 +1,9 @@
-import { AuthenticationError } from 'apollo-server-express';
-import type { ContextFunction } from 'apollo-server-core';
 import got from 'got';
+import { GraphQLError } from 'graphql';
 
 import { DISABLE_AUTH, ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC_SEARCH_URL } from '../config';
+
+import { SWGGraphqlContextFunction } from './types';
 
 /**
  * Partial response body for the Elastic "Has Privlages" API.
@@ -30,11 +31,21 @@ export const checkKibanaToken = async (token: string) => {
     },
     responseType: 'json',
   }).catch(() => {
-    throw new AuthenticationError('Error while confirming authorization');
+    throw new GraphQLError('Error while confirming authorization', {
+      extensions: {
+        code: 'FORBIDDEN',
+        myExtension: 'swg-graphql',
+      },
+    });
   });
 
   if (!result.body.has_all_requested) {
-    throw new AuthenticationError('Incorrect authorization');
+    throw new GraphQLError('Incorrect authorization', {
+      extensions: {
+        code: 'FORBIDDEN',
+        myExtension: 'swg-graphql',
+      },
+    });
   }
 };
 
@@ -49,13 +60,18 @@ export const checkKibanaToken = async (token: string) => {
  * @returns undefined if successful.
  * @throws AuthenticationError
  */
-export const kibanaAuthorisationContext: ContextFunction = async params => {
+export const kibanaAuthorisationContext: SWGGraphqlContextFunction = async params => {
   if (DISABLE_AUTH) {
     return {};
   }
 
   if (!params.req.headers.authorization) {
-    throw new AuthenticationError('Authorization required.');
+    throw new GraphQLError('Authorization required.', {
+      extensions: {
+        code: 'FORBIDDEN',
+        myExtension: 'swg-graphql',
+      },
+    });
   }
 
   await checkKibanaToken(params.req.headers.authorization);
