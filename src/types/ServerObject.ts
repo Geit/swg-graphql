@@ -116,7 +116,7 @@ export class IServerObject {
   scriptList: string[] | null;
 
   @Field(() => [ObjVarUnion], { description: 'Object variables on the object', nullable: true })
-  objVars: typeof ObjVarUnion[];
+  objVars: (typeof ObjVarUnion)[];
 
   @Field(() => [IServerObject], { description: 'The contents of this object', nullable: true })
   contents: IServerObject[];

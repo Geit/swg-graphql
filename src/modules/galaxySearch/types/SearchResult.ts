@@ -44,5 +44,5 @@ export class SearchResultDetails {
   totalResultCount: number;
 
   @Field(() => [SearchResultUnion], { description: 'Results in this page', nullable: true })
-  results: typeof SearchResultUnion[] | null;
+  results: (typeof SearchResultUnion)[] | null;
 }

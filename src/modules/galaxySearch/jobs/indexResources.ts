@@ -33,9 +33,9 @@ async function indexPageOfResources(limit = RESOURCES_PER_PAGE, offset = 0) {
 
   const resources = resourceListingResult.resources.results;
 
+  console.timeEnd('Finding new resources');
   if (resources.length === 0) return { hasMorePages: false };
 
-  console.timeEnd('Finding new resources');
   console.time('Producing resource docs');
   console.log(`Producing documents for ${resources.length} resources`);
 
