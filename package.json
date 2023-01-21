@@ -29,7 +29,6 @@
     "prettier": "2.8.3",
     "ts-node": "10.9.1",
     "ts-node-dev": "^2.0.0",
-    "tsconfig-paths": "^4.1.2",
     "typescript": "4.9.4"
   },
   "scripts": {
@@ -41,7 +40,7 @@
     "build-dist": "yarn run build && yarn run caxa:linux",
     "codegen:main": "graphql-codegen --config codegen.yml || echo \"Could not regenerate root schema, server must be running, skipping for now\" && exit 0",
     "codegen": "yarn codegen:main && yarn workspaces run codegen",
-    "caxa:linux": "caxa --input . --exclude dist --output dist/swg-graphql {{caxa}}/node_modules/.bin/node {{caxa}}/build/index.js"
+    "caxa:linux": "node caxa-build.js"
   },
   "dependencies": {
     "@apollo/server": "^4.3.1",
@@ -66,6 +65,7 @@
     "reflect-metadata": "^0.1.13",
     "smart-buffer": "^4.2.0",
     "subscriptions-transport-ws": "^0.11.0",
+    "tsconfig-paths": "^4.1.2",
     "type-graphql": "^2.0.0-beta.1",
     "typedi": "^0.10.0",
     "zod": "^3.20.2"

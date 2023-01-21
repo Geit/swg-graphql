@@ -114,7 +114,7 @@ export class AccountResolver implements ResolverInterface<Account> {
     return ownedObjects;
   }
 
-  async getVetRewardName(record: { type: 'item'; itemId: string } | { type: 'event'; eventId: string }) {
+  private async getVetRewardName(record: { type: 'item'; itemId: string } | { type: 'event'; eventId: string }) {
     if (record.type === 'event') {
       const events = (await this.dataTable.load('veteran_rewards/events.iff')) as EventDataTableRow[];
 
