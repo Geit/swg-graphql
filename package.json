@@ -51,7 +51,7 @@
     "binary-parser": "^2.1.0",
     "body-parser": "^1.20.1",
     "bullmq": "^3.5.9",
-    "class-validator": "^0.14.0",
+    "class-validator": "^0.13.2",
     "cors": "^2.8.5",
     "dataloader": "^2.1.0",
     "elastic-builder": "^2.17.3",

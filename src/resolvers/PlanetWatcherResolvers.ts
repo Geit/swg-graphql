@@ -51,7 +51,7 @@ export class PlanetWatcherResolvers {
   @Subscription(() => [PlanetWatcherObjectUpdate], {
     subscribe: createPlanetWatcherSubscriber('OBJECT_UPDATE'),
     description: `
-Recieve updates in real-time about objects on a planet.\n
+Receive updates in real-time about objects on a planet.\n
 ${sharedPlanetWatcherDocumentation}`,
   })
   planetWatcherObject(
@@ -77,7 +77,7 @@ ${sharedPlanetWatcherDocumentation}`,
   @Subscription(() => [PlanetWatcherNodeStatusUpdate], {
     subscribe: createPlanetWatcherSubscriber('NODE_STATUS_UPDATE'),
     description: `
-Recieve updates in real-time about cell/node updates on a planet.\n
+Receive updates in real-time about cell/node updates on a planet.\n
 ${sharedPlanetWatcherDocumentation}`,
   })
   planetWatcherNodeStatus(
@@ -99,7 +99,7 @@ ${sharedPlanetWatcherDocumentation}`,
   @Subscription(() => [PlanetWatcherGameServerStatus], {
     subscribe: createPlanetWatcherSubscriber('GAME_SERVER_STATUS'),
     description: `
-Recieve updates in real-time about the game server status for a given planet.\n
+Receive updates in real-time about the game server status for a given planet.\n
 ${sharedPlanetWatcherDocumentation}`,
   })
   async planetWatcherGameServerStatus(
@@ -124,7 +124,7 @@ ${sharedPlanetWatcherDocumentation}`,
   @Subscription(() => [PlanetWatcherFrameEnd], {
     subscribe: createPlanetWatcherSubscriber('FRAME_END'),
     description: `
-Recieve real-time performance data about game servers on a given planet.\n
+Receive real-time performance data about game servers on a given planet.\n
 ${sharedPlanetWatcherDocumentation}`,
   })
   planetWatcherFrameEnd(

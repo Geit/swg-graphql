@@ -14,7 +14,7 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { json } from 'body-parser';
 import { ExpressAdapter, createBullBoard, BullMQAdapter } from '@bull-board/express';
-import { merge } from 'lodash';
+import { mergeWith } from 'lodash';
 import { ZodError } from 'zod';
 import 'express-async-errors';
 
@@ -22,6 +22,7 @@ import { PORT, DISABLE_AUTH } from './config';
 import { checkKibanaToken } from './context/kibana-auth';
 import { galaxySearchModule } from './modules/galaxySearch';
 import { transactionsModule } from './modules/transactions';
+import { loginsModule } from './modules/logins';
 import { ContextType } from './context/types';
 import { getRequestContext } from './context';
 import { Module, ModuleExports } from './moduleTypes';
@@ -36,8 +37,13 @@ interface WebSocketConnectionParameters {
 interface WebSocketContext {
   authToken: string;
 }
+function concatIfArray<T>(objValue: T, srcValue: T) {
+  if (Array.isArray(objValue)) {
+    return objValue.concat(srcValue);
+  }
+}
 
-const modules: Module[] = [galaxySearchModule, transactionsModule];
+const modules: Module[] = [galaxySearchModule, transactionsModule, loginsModule];
 
 async function bootstrap() {
   const app = express();
@@ -47,8 +53,8 @@ async function bootstrap() {
 
   app.post('/websocket_auth', async (req, res) => {
     if (!req.headers.authorization) {
-      res.status(404);
-      return res.end();
+      console.log('No auth header on /websocket_auth, 404ing');
+      return res.status(401).end();
     }
 
     await checkKibanaToken(req.headers.authorization);
@@ -56,7 +62,9 @@ async function bootstrap() {
     const authToken = randomBytes(32).toString('hex');
     websocketAuthTokens.add(authToken);
 
-    res.send(`{ "authToken": "${authToken}" }`);
+    console.log('Auth token added to GQL Memory');
+
+    res.json({ authToken });
   });
 
   app.use(
@@ -74,7 +82,7 @@ async function bootstrap() {
     resolvers: moduleResolvers,
     routes: moduleRouters,
   } = validModules.reduce((acc, cur) => {
-    return merge(acc, cur);
+    return mergeWith(acc, cur, concatIfArray);
   }, {} as ModuleExports);
 
   if (moduleQueues) {

@@ -83,7 +83,7 @@ export const createPlanetWatcherSubscriber = (topic: string) => {
             } else {
               planetWatcherPool.set(PLANET, {
                 ...poolVal,
-                count: poolVal.count + -1,
+                count: poolVal.count - 1,
               });
             }
           }
