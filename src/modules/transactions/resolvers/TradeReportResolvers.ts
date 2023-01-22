@@ -1,11 +1,10 @@
 import { Arg, Query, Resolver } from 'type-graphql';
 import { Service } from 'typedi';
+import { isPresent } from '@core/utils/utility-types';
 
 import { TransactionRollupService } from '../services/TransactionRollupService';
 import { TransactionService } from '../services/TransactionService';
 import { TransactionRollup } from '../types/TransactionRollup';
-
-import { isPresent } from '@core/utils/utility-types';
 
 @Service()
 @Resolver()

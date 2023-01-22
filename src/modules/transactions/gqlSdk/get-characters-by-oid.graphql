@@ -1,0 +1,12 @@
+query getCharacters($objectIds: [ID!]!, $limit: Int) {
+  objects(objectIds: $objectIds, limit: $limit) {
+    __typename
+    id
+    resolvedName
+    ... on PlayerCreatureObject {
+      account {
+        id
+      }
+    }
+  }
+}

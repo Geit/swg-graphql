@@ -1,5 +1,4 @@
 import { Field, ID, Int, ObjectType, createUnionType } from 'type-graphql';
-
 import { Account, UnenrichedAccount, UnenrichedServerObject, PlayerCreatureObject } from '@core/types';
 
 export const RollupPartyEntity: UnenrichedServerObject | UnenrichedAccount = createUnionType({

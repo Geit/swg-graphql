@@ -1,5 +1,10 @@
-export function startModule() {
-  const resolvers = [`${__dirname}/resolvers/*.{js,ts}`];
+import { Module } from '@core/moduleTypes';
+import { NonEmptyArray } from 'type-graphql';
 
-  return { queues: [], resolvers };
-}
+import router from './routes';
+
+export const transactionsModule: Module = () => {
+  const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`];
+
+  return { moduleName: 'transactions', resolvers, routes: [router] };
+};

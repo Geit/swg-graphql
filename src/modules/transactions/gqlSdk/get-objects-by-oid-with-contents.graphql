@@ -1,0 +1,23 @@
+fragment ServerObjectParts on IServerObject {
+    __typename
+    id
+    name
+    basicName: resolvedName(resolveCustomNames: false)
+    resolvedName
+    staticItemName
+    templateId
+    template
+    ... on ITangibleObject {
+      count
+    }
+}
+
+query getObjectsWithContents($objectIds: [ID!]!, $limit: Int) {
+  objects(objectIds: $objectIds, limit: $limit) {
+    ...ServerObjectParts
+
+    contents(excludeDeleted: true, recursive: true) {
+      ...ServerObjectParts
+    }
+  }
+}

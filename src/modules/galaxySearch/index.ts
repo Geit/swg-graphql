@@ -1,5 +1,7 @@
 import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '@core/config';
 import { elasticClient } from '@core/utils/elasticClient';
+import { Module } from '@core/moduleTypes';
+import { NonEmptyArray } from 'type-graphql';
 
 import { currentMappingProperties } from './migrations/currentMapping';
 import { startJobs } from './jobs';
@@ -31,20 +33,21 @@ export async function initialSearchIndexSetup() {
   }
 }
 
-export async function startModule() {
-  if (!ENABLE_TEXT_SEARCH) return { queues: [], resolvers: [] };
+export const galaxySearchModule: Module = async () => {
+  if (!ENABLE_TEXT_SEARCH) return null;
 
   try {
     await initialSearchIndexSetup();
   } catch (err) {
     if (err instanceof Error) {
       console.error(`Failed to start search indexer with error: ${err.message}`);
+      return null;
     }
   }
 
   const { queues } = await startJobs();
 
-  const resolvers = [`${__dirname}/resolvers/*.{js,ts}`];
+  const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`];
 
-  return { queues, resolvers };
-}
+  return { moduleName: 'galaxySearch', queues, resolvers };
+};

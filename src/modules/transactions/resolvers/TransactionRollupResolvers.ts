@@ -1,12 +1,11 @@
 import { Arg, Query, Resolver, FieldResolver, Root } from 'type-graphql';
 import { Inject, Service } from 'typedi';
+import { ServerObjectService } from '@core/services/ServerObjectService';
+import { Account } from '@core/types';
 
 import { TransactionRollupService } from '../services/TransactionRollupService';
 import { TransactionService } from '../services/TransactionService';
 import { TransactionRollup, TransactionRollupParty, RollupPartyEntity } from '../types/TransactionRollup';
-
-import { ServerObjectService } from '@core/services/ServerObjectService';
-import { Account } from '@core/types';
 
 @Service()
 @Resolver()

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { createServer } from 'http';
 import { randomBytes } from 'crypto';
 
-import express from 'express';
+import express, { ErrorRequestHandler } from 'express';
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -14,13 +14,18 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { json } from 'body-parser';
 import { ExpressAdapter, createBullBoard, BullMQAdapter } from '@bull-board/express';
+import { merge } from 'lodash';
+import { ZodError } from 'zod';
+import 'express-async-errors';
 
 import { PORT, DISABLE_AUTH } from './config';
 import { checkKibanaToken } from './context/kibana-auth';
-import { startModule as startGalaxySearchModule } from './modules/galaxySearch';
-import { startModule as startTransactionsModule } from './modules/transactions';
+import { galaxySearchModule } from './modules/galaxySearch';
+import { transactionsModule } from './modules/transactions';
 import { ContextType } from './context/types';
 import { getRequestContext } from './context';
+import { Module, ModuleExports } from './moduleTypes';
+import { isPresent } from './utils/utility-types';
 
 const GQL_PATH = '/graphql' as const;
 
@@ -32,17 +37,17 @@ interface WebSocketContext {
   authToken: string;
 }
 
+const modules: Module[] = [galaxySearchModule, transactionsModule];
+
 async function bootstrap() {
   const app = express();
   const httpServer = createServer(app);
-  const { queues, resolvers: galaxySearchResolvers } = await startGalaxySearchModule();
-  const { resolvers: transactionResolvers } = startTransactionsModule();
+
   const websocketAuthTokens = new Set();
 
   app.post('/websocket_auth', async (req, res) => {
     if (!req.headers.authorization) {
-      // eslint-disable-next-line no-param-reassign
-      res.statusCode = 404;
+      res.status(404);
       return res.end();
     }
 
@@ -62,21 +67,31 @@ async function bootstrap() {
   );
   app.use(json({ limit: '1MB' }));
 
-  const bullExpressAdapter = new ExpressAdapter();
-  bullExpressAdapter.setBasePath('/admin/queues');
+  const moduleResults = await Promise.all(modules.map(m => m()));
+  const validModules = moduleResults.filter(isPresent);
+  const {
+    queues: moduleQueues,
+    resolvers: moduleResolvers,
+    routes: moduleRouters,
+  } = validModules.reduce((acc, cur) => {
+    return merge(acc, cur);
+  }, {} as ModuleExports);
 
-  createBullBoard({
-    queues: queues.map(q => new BullMQAdapter(q)),
-    serverAdapter: bullExpressAdapter,
-  });
+  if (moduleQueues) {
+    const bullExpressAdapter = new ExpressAdapter();
+    bullExpressAdapter.setBasePath('/admin/queues');
 
-  app.use('/admin/queues', bullExpressAdapter.getRouter());
+    createBullBoard({
+      queues: moduleQueues.map(q => new BullMQAdapter(q)),
+      serverAdapter: bullExpressAdapter,
+    });
+    app.use('/admin/queues', bullExpressAdapter.getRouter());
+  }
 
   // Build the schema by pulling in all the resolvers from the resolvers folder
   const resolvers: NonEmptyArray<string> = [
     `${__dirname}/resolvers/*.{js,ts}`,
-    ...galaxySearchResolvers,
-    ...transactionResolvers,
+    ...(moduleResolvers?.flatMap(mr => mr) ?? []),
   ];
 
   const schema = await buildSchema({
@@ -98,6 +113,44 @@ async function bootstrap() {
       context: getRequestContext,
     })
   );
+
+  app.use(async (req, res, next) => {
+    try {
+      await getRequestContext({ req, res });
+    } catch (err) {
+      if (err instanceof GraphQLError) {
+        res.status(403);
+        return next(err.message);
+      }
+
+      return next(err);
+    }
+    return next();
+  });
+
+  for (const router of moduleRouters ?? []) {
+    app.use(router);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+    if (err instanceof ZodError) {
+      const message = err.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('\n');
+
+      res.status(400).json({
+        message,
+      });
+      return;
+    }
+    const { status } = err;
+
+    console.error(err);
+    res.status(status || 500).json({
+      message: 'Unexpected server error',
+    });
+  };
+
+  app.use(errorHandler);
 
   SubscriptionServer.create(
     {
