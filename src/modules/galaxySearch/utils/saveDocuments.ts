@@ -4,7 +4,7 @@ import { elasticClient } from '@core/utils/elasticClient';
 import { ELASTIC_SEARCH_INDEX_NAME } from '../../../config';
 import { SearchDocument } from '../types';
 
-const elasticDocumentSaver = new DataLoader(_saveDocuments);
+const elasticDocumentSaver = new DataLoader(_saveDocuments, { cache: false });
 
 async function _saveDocuments(documents: readonly SearchDocument[]) {
   const body = documents.flatMap(doc => [
