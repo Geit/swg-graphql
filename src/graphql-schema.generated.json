@@ -2034,6 +2034,57 @@
       },
       {
         "kind": "OBJECT",
+        "name": "CitiesResult",
+        "description": null,
+        "fields": [
+          {
+            "name": "results",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "City",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalResults",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "Citizen",
         "description": null,
         "fields": [
@@ -3786,7 +3837,7 @@
           },
           {
             "name": "location",
-            "description": null,
+            "description": "Location where the object was last seen or saved",
             "args": [],
             "type": {
               "kind": "LIST",
@@ -5515,6 +5566,57 @@
             "ofType": null
           }
         ],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "GuildsResult",
+        "description": null,
+        "fields": [
+          {
+            "name": "results",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Guild",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalResults",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -14237,7 +14339,7 @@
           },
           {
             "name": "location",
-            "description": null,
+            "description": "Location where the object was last seen or saved",
             "args": [],
             "type": {
               "kind": "LIST",
@@ -16069,22 +16171,47 @@
           {
             "name": "cities",
             "description": null,
-            "args": [],
+            "args": [
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "50",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "offset",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "0",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "OBJECT",
-                    "name": "City",
-                    "ofType": null
-                  }
-                }
+                "kind": "OBJECT",
+                "name": "CitiesResult",
+                "ofType": null
               }
             },
             "isDeprecated": false,
@@ -16151,22 +16278,47 @@
           {
             "name": "guilds",
             "description": null,
-            "args": [],
+            "args": [
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "50",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "offset",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "0",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "OBJECT",
-                    "name": "Guild",
-                    "ofType": null
-                  }
-                }
+                "kind": "OBJECT",
+                "name": "GuildsResult",
+                "ofType": null
               }
             },
             "isDeprecated": false,
@@ -20799,7 +20951,7 @@
         "fields": [
           {
             "name": "planetWatcherFrameEnd",
-            "description": "\nRecieve real-time performance data about game servers on a given planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
+            "description": "\nReceive real-time performance data about game servers on a given planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
             "args": [
               {
                 "name": "clientId",
@@ -20856,7 +21008,7 @@
           },
           {
             "name": "planetWatcherGameServerStatus",
-            "description": "\nRecieve updates in real-time about the game server status for a given planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
+            "description": "\nReceive updates in real-time about the game server status for a given planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
             "args": [
               {
                 "name": "clientId",
@@ -20913,7 +21065,7 @@
           },
           {
             "name": "planetWatcherNodeStatus",
-            "description": "\nRecieve updates in real-time about cell/node updates on a planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
+            "description": "\nReceive updates in real-time about cell/node updates on a planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
             "args": [
               {
                 "name": "clientId",
@@ -20970,7 +21122,7 @@
           },
           {
             "name": "planetWatcherObject",
-            "description": "\nRecieve updates in real-time about objects on a planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
+            "description": "\nReceive updates in real-time about objects on a planet.\n\n\nWhile there are active subscribers, the GraphQL server will maintain a single connection to the relevant planet server. Further identical subscriptions will be multiplexed on to the same underlying connection, and a summary of recent information will be replayed to them.\n\nThis functionality requires that `data/planet-servers.json` be prepopulated with the planet server details for your cluster",
             "args": [
               {
                 "name": "clientId",

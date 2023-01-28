@@ -1,12 +1,10 @@
 import { Arg, Int, Query, Resolver, ID, Field, ObjectType } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 
-import { GuildService } from '../services/GuildService';
-import { CityService } from '../services/CityService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
 import { ResourceTypeService } from '../services/ResourceTypeService';
-import { IServerObject, UnenrichedServerObject, Account, Guild, City, PlayerCreatureObject } from '../types';
+import { IServerObject, UnenrichedServerObject, Account, PlayerCreatureObject } from '../types';
 import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
 import TAGIFY from '../utils/tagify';
 
@@ -24,10 +22,6 @@ class RecentLoginsResult {
 export class RootResolver {
   @Inject()
   private readonly objectService: ServerObjectService;
-  @Inject()
-  private readonly guildService: GuildService;
-  @Inject()
-  private readonly cityService: CityService;
   @Inject()
   private readonly resourceTypeService: ResourceTypeService;
   @Inject()
@@ -54,34 +48,6 @@ export class RootResolver {
     return Object.assign(new Account(), {
       id: parseInt(accountId),
     });
-  }
-
-  @Query(() => [Guild])
-  async guilds() {
-    const guilds = await this.guildService.getAllGuilds();
-
-    const guildsArr = [...guilds].map(([, val]) => val);
-
-    return guildsArr;
-  }
-
-  @Query(() => Guild, { nullable: true })
-  guild(@Arg('guildId', { nullable: false }) id: string) {
-    return this.guildService.getGuild(id);
-  }
-
-  @Query(() => [City])
-  async cities() {
-    const cities = await this.cityService.getAllCities();
-
-    const citiesArr = [...cities].map(([, val]) => val);
-
-    return citiesArr;
-  }
-
-  @Query(() => City, { nullable: true })
-  city(@Arg('cityId', { nullable: false }) id: string) {
-    return this.cityService.getCity(id);
   }
 
   @Query(() => ResourceTypeResult)
@@ -114,6 +80,7 @@ export class RootResolver {
     @Arg('durationSeconds', () => Int, { defaultValue: 10 * 60 }) durationSeconds: number
   ): Promise<RecentLoginsResult> {
     if (limit > 1000 || limit < 0) throw new Error('Bad `limit` argument');
+    if (offset < 0) throw new Error('Bad `offset` argument');
 
     const results = await this.playerCreatureService.getRecentlyLoggedInCharacters(durationSeconds);
 
