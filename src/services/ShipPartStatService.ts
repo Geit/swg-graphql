@@ -425,15 +425,18 @@ export class ShipPartStatService {
 
   loadingHandle: false | Promise<void> = false;
 
-  private loadShipParts() {
-    if (this.loadingHandle) return this.loadingHandle;
-
-    try {
-      this.loadingHandle = this.loadShipPartsFromDatatables();
-    } catch (err) {
-      this.loadingHandle = false;
-      throw err;
+  private async loadShipParts() {
+    if (!this.loadingHandle) {
+      try {
+        this.loadingHandle = this.loadShipPartsFromDatatables();
+        await this.loadingHandle;
+      } catch (err) {
+        this.loadingHandle = false;
+        throw err;
+      }
     }
+
+    return this.loadingHandle;
   }
 
   private async loadShipPartsFromDatatables() {
