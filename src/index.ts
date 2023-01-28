@@ -7,10 +7,11 @@ import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { execute, GraphQLError, subscribe } from 'graphql';
+import { GraphQLError } from 'graphql';
 import { buildSchema, NonEmptyArray } from 'type-graphql';
 import { Container } from 'typedi';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import cors from 'cors';
 import { json } from 'body-parser';
 import { ExpressAdapter, createBullBoard, BullMQAdapter } from '@bull-board/express';
@@ -30,13 +31,6 @@ import { isPresent } from './utils/utility-types';
 
 const GQL_PATH = '/graphql' as const;
 
-interface WebSocketConnectionParameters {
-  authToken?: string;
-}
-
-interface WebSocketContext {
-  authToken: string;
-}
 function concatIfArray<T>(objValue: T, srcValue: T) {
   if (Array.isArray(objValue)) {
     return objValue.concat(srcValue);
@@ -110,7 +104,20 @@ async function bootstrap() {
   // Create the GraphQL server
   const server = new ApolloServer<ContextType>({
     schema,
-    plugins: [ApolloServerPluginInlineTrace(), ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginInlineTrace(),
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        // eslint-disable-next-line require-await
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await websocketServer.dispose();
+            },
+          };
+        },
+      },
+    ],
   });
 
   await server.start();
@@ -160,15 +167,22 @@ async function bootstrap() {
 
   app.use(errorHandler);
 
-  SubscriptionServer.create(
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: GQL_PATH,
+  });
+
+  // Passing in an instance of a GraphQLSchema and
+  // telling the WebSocketServer to start listening
+  const websocketServer = useServer<{ authToken?: string }, { authToken: string }>(
     {
       schema,
-      execute,
-      subscribe,
-      onConnect(connectionParams: WebSocketConnectionParameters, _socket: unknown, context: WebSocketContext) {
+      context: ctx => {
         if (DISABLE_AUTH) return;
 
-        if (!('authToken' in connectionParams) || !connectionParams.authToken) {
+        const { connectionParams } = ctx;
+
+        if (!connectionParams || !('authToken' in connectionParams) || !connectionParams.authToken) {
           throw new GraphQLError('Missing auth token!', {
             extensions: {
               code: 'FORBIDDEN',
@@ -176,7 +190,6 @@ async function bootstrap() {
             },
           });
         }
-
         if (!websocketAuthTokens.has(connectionParams.authToken)) {
           throw new GraphQLError('Not authorised to use websockets!', {
             extensions: {
@@ -186,14 +199,13 @@ async function bootstrap() {
           });
         }
 
-        // eslint-disable-next-line no-param-reassign
-        context.authToken = connectionParams.authToken;
+        return { authToken: connectionParams.authToken };
       },
-      onDisconnect(_socket: unknown, context: WebSocketContext) {
-        websocketAuthTokens.delete(context.authToken);
+      onDisconnect(ctx) {
+        if (ctx && 'authToken' in ctx) websocketAuthTokens.delete(ctx.authToken);
       },
     },
-    { server: httpServer, path: GQL_PATH }
+    wsServer
   );
 
   // Start the server on the port specified in the config.
