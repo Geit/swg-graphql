@@ -1,4 +1,4 @@
-import { FieldResolver, Float, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 
 import { CreatureObjectService } from '../services/CreatureObjectService';
@@ -83,15 +83,11 @@ export class CreatureObjectResolver implements ResolverInterface<CreatureObject>
     return creature?.PERSISTED_BUFFS ?? null;
   }
 
-  @FieldResolver()
+  @FieldResolver({ nullable: true })
   async worldspaceLocation(@Root() object: IServerObject) {
     const creature = await this.creatureObjectService.load(object.id);
-    return creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
-  }
+    const location = creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
 
-  @FieldResolver(() => [Float], { nullable: true })
-  async location(@Root() object: IServerObject) {
-    const creature = await this.creatureObjectService.load(object.id);
-    return creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
+    return location?.filter(n => typeof n === 'number').length === 3 ? location : null;
   }
 }

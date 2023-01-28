@@ -1,4 +1,4 @@
-import { Arg, FieldResolver, Float, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { Arg, FieldResolver, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 
 import { ENABLE_STRUCTURE_SHORTCUT } from '../config';
@@ -8,7 +8,7 @@ import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectSer
 import { PropertyListService } from '../services/PropertyListService';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { StringFileLoader } from '../services/StringFileLoader';
-import { City, Guild, Location, PlayerCreatureObject } from '../types';
+import { City, Guild, PlayerCreatureObject } from '../types';
 import { PropertyListIds } from '../types/PropertyList';
 import { PlayerObject } from '../types/PlayerObject';
 import TAGIFY, { STRUCTURE_TYPE_IDS } from '../utils/tagify';
@@ -138,11 +138,5 @@ export class PlayerCreatureObjectResolver
     if (!objects || objects.length === 0) throw new Error('Character with no player object is invalid!');
 
     return objects[0];
-  }
-
-  @FieldResolver(() => [Float], { nullable: true })
-  async location(@Root() object: PlayerCreatureObject) {
-    const creature = await this.creatureObjectService.load(object.id);
-    return creature ? ([creature.WS_X, creature.WS_Y, creature.WS_Z] as Location) : null;
   }
 }

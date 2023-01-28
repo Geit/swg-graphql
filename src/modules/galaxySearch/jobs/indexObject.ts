@@ -77,6 +77,9 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
       ]);
     }
 
+    const location =
+      'worldspaceLocation' in object && object.worldspaceLocation ? object.worldspaceLocation : object.location;
+
     const objectDoc: ObjectDocument = {
       type: 'Object',
       lastSeen: new Date().toISOString(),
@@ -89,9 +92,9 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
 
       location: {
         scene: object.scene,
-        x: object.location?.[0] ?? 0,
-        y: object.location?.[1] ?? 0,
-        z: object.location?.[2] ?? 0,
+        x: location?.[0] ?? 0,
+        y: location?.[1] ?? 0,
+        z: location?.[2] ?? 0,
       },
 
       ...(object.deletionReason &&
