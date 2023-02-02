@@ -5,24 +5,8 @@ import { SmartBuffer } from 'smart-buffer';
 
 import { IffReader } from './IFFReader';
 
-/**
- * The datatable format is a fairly simple IFF file consisting of:
- *  DTII form
- *  --> VERSION form (e.g 0001)
- *  ----> COLS
- *  ------> [int32] colCount
- *  ------> [...c_str[colCount]] columnName
- *  ----> TYPE
- *  ------> [...c_str[colCount]] column data type
- *  ----> ROWS
- *  ------> [int32] rowCount
- *  ------> [...custom[rowCount]] Format depends on COLS + TYPE.
- *
- *
- * Version 0 uses an enum for TYPEs, version 1 uses strings.
- */
-
 export async function loadCrcLookupTable(fileName: string) {
+  console.log('loading CRC Lookup table');
   const filePath = path.join(__dirname, '../../data', `${fileName}`);
   const file = await fs.readFile(filePath);
 
@@ -56,5 +40,6 @@ export async function loadCrcLookupTable(fileName: string) {
     lookupTable.set(crc, string);
   }
 
+  console.log('Loaded CRC table...');
   return lookupTable;
 }

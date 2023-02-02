@@ -91,7 +91,10 @@ export class ResourceTypeService {
     };
   }
 
-  private dataloader = new DataLoader(ResourceTypeService.batchFunction, { cache: false, maxBatchSize: 999 });
+  private dataloader = new DataLoader(ResourceTypeService.batchFunction, {
+    cache: false,
+    maxBatchSize: 999,
+  });
   getOne = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

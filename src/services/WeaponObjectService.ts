@@ -26,7 +26,7 @@ interface WeaponObjectRecord {
 
 @Service()
 export class WeaponObjectService {
-  private dataloader = new DataLoader(WeaponObjectService.batchFunction, { maxBatchSize: 999 });
+  private dataloader = new DataLoader(WeaponObjectService.batchFunction, { maxBatchSize: 999, cache: false });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

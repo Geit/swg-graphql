@@ -51,7 +51,7 @@ export interface PlayerObjectRecord {
 
 @Service()
 export class PlayerObjectService {
-  private dataloader = new DataLoader(PlayerObjectService.batchFunction, { maxBatchSize: 999 });
+  private dataloader = new DataLoader(PlayerObjectService.batchFunction, { maxBatchSize: 999, cache: false });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

@@ -18,7 +18,7 @@ interface BuildingObjectRecord {
 
 @Service()
 export class BuildingObjectService {
-  private dataloader = new DataLoader(BuildingObjectService.batchFunction, { maxBatchSize: 999 });
+  private dataloader = new DataLoader(BuildingObjectService.batchFunction, { maxBatchSize: 999, cache: false });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {

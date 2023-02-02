@@ -56,7 +56,12 @@ export class SearchService {
     }
 
     if (filters.types) {
-      filters.types.forEach(t => mustQueries.push(esb.termQuery('type', t)));
+      mustQueries.push(
+        esb
+          .boolQuery()
+          .should(filters.types.map(t => esb.termQuery('type', t)))
+          .minimumShouldMatch(1)
+      );
     }
 
     if (searchText && !filters.searchTextIsEsQuery) {
@@ -64,7 +69,7 @@ export class SearchService {
         esb
           .disMaxQuery()
           .queries([
-            esb.multiMatchQuery().type('phrase').query(searchText).boost(100).fields(['accountName^2', '*']),
+            esb.multiMatchQuery().type('phrase').analyzer('keyword').query(searchText).boost(100),
             esb
               .multiMatchQuery()
               .query(searchText)

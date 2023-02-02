@@ -8,6 +8,8 @@ import { IffReader } from './IFFReader';
 
 /**
  * The datatable format is a fairly simple IFF file consisting of:
+ *
+ * ```plain
  *  DTII form
  *  --> VERSION form (e.g 0001)
  *  ----> COLS
@@ -18,6 +20,7 @@ import { IffReader } from './IFFReader';
  *  ----> ROWS
  *  ------> [int32] rowCount
  *  ------> [...custom[rowCount]] Format depends on COLS + TYPE.
+ * ```
  *
  *
  * Version 0 uses an enum for TYPEs, version 1 uses strings.

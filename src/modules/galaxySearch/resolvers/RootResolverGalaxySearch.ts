@@ -66,7 +66,7 @@ export class RootResolver {
       })
     );
 
-    if (searchText.trim().match(/^\d+$/) && results.length === 0) {
+    if (results.length === 0 && searchText.trim().match(/^\d+$/)) {
       const exactOidMatch = await this.objectService.getOne(searchText.trim());
 
       if (exactOidMatch) results.push(exactOidMatch);

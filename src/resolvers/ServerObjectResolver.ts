@@ -48,10 +48,12 @@ export class ServerObjectResolver implements ResolverInterface<ServerObject> {
   }
 
   @FieldResolver(() => String, { nullable: true })
-  template(@Root() object: IServerObject) {
+  async template(@Root() object: IServerObject) {
     if (!object.templateId) return null;
 
-    return this.crcLookup.lookupCrc(object.templateId >>> 0);
+    const template = await this.crcLookup.lookupCrc(object.templateId >>> 0);
+
+    return template;
   }
 
   @FieldResolver()

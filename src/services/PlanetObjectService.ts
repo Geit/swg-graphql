@@ -15,7 +15,7 @@ interface PlanetObjectRecord {
 
 @Service()
 export class PlanetObjectService {
-  private dataloader = new DataLoader(PlanetObjectService.batchFunction, { maxBatchSize: 999 });
+  private dataloader = new DataLoader(PlanetObjectService.batchFunction, { maxBatchSize: 999, cache: false });
   load = this.dataloader.load.bind(this.dataloader);
 
   static async batchFunction(keys: readonly string[]) {
