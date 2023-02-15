@@ -1,9 +1,11 @@
-import { Arg, Int, Query, Resolver, Field, ObjectType } from 'type-graphql';
+import { Arg, Int, Query, Resolver, Field, ObjectType, Authorized } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 
 import { GuildService } from '../services/GuildService';
 import { CityService } from '../services/CityService';
 import { Guild, City } from '../types';
+
+import { ROLES } from '@core/auth';
 
 @ObjectType()
 class GuildsResult {
@@ -32,6 +34,7 @@ export class RootResolver {
   private readonly cityService: CityService;
 
   @Query(() => GuildsResult)
+  @Authorized([ROLES.READ_GUILDS])
   async guilds(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
@@ -51,11 +54,13 @@ export class RootResolver {
   }
 
   @Query(() => Guild, { nullable: true })
+  @Authorized([ROLES.READ_GUILDS])
   guild(@Arg('guildId', { nullable: false }) id: string) {
     return this.guildService.getGuild(id);
   }
 
   @Query(() => CitiesResult)
+  @Authorized([ROLES.READ_CITIES])
   async cities(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
@@ -75,6 +80,7 @@ export class RootResolver {
   }
 
   @Query(() => City, { nullable: true })
+  @Authorized([ROLES.READ_CITIES])
   city(@Arg('cityId', { nullable: false }) id: string) {
     return this.cityService.getCity(id);
   }

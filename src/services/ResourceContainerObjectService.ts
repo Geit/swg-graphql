@@ -17,6 +17,20 @@ interface ResourceContainerObjectRecord {
 
 @Service()
 export class ResourceContainerObjectService {
+  async getCirculationAmountForResourceTypeId(typeId: number) {
+    const result = await knexDb
+      .first()
+      .from<ResourceContainerObjectRecord>('RESOURCE_CONTAINER_OBJECTS')
+      .sum('QUANTITY')
+      .count()
+      .where('RESOURCE_TYPE', typeId);
+
+    return {
+      totalQuantity: result['SUM("QUANTITY")'] ?? 0,
+      containerObjects: result['COUNT(*)'],
+    };
+  }
+
   private dataloader = new DataLoader(ResourceContainerObjectService.batchFunction, {
     maxBatchSize: 999,
     cache: false,

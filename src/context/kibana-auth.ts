@@ -1,9 +1,11 @@
 import got from 'got';
 import { GraphQLError } from 'graphql';
 
-import { DISABLE_AUTH, ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC_SEARCH_URL } from '../config';
+import { ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC_SEARCH_URL } from '../config';
 
 import { SWGGraphqlContextFunction } from './types';
+
+import { ROLES } from '@core/auth';
 
 /**
  * Partial response body for the Elastic "Has Privlages" API.
@@ -15,29 +17,31 @@ interface ElasticHasPrivlagesResponse {
 }
 
 export const checkKibanaToken = async (token: string) => {
-  const result = await got<ElasticHasPrivlagesResponse>(`${ELASTIC_SEARCH_URL}_security/user/_has_privileges`, {
-    headers: {
-      authorization: token,
-    },
-    allowGetBody: true,
-    json: {
-      application: [
-        {
-          application: `kibana-${ELASTIC_KIBANA_INDEX}`,
-          privileges: [ELASTIC_REQUIRED_PRIVILEGE],
-          resources: ['*'],
-        },
-      ],
-    },
-    responseType: 'json',
-  }).catch(() => {
-    throw new GraphQLError('Error while confirming authorization', {
-      extensions: {
-        code: 'FORBIDDEN',
-        myExtension: 'swg-graphql',
+  const result = await got
+    .get<ElasticHasPrivlagesResponse>(`${ELASTIC_SEARCH_URL}_security/user/_has_privileges`, {
+      headers: {
+        authorization: token,
       },
+      allowGetBody: true,
+      json: {
+        application: [
+          {
+            application: `kibana-${ELASTIC_KIBANA_INDEX}`,
+            privileges: [ELASTIC_REQUIRED_PRIVILEGE],
+            resources: ['*'],
+          },
+        ],
+      },
+      responseType: 'json',
+    })
+    .catch(() => {
+      throw new GraphQLError('Error while confirming authorization', {
+        extensions: {
+          code: 'FORBIDDEN',
+          myExtension: 'swg-graphql',
+        },
+      });
     });
-  });
 
   if (!result.body.has_all_requested) {
     throw new GraphQLError('Incorrect authorization', {
@@ -61,20 +65,17 @@ export const checkKibanaToken = async (token: string) => {
  * @throws AuthenticationError
  */
 export const kibanaAuthorisationContext: SWGGraphqlContextFunction = async params => {
-  if (DISABLE_AUTH) {
-    return {};
-  }
-
   if (!params.req.headers.authorization) {
-    throw new GraphQLError('Authorization required.', {
-      extensions: {
-        code: 'FORBIDDEN',
-        myExtension: 'swg-graphql',
-      },
-    });
+    return {
+      isAuthenticated: false,
+    };
   }
 
   await checkKibanaToken(params.req.headers.authorization);
 
-  return {};
+  return {
+    // Kibana auth is superuser for now.
+    roles: new Set(Object.values(ROLES)),
+    isAuthenticated: true,
+  };
 };

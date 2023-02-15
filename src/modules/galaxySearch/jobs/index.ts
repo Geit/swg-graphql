@@ -44,7 +44,7 @@ export const startJobs = async () => {
     GALAXY_SEARCH_QUEUE_NAME,
     async job => {
       console.log(`Starting job ${job.name} with id ${job.id}`);
-      switch (job.name) {
+      switch (job.data.jobName) {
         case 'checkRecentLogins':
           await checkRecentLogins(job);
           break;
@@ -54,7 +54,7 @@ export const startJobs = async () => {
           break;
 
         case 'indexResources':
-          await indexResources();
+          await indexResources(job.data.full);
           break;
 
         default:
@@ -100,6 +100,7 @@ export const startJobs = async () => {
     'indexResources',
     {
       jobName: 'indexResources',
+      full: false,
     },
     {
       repeat: {
@@ -109,6 +110,19 @@ export const startJobs = async () => {
     }
   );
 
+  await galaxySearchQueue.add(
+    'indexResources',
+    {
+      jobName: 'indexResources',
+      full: true,
+    },
+    {
+      repeat: {
+        immediately: true,
+        pattern: '0 7 * * *',
+      },
+    }
+  );
   console.log(`Repeatable jobs scheduled.`);
 
   return {

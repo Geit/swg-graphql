@@ -29,7 +29,7 @@ export class ResourceTypeService {
   private db = knexDb;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  prepareManyQuery(filters: Partial<GetManyFilters>) {
+  private prepareManyQuery(filters: Partial<GetManyFilters>) {
     const query = this.db.select().from<ResourceTypeRecord>('RESOURCE_TYPES').orderBy('RESOURCE_ID', 'desc');
 
     return query;

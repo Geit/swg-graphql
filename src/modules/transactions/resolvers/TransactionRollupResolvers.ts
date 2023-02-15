@@ -1,4 +1,4 @@
-import { Arg, Query, Resolver, FieldResolver, Root } from 'type-graphql';
+import { Arg, Query, Resolver, FieldResolver, Root, Authorized } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 import { ServerObjectService } from '@core/services/ServerObjectService';
 import { Account } from '@core/types';
@@ -14,6 +14,7 @@ export class RootResolver {
   private readonly rollupService: TransactionRollupService;
 
   @Query(() => TransactionRollup, { nullable: true })
+  @Authorized()
   transactionRollup(
     @Arg('partyA', { nullable: true }) partyA: string,
     @Arg('partyB', { nullable: true }) partyB: string,

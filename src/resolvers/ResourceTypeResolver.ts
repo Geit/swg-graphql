@@ -1,4 +1,4 @@
-import { FieldResolver, Resolver, Root } from 'type-graphql';
+import { Field, FieldResolver, Float, ObjectType, Resolver, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { ClusterClockService } from '../services/ClusterClockService';
@@ -11,6 +11,8 @@ import {
   ResourceTypeFractalData,
   ResourceTypePlanetDistribution,
 } from '../types/ResourceType';
+
+import { ResourceContainerObjectService } from '@core/services/ResourceContainerObjectService';
 
 interface ResourceTreeDatatableRow {
   INDEX: number;
@@ -33,13 +35,23 @@ interface ResourceDistributionRow {
   'Fractal Octaves': number;
 }
 
+@ObjectType()
+export class ResourceCirculationData {
+  @Field(() => Float, { description: 'Total amount of this resource available on the server.' })
+  totalQuantity: number;
+
+  @Field(() => Float, { description: 'Number of unique objects containing this resource on the server.' })
+  containerObjects: number;
+}
+
 @Resolver(() => ResourceType)
 @Service()
 export class ResourceTypeResolver {
   constructor(
     private readonly stringService: StringFileLoader,
     private readonly clusterClock: ClusterClockService,
-    private readonly dataTable: DataTableService
+    private readonly dataTable: DataTableService,
+    private readonly rcObjectService: ResourceContainerObjectService
   ) {
     // Do nothing
   }
@@ -105,6 +117,11 @@ export class ResourceTypeResolver {
       amplitude: dist['Fractal Amplitude'],
       octaves: dist['Fractal Octaves'],
     };
+  }
+
+  @FieldResolver(() => ResourceCirculationData)
+  circulationData(@Root() resource: ResourceType): Promise<ResourceCirculationData> {
+    return this.rcObjectService.getCirculationAmountForResourceTypeId(Number(resource.id));
   }
 }
 

@@ -9,6 +9,10 @@ query getResourceListing($offset: Int, $limit: Int) {
       className
       depletedTimeReal
       depletedTime
+      circulationData {
+        containerObjects
+        totalQuantity
+      }
       planetDistribution {
         sceneId
         sceneName

@@ -1,4 +1,4 @@
-import { Arg, FieldResolver, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { Arg, Authorized, FieldResolver, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 
 import { ENABLE_STRUCTURE_SHORTCUT } from '../config';
@@ -15,6 +15,8 @@ import TAGIFY, { STRUCTURE_TYPE_IDS } from '../utils/tagify';
 import { subsetOf } from '../utils/utility-types';
 
 import { CreatureObjectResolver } from './CreatureObjectResolver';
+
+import { ROLES } from '@core/auth/roles';
 
 @Resolver(() => PlayerCreatureObject)
 @Service()
@@ -71,6 +73,7 @@ export class PlayerCreatureObjectResolver
   }
 
   @FieldResolver()
+  @Authorized([ROLES.READ_ACCOUNTS])
   async account(@Root() object: PlayerCreatureObject) {
     const playerRecord = await this.playerCreatureObjectService.getPlayerRecordForCharacter(object.id);
 

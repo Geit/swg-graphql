@@ -77,7 +77,9 @@ export class ServerObjectService {
     if (filters.containedByIdRecursive) {
       query
         .whereRaw(
-          "OBJECT_ID in (SELECT OBJECT_ID FROM SWG.OBJECTS CONNECT BY PRIOR OBJECT_ID = CONTAINED_BY AND TYPE_ID != 1129465167 AND NOT script_list LIKE '%terminal.vendor%' START WITH OBJECT_ID = ?)",
+          `OBJECT_ID in (SELECT OBJECT_ID FROM SWG.OBJECTS CONNECT BY PRIOR OBJECT_ID = CONTAINED_BY AND TYPE_ID != ${TAGIFY(
+            'CREO'
+          )} AND NOT script_list LIKE '%terminal.vendor%' START WITH OBJECT_ID = ?)`,
           filters.containedByIdRecursive
         )
         // Exclude the object we're directly searching for - we only want the children

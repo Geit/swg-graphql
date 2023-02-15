@@ -7,6 +7,7 @@ import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { GraphQLError } from 'graphql';
 import { buildSchema, NonEmptyArray } from 'type-graphql';
 import { Container } from 'typedi';
@@ -28,6 +29,7 @@ import { ContextType } from './context/types';
 import { getRequestContext } from './context';
 import { Module, ModuleExports } from './moduleTypes';
 import { isPresent } from './utils/utility-types';
+import { customAuthChecker } from './auth';
 
 const GQL_PATH = '/graphql' as const;
 
@@ -99,6 +101,7 @@ async function bootstrap() {
   const schema = await buildSchema({
     resolvers,
     container: Container,
+    authChecker: customAuthChecker,
   });
 
   // Create the GraphQL server
@@ -117,6 +120,10 @@ async function bootstrap() {
           };
         },
       },
+      ApolloServerPluginLandingPageLocalDefault({
+        includeCookies: true,
+        embed: true,
+      }),
     ],
   });
 

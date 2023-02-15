@@ -2,12 +2,20 @@ import { apiKeyAuth } from './api-key-auth';
 import { kibanaAuthorisationContext } from './kibana-auth';
 import { SWGGraphqlContextFunction } from './types';
 
-export const getRequestContext: SWGGraphqlContextFunction = async params => {
-  if (typeof params.req.headers.authorization === 'string' && params.req.headers.authorization.startsWith('ApiKey-')) {
-    await apiKeyAuth(params);
-  } else {
-    await kibanaAuthorisationContext(params);
+import { DISABLE_AUTH } from '@core/config';
+import { ROLES } from '@core/auth';
+
+export const getRequestContext: SWGGraphqlContextFunction = params => {
+  if (DISABLE_AUTH) {
+    return Promise.resolve({
+      roles: new Set(Object.values(ROLES)),
+      isAuthenticated: true,
+    });
   }
 
-  return {};
+  if (typeof params.req.headers.authorization === 'string' && params.req.headers.authorization.startsWith('ApiKey-')) {
+    return apiKeyAuth(params);
+  }
+
+  return kibanaAuthorisationContext(params);
 };

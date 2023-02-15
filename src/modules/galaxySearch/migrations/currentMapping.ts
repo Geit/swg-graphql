@@ -22,7 +22,13 @@ export const currentMappingProperties: Record<string, MappingProperty> = {
   templateId: { type: 'keyword' },
 
   relevancyBump: { type: 'rank_feature' },
-  resourceName: { type: 'text' },
+  resourceName: {
+    type: 'text',
+    fields: {
+      keyword: { type: 'keyword' },
+    },
+  },
+  resourceNameKeyword: { type: 'keyword' },
   resourceClass: { type: 'keyword' },
   resourceClassId: { type: 'keyword' },
   resourcePlanets: { type: 'keyword' },
@@ -38,6 +44,8 @@ export const currentMappingProperties: Record<string, MappingProperty> = {
   'resourceAttributes.res_potential_energy': { type: 'short' },
   'resourceAttributes.res_shock_resistance': { type: 'short' },
   'resourceAttributes.res_toughness': { type: 'short' },
+  'resourceCirculationData.containerObjects': { type: 'long' },
+  'resourceCirculationData.totalQuantity': { type: 'long' },
 
   // Account fields
   characters: { type: 'text' },

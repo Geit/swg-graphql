@@ -1,4 +1,4 @@
-import { Arg, Int, Query, Resolver, ID, Field, ObjectType } from 'type-graphql';
+import { Arg, Int, Query, Resolver, ID, Field, ObjectType, Authorized } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 
 import { ServerObjectService } from '../services/ServerObjectService';
@@ -8,12 +8,15 @@ import { IServerObject, UnenrichedServerObject, Account, PlayerCreatureObject } 
 import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
 import TAGIFY from '../utils/tagify';
 
+import { ROLES } from '@core/auth';
+
 @ObjectType()
 class RecentLoginsResult {
   @Field(() => Int)
   totalResults: number;
 
   @Field(() => [PlayerCreatureObject])
+  @Authorized([ROLES.READ_OBJECTS])
   results: PlayerCreatureObject[];
 }
 
@@ -28,22 +31,33 @@ export class RootResolver {
   private readonly playerCreatureService: PlayerCreatureObjectService;
 
   @Query(() => IServerObject, { nullable: true })
+  @Authorized([ROLES.READ_OBJECTS])
   object(@Arg('objectId', { nullable: false }) objectId: string): Promise<Partial<IServerObject> | null> {
     return this.objectService.getOne(objectId);
   }
 
   @Query(() => [IServerObject], { nullable: true })
+  @Authorized([ROLES.READ_OBJECTS])
   objects(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean,
     @Arg('objectIds', () => [ID], { nullable: true }) objectIds?: string[],
     @Arg('loadsWithIds', () => [ID], { nullable: true }) loadsWithIds?: string[],
+    @Arg('containedByIdRecursive', () => ID, { nullable: true }) containedByIdRecursive?: string,
     @Arg('searchText', { nullable: true }) searchText?: string
   ): Promise<Partial<UnenrichedServerObject[]> | null> {
-    return this.objectService.getMany({ searchText, limit, excludeDeleted, objectIds, loadsWithIds });
+    return this.objectService.getMany({
+      searchText,
+      limit,
+      excludeDeleted,
+      objectIds,
+      loadsWithIds,
+      containedByIdRecursive,
+    });
   }
 
   @Query(() => Account, { nullable: true })
+  @Authorized([ROLES.READ_ACCOUNTS, ROLES.READ_OBJECTS])
   account(@Arg('stationId', { nullable: false }) accountId: string) {
     return Object.assign(new Account(), {
       id: parseInt(accountId),
@@ -51,6 +65,7 @@ export class RootResolver {
   }
 
   @Query(() => ResourceTypeResult)
+  @Authorized([ROLES.READ_RESOURCES])
   async resources(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
@@ -69,11 +84,13 @@ export class RootResolver {
   }
 
   @Query(() => ResourceType, { nullable: true })
+  @Authorized([ROLES.READ_RESOURCES])
   resource(@Arg('resourceId', { nullable: false }) id: string) {
     return this.resourceTypeService.getOne(id);
   }
 
   @Query(() => RecentLoginsResult)
+  @Authorized([ROLES.READ_LOGINS])
   async recentLogins(
     @Arg('limit', () => Int, { defaultValue: 1000 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number,

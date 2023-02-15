@@ -1,4 +1,4 @@
-import { Arg, FieldResolver, Int, Query, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { Arg, Authorized, FieldResolver, Int, Query, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { Transaction, TransactionServiceResponse } from '../types/Transaction';
@@ -15,6 +15,7 @@ export class RootResolver {
   }
 
   @Query(() => Transaction, { nullable: true })
+  @Authorized()
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transaction(@Arg('transaction', { nullable: false }) transactionId: string): Promise<Transaction | null> {
     //return this.objectService.getOne(transactionId);
@@ -22,6 +23,7 @@ export class RootResolver {
   }
 
   @Query(() => TransactionServiceResponse, { nullable: true })
+  @Authorized()
   transactions(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('from', () => Int, { defaultValue: 0 }) from: number,

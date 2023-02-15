@@ -1,4 +1,4 @@
-import { Arg, Int, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Int, Query, Resolver } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 import { ServerObjectService } from '@core/services/ServerObjectService';
 import { ResourceTypeService } from '@core/services/ResourceTypeService';
@@ -19,6 +19,7 @@ export class RootResolver {
   private readonly resourceTypeService: ResourceTypeService;
 
   @Query(() => SearchResultDetails, { nullable: false })
+  @Authorized()
   async search(
     @Arg('searchText', { nullable: false }) searchText: string,
     @Arg('searchTextIsEsQuery', { defaultValue: false }) searchTextIsEsQuery: boolean,

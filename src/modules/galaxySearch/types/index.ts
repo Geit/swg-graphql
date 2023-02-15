@@ -55,6 +55,10 @@ export interface ResourceTypeDocument extends BaseDocument {
   resourceAttributes: {
     [key in ResourceAttribute]?: number;
   };
+  resourceCirculationData: {
+    containerObjects: number;
+    totalQuantity: number;
+  };
 }
 
 export interface AccountDocument extends BaseDocument {

@@ -6,24 +6,25 @@ import gqlSdk, { GetResourceListingQuery } from '../gqlSdk';
 
 export interface IndexResourcesJob {
   jobName: 'indexResources';
+  full: boolean;
 }
 
 type ResourceResultType = GetResourceListingQuery['resources']['results'][number];
 
 const RESOURCES_PER_PAGE = 1000;
 
-export async function indexResources() {
+export async function indexResources(fullIndex: boolean) {
   let hasMorePages = true;
   const limit = RESOURCES_PER_PAGE;
   let offset = 0;
 
   do {
-    ({ hasMorePages } = await indexPageOfResources(limit, offset));
+    ({ hasMorePages } = await indexPageOfResources(limit, offset, fullIndex));
     offset += limit;
   } while (hasMorePages);
 }
 
-async function indexPageOfResources(limit = RESOURCES_PER_PAGE, offset = 0) {
+async function indexPageOfResources(limit = RESOURCES_PER_PAGE, offset = 0, fullIndex = false) {
   console.time('Finding new resources');
 
   const resourceListingResult = await gqlSdk.getResourceListing({
@@ -50,7 +51,9 @@ async function indexPageOfResources(limit = RESOURCES_PER_PAGE, offset = 0) {
   const results = await Promise.all(documentPromises);
 
   // We have more new resources to process as long as every document was "new" and we had a full page of results.
-  const hasMorePages = results.every(r => r && r.result === 'created') && results.length === limit;
+  const hasMorePages =
+    (results.every(r => r && r.result === 'created') && results.length === limit) ||
+    (fullIndex && results.length === limit);
 
   console.timeEnd('Producing resource docs');
   return { hasMorePages };
@@ -69,6 +72,9 @@ function produceDocumentForResource(resource: ResourceResultType): ResourceTypeD
     resourcePlanets: resource.planetDistribution?.map(pd => pd.sceneId).filter(isPresent) ?? [],
     resourceDepletedTime: new Date(resource.depletedTimeReal),
     resourceAttributes: Object.fromEntries(resource.attributes?.map(attr => [attr.attributeId, attr.value]) ?? []),
+    resourceCirculationData: {
+      ...resource.circulationData,
+    },
     lastSeen: new Date().toISOString(),
   };
 
