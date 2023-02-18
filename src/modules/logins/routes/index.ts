@@ -1,1 +1,0 @@
-export { captureLogin } from './captureLogin';

@@ -58,7 +58,7 @@ export const ELASTIC_SEARCH_INDEX_NAME = process.env.ELASTIC_SEARCH_INDEX_NAME ?
 /**
  * Required Elastic privilege the requesters must have in order to make queries.
  */
-export const ELASTIC_REQUIRED_PRIVILEGE = process.env.ELASTIC_REQUIRED_PRIVILEGE ?? 'api:8.0.0:csrToolGraphQl';
+export const ELASTIC_REQUIRED_PRIVILEGE = process.env.ELASTIC_REQUIRED_PRIVILEGE ?? 'feature_galaxySearch.all';
 
 /**
  * The index to check for privleges within.
