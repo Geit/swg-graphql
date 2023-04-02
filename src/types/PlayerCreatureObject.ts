@@ -1,4 +1,4 @@
-import { Field, ObjectType } from 'type-graphql';
+import { Field, Int, ObjectType } from 'type-graphql';
 
 import { Account, UnenrichedAccount } from './Account';
 import { CreatureObject } from './CreatureObject';
@@ -16,18 +16,102 @@ export enum Attributes {
 }
 
 @ObjectType()
-export class Skill {
-  @Field(() => String, { description: 'ID of the skill', nullable: true })
+export class SkillMod {
+  @Field()
   id: string;
 
-  @Field(() => String, { nullable: true, description: 'Resolved name of the skill' })
+  @Field(() => Int)
+  value: number;
+}
+
+@ObjectType()
+export class Skill {
+  @Field()
+  id: string;
+
+  @Field(() => String, { nullable: true })
   name: string | null;
 
-  @Field(() => String, { nullable: true, description: 'Resolved string of the title of the skill' })
+  @Field(() => String, { nullable: true })
   title: string | null;
 
-  @Field(() => String, { nullable: true, description: 'Resolved string description of the skill' })
+  @Field(() => String, { nullable: true })
   description: string | null;
+
+  @Field(() => [String], { nullable: true })
+  commands: string[] | null;
+
+  @Field(() => [SkillMod], { nullable: true })
+  skillMods: SkillMod[] | null;
+
+  @Field(() => [String], { nullable: true })
+  schematicsRevoked: string[] | null;
+
+  @Field(() => [String], { nullable: true })
+  schematicsGranted: string[] | null;
+
+  @Field(() => [String], { nullable: true })
+  speciesRequired: string[] | null;
+
+  @Field(() => [String], { nullable: true })
+  statsRequired: string[] | null;
+
+  @Field(() => [String], { nullable: true })
+  missionsRequired: string[] | null;
+
+  @Field(() => [String], { nullable: true })
+  preclusionSkills: string[] | null;
+
+  @Field()
+  parent: string;
+
+  @Field(() => Int)
+  graphType: number;
+
+  @Field()
+  godOnly: boolean;
+
+  @Field()
+  isTitle: boolean;
+
+  @Field()
+  isProfession: boolean;
+
+  @Field()
+  isHidden: boolean;
+
+  @Field(() => Int)
+  moneyRequired: number;
+
+  @Field(() => Int)
+  pointsRequired: number;
+
+  @Field(() => Int)
+  skillsRequiredCount: number;
+
+  @Field()
+  xpType: string;
+
+  @Field(() => Int)
+  xpCost: number;
+
+  @Field(() => Int)
+  xpCap: number;
+
+  @Field()
+  apprenticeshipsRequired: string;
+
+  @Field(() => Int)
+  jediStateRequired: number;
+
+  @Field()
+  skillAbility: string;
+
+  @Field()
+  searchable: boolean;
+
+  @Field(() => Int)
+  ender: number;
 }
 
 /**

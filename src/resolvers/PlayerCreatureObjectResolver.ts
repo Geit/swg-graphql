@@ -12,7 +12,9 @@ import { City, Guild, PlayerCreatureObject } from '../types';
 import { PropertyListIds } from '../types/PropertyList';
 import { PlayerObject } from '../types/PlayerObject';
 import TAGIFY, { STRUCTURE_TYPE_IDS } from '../utils/tagify';
-import { subsetOf } from '../utils/utility-types';
+import { isPresent, subsetOf } from '../utils/utility-types';
+import { Skill } from '../types/PlayerCreatureObject';
+import { SkillService } from '../services/SkillService';
 
 import { CreatureObjectResolver } from './CreatureObjectResolver';
 
@@ -41,6 +43,9 @@ export class PlayerCreatureObjectResolver
 
   @Inject()
   guildService: GuildService;
+
+  @Inject()
+  skillService: SkillService;
 
   @FieldResolver()
   async ownedObjects(
@@ -100,25 +105,22 @@ export class PlayerCreatureObjectResolver
     return playerRecord?.CREATE_TIME?.toISOString() ?? null;
   }
 
-  @FieldResolver()
+  @FieldResolver(() => [Skill])
   async skills(@Root() object: PlayerCreatureObject) {
-    const [pLists, skillNames, skillTitles, skillDescriptions] = await Promise.all([
-      this.propertyListService.load({ objectId: object.id, listId: PropertyListIds.Skills }),
-      this.stringFileService.load('skl_n'),
-      this.stringFileService.load('skl_t'),
-      this.stringFileService.load('skl_d'),
-    ]);
+    const pLists = await this.propertyListService.load({ objectId: object.id, listId: PropertyListIds.Skills });
 
-    const skills = pLists.map(val => {
-      return {
-        id: val.value,
-        name: skillNames[val.value] ?? null,
-        title: skillTitles[val.value] ?? null,
-        description: skillDescriptions[val.value] ?? null,
-      };
-    });
+    const skillPromises = pLists.map(val => this.skillService.getSkillInformation(val.value));
+
+    const skills = (await Promise.all(skillPromises)).filter(isPresent);
 
     return skills;
+  }
+
+  @FieldResolver(() => Int)
+  async level(@Root() object: PlayerCreatureObject) {
+    const skills = await this.skills(object);
+
+    return this.skillService.getLevelForPlayer(skills);
   }
 
   @FieldResolver(() => City, { nullable: true, description: 'The City the player is Resident in' })
