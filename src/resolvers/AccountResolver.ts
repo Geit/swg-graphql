@@ -116,7 +116,7 @@ export class AccountResolver implements ResolverInterface<Account> {
 
   private async getVetRewardName(record: { type: 'item'; itemId: string } | { type: 'event'; eventId: string }) {
     if (record.type === 'event') {
-      const events = (await this.dataTable.load('veteran_rewards/events.iff')) as EventDataTableRow[];
+      const events = (await this.dataTable.load({ fileName: 'veteran_rewards/events.iff' })) as EventDataTableRow[];
 
       const eventDefinition = events.find(e => e.id === record.eventId);
 
@@ -127,7 +127,7 @@ export class AccountResolver implements ResolverInterface<Account> {
       return (await this.stringService.load(stringFile))?.[stringId] ?? null;
     }
 
-    const items = (await this.dataTable.load('veteran_rewards/items.iff')) as VetRewardItemDataTableRow[];
+    const items = (await this.dataTable.load({ fileName: 'veteran_rewards/items.iff' })) as VetRewardItemDataTableRow[];
 
     const itemDefinition = items.find(e => e.id === record.itemId);
 

@@ -3,6 +3,7 @@ import path from 'path';
 
 import { Parser } from 'binary-parser';
 import { SmartBuffer } from 'smart-buffer';
+import { camelCase } from 'lodash';
 
 import { IffReader } from './IFFReader';
 
@@ -29,6 +30,11 @@ import { IffReader } from './IFFReader';
 interface ColumnNames {
   numCols: number;
   columnNames: string[];
+}
+
+export interface LoadDatatableOptions {
+  fileName: string;
+  camelcase?: boolean;
 }
 
 const COLSParser = Parser.start()
@@ -58,8 +64,8 @@ const TYPEParser = Parser.start()
     readUntil: 'eof',
   });
 
-export async function loadDatatable<T extends object>(fileName: string) {
-  const filePath = path.join(__dirname, '../../data/datatables', `${fileName}`);
+export async function loadDatatable<T extends object>(options: LoadDatatableOptions) {
+  const filePath = path.join(__dirname, '../../data/datatables', `${options.fileName}`);
   const file = await fs.readFile(filePath);
 
   const iffReader = new IffReader(file);
@@ -92,9 +98,13 @@ export async function loadDatatable<T extends object>(fileName: string) {
   // + handle enums
   const getValueForColumn = (buffer: SmartBuffer, type: string) => {
     switch (type[0]) {
+      case 'b': {
+        const val = buffer.readInt32LE();
+        return Boolean(val);
+      }
+
       case 'v':
       case 'i':
-      case 'b':
       case 'e':
       case 'z':
       case 'h':
@@ -120,7 +130,11 @@ export async function loadDatatable<T extends object>(fileName: string) {
     const row: T = {} as T;
 
     for (let colIdx = 0; colIdx < cols.numCols; colIdx++) {
-      const columnName = cols.columnNames[colIdx];
+      let columnName = cols.columnNames[colIdx];
+      if (options.camelcase) {
+        columnName = camelCase(columnName);
+      }
+
       const columnType = colTypes.columnTypes[colIdx];
 
       // @ts-expect-error TODO: Make generics work with this line

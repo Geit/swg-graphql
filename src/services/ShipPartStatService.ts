@@ -441,10 +441,12 @@ export class ShipPartStatService {
 
   private async loadShipPartsFromDatatables() {
     for (const [className, classData] of Object.entries(COMPONENT_CLASS_DATA)) {
-      const components = (await this.dataTable.load(`ship/components/${className}.iff`)) as Record<
-        string,
-        string | number
-      >[];
+      // TODO: This could be better typed, but each component datatable has it's own unique signature,
+      // so would have to have a type lookup map.
+      type ComponentDatatableRow = Record<string, string | number>;
+      const components = await this.dataTable.load<ComponentDatatableRow>({
+        fileName: `ship/components/${className}.iff`,
+      });
       const bestInClass: StatBestInClassMap = new Map();
 
       components.forEach(component => {

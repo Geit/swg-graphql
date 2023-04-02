@@ -1,5 +1,6 @@
 import { Field, FieldResolver, Float, ObjectType, Resolver, Root } from 'type-graphql';
 import { Service } from 'typedi';
+import { CamelCasedProperties } from 'type-fest';
 
 import { ClusterClockService } from '../services/ClusterClockService';
 import { DataTableService } from '../services/DataTableService';
@@ -14,12 +15,12 @@ import {
 
 import { ResourceContainerObjectService } from '@core/services/ResourceContainerObjectService';
 
-interface ResourceTreeDatatableRow {
+type ResourceTreeDatatableRow = CamelCasedProperties<{
   INDEX: number;
   ENUM: string;
-}
+}>;
 
-interface ResourceDistributionRow {
+type ResourceDistributionRow = CamelCasedProperties<{
   'Resource Index#': number;
   Planet: string;
   'Pool Size Min': number;
@@ -33,7 +34,7 @@ interface ResourceDistributionRow {
   'Fractal Frequency': number;
   'Fractal Amplitude': number;
   'Fractal Octaves': number;
-}
+}>;
 
 @ObjectType()
 export class ResourceCirculationData {
@@ -90,32 +91,35 @@ export class ResourceTypeResolver {
     description: 'Shared fractal data for this resource',
   })
   async fractalData(@Root() resource: ResourceType): Promise<ResourceTypeFractalData | null> {
-    const resourceTree = (await this.dataTable.load('resource/resource_tree.iff')) as ResourceTreeDatatableRow[];
+    const resourceTree = (await this.dataTable.load({
+      fileName: 'resource/resource_tree.iff',
+      camelcase: true,
+    })) as ResourceTreeDatatableRow[];
 
-    const resourceRow = resourceTree.find(row => row.ENUM === resource.classId);
+    const resourceRow = resourceTree.find(row => row.enum === resource.classId);
 
     if (!resourceRow) return null;
 
-    const resourceDistributions = (await this.dataTable.load(
-      'resource/resource_distribution.iff'
-    )) as ResourceDistributionRow[];
+    const resourceDistributions = (await this.dataTable.load({
+      fileName: 'resource/resource_distribution.iff',
+    })) as ResourceDistributionRow[];
 
-    const dist = resourceDistributions.find(d => d['Resource Index#'] === resourceRow.INDEX);
+    const dist = resourceDistributions.find(d => d['resourceIndex#'] === resourceRow.index);
 
     if (!dist) return null;
 
     return {
-      poolSizeMin: dist['Pool Size Min'],
-      poolSizeMax: dist['Pool Size Max'],
-      type: dist['Fractal Type'],
-      xScale: dist['Fractal X Scale'],
-      yScale: dist['Fractal Y Scale'],
-      bias: dist['Fractal Bias'],
-      gain: dist['Fractal Gain'],
-      comboRule: dist['Fractal Combo Rule'],
-      frequency: dist['Fractal Frequency'],
-      amplitude: dist['Fractal Amplitude'],
-      octaves: dist['Fractal Octaves'],
+      poolSizeMin: dist.poolSizeMin,
+      poolSizeMax: dist.poolSizeMax,
+      type: dist.fractalType,
+      xScale: dist.fractalXScale,
+      yScale: dist.fractalYScale,
+      bias: dist.fractalBias,
+      gain: dist.fractalGain,
+      comboRule: dist.fractalComboRule,
+      frequency: dist.fractalFrequency,
+      amplitude: dist.fractalAmplitude,
+      octaves: dist.fractalOctaves,
     };
   }
 
