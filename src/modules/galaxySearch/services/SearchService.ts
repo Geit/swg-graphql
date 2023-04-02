@@ -1,9 +1,10 @@
 import { Service } from 'typedi';
 import esb, { Query } from 'elastic-builder';
 import { mergeWith } from 'lodash';
-import { ELASTIC_SEARCH_INDEX_NAME, ENABLE_TEXT_SEARCH } from '@core/config';
+import { ENABLE_TEXT_SEARCH } from '@core/config';
 import { elasticClient } from '@core/utils/elasticClient';
 
+import { GALAXY_SEARCH_INDEX_NAME } from '../config';
 import { SearchDocument } from '../types';
 
 function concatIfArray<T>(objValue: T, srcValue: T) {
@@ -145,7 +146,7 @@ export class SearchService {
     }
 
     const elasticResponse = await this.elastic.search<SearchDocument>({
-      index: ELASTIC_SEARCH_INDEX_NAME,
+      index: GALAXY_SEARCH_INDEX_NAME,
       size: filters.size,
       from: filters.from,
       query: elasticQuery,

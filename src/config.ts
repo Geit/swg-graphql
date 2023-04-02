@@ -53,8 +53,6 @@ export const ELASTIC_SEARCH_URL = process.env.ELASTIC_SEARCH_URL ?? 'http://loca
 export const ELASTIC_SEARCH_AUTH =
   process.env.ELASTIC_SEARCH_AUTH ?? '{ "username": "elastic", "password": "changeme" }';
 
-export const ELASTIC_SEARCH_INDEX_NAME = process.env.ELASTIC_SEARCH_INDEX_NAME ?? 'object_search_index';
-
 /**
  * Required Elastic privilege the requesters must have in order to make queries.
  */
