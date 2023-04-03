@@ -118,9 +118,9 @@ export class PlayerCreatureObjectResolver
 
   @FieldResolver(() => Int)
   async level(@Root() object: PlayerCreatureObject) {
-    const skills = await this.skills(object);
+    const [skills, playerObject] = await Promise.all([this.skills(object), this.playerObject(object)]);
 
-    return this.skillService.getLevelForPlayer(skills);
+    return this.skillService.getLevelForPlayer(skills, playerObject.id);
   }
 
   @FieldResolver(() => City, { nullable: true, description: 'The City the player is Resident in' })

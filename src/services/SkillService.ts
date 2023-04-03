@@ -1,9 +1,11 @@
 import { Inject, Service } from 'typedi';
 import { CamelCasedProperties, Merge } from 'type-fest';
+import { camelCase } from 'lodash';
 
 import { DataTableService } from './DataTableService';
 import { ObjVarService } from './ObjVarService';
 import { StringFileLoader } from './StringFileLoader';
+import db from './db';
 
 import { isPresent } from '@core/utils/utility-types';
 
@@ -66,6 +68,12 @@ interface SkillDataToAdd {
   preclusionSkills: string[] | null;
 }
 
+interface ExperienceRecord {
+  OBJECT_ID: number;
+  EXPERIENCE_TYPE: string;
+  POINTS: number;
+}
+
 type EnrichedSkillData = Merge<SkillDatableRow, SkillDataToAdd>;
 
 const splitToArrayOrNull = (csvString: string): string[] | null => (csvString ? csvString.split(',') : null);
@@ -81,6 +89,8 @@ export class SkillService {
 
   private _levelData: PlayerLevelDatatableRow[] = [];
   private _xpTypesThatAffectLevel: Set<string> = new Set();
+
+  private db = db;
 
   constructor(private readonly dataTable: DataTableService, private readonly stringService: StringFileLoader) {
     this.loadSkillData();
@@ -150,12 +160,33 @@ export class SkillService {
     }
   }
 
-  public getLevelForPlayer(skills: EnrichedSkillData[]) {
+  public async getExperiencePointsForObject(objectId: string): Promise<CamelCasedProperties<ExperienceRecord>[]> {
+    const experienceRecords = await this.db
+      .select('*')
+      .from<ExperienceRecord>('EXPERIENCE_POINTS')
+      .where('OBJECT_ID', objectId);
+
+    const result = experienceRecords.map(er =>
+      Object.fromEntries(Object.entries(er).map(([key, val]) => [camelCase(key), val]))
+    ) as CamelCasedProperties<ExperienceRecord>[];
+
+    return result;
+  }
+
+  public async getLevelForPlayer(skills: EnrichedSkillData[], playerObjectId: string) {
     let totalXp = 0;
 
     for (const skill of skills) {
       if (this._xpTypesThatAffectLevel.has(skill.xpType)) {
         totalXp += skill.xpCost;
+      }
+    }
+
+    const xp = await this.getExperiencePointsForObject(playerObjectId);
+
+    for (const xpEntry of xp) {
+      if (this._xpTypesThatAffectLevel.has(xpEntry.experienceType)) {
+        totalXp += xpEntry.points;
       }
     }
 
