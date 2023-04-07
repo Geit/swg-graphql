@@ -1,9 +1,8 @@
-import { Inject, Service } from 'typedi';
+import { Service } from 'typedi';
 import { CamelCasedProperties, Merge } from 'type-fest';
 import { camelCase } from 'lodash';
 
 import { DataTableService } from './DataTableService';
-import { ObjVarService } from './ObjVarService';
 import { StringFileLoader } from './StringFileLoader';
 import db from './db';
 
@@ -80,9 +79,6 @@ const splitToArrayOrNull = (csvString: string): string[] | null => (csvString ? 
 
 @Service({ global: true, eager: true })
 export class SkillService {
-  @Inject()
-  private readonly objvarService: ObjVarService;
-
   loadingHandle: false | Promise<void> = false;
 
   private _skillMap = new Map<string, EnrichedSkillData>();
