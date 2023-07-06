@@ -38,6 +38,3 @@ dist
 start.sh
 *.generated.ts
 
-
-# Legends specific modules
-src/modules/legends_*

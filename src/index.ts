@@ -22,11 +22,10 @@ import { mergeWith } from 'lodash';
 import { ZodError } from 'zod';
 import 'express-async-errors';
 
+import { glob } from 'glob';
+
 import { PORT, DISABLE_AUTH } from './config';
 import { checkKibanaToken } from './context/kibana-auth';
-import { galaxySearchModule } from './modules/galaxySearch';
-import { transactionsModule } from './modules/transactions';
-import { loginsModule } from './modules/legends_logins';
 import { ContextType } from './context/types';
 import { getRequestContext } from './context';
 import { Module, ModuleExports } from './moduleTypes';
@@ -41,7 +40,21 @@ function concatIfArray<T>(objValue: T, srcValue: T) {
   }
 }
 
-const modules: Module[] = [galaxySearchModule, transactionsModule, loginsModule];
+const findAndLoadModules = async () => {
+  const moduleEntryPoints = await glob('modules/**/index.module.{ts,js}', { cwd: __dirname });
+  const importPromises = moduleEntryPoints.map(entry => import(entry).then(m => m.default as Module));
+
+  const importedModules = await Promise.all(importPromises);
+
+  const moduleResults = await Promise.all(importedModules.map(bootstrapModule => bootstrapModule()));
+  const validModules = moduleResults.filter(isPresent);
+
+  validModules.forEach(vm => {
+    console.log(`Loaded module: ${vm.moduleName}`);
+  });
+
+  return validModules;
+};
 
 async function bootstrap() {
   const app = express();
@@ -73,13 +86,13 @@ async function bootstrap() {
   );
   app.use(json({ limit: '1MB' }));
 
-  const moduleResults = await Promise.all(modules.map(m => m()));
-  const validModules = moduleResults.filter(isPresent);
+  const modules = await findAndLoadModules();
+
   const {
     queues: moduleQueues,
     resolvers: moduleResolvers,
     routes: moduleRouters,
-  } = validModules.reduce((acc, cur) => {
+  } = modules.reduce((acc, cur) => {
     return mergeWith(acc, cur, concatIfArray);
   }, {} as ModuleExports);
 

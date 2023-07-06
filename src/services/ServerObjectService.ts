@@ -1,5 +1,6 @@
 import DataLoader from 'dataloader';
 import { Service } from 'typedi';
+import { chunk } from 'lodash';
 
 import { ServerObject, TAG_TO_TYPE_MAP } from '../types';
 import { PlayerCreatureObject } from '../types/PlayerCreatureObject';
@@ -91,7 +92,16 @@ export class ServerObjectService {
     }
 
     if (filters.objectIds) {
-      query.whereIn('OBJECTS.OBJECT_ID', filters.objectIds);
+      query.andWhere(qb => {
+        if (!filters.objectIds) return;
+
+        // Keep number of items in each `whereIn` below 1000 because of Oracle Limit.
+        const objectIdParts = chunk(filters.objectIds, 999);
+
+        objectIdParts.forEach(objectIdsPart => {
+          qb.orWhereIn('OBJECTS.OBJECT_ID', objectIdsPart);
+        });
+      });
     }
 
     if (filters.ownedBy) {

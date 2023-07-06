@@ -21,7 +21,7 @@ type ResourceTreeDatatableRow = CamelCasedProperties<{
 }>;
 
 type ResourceDistributionRow = CamelCasedProperties<{
-  'Resource Index#': number;
+  'Resource Index': number;
   Planet: string;
   'Pool Size Min': number;
   'Pool Size Max': number;
@@ -102,9 +102,10 @@ export class ResourceTypeResolver {
 
     const resourceDistributions = (await this.dataTable.load({
       fileName: 'resource/resource_distribution.iff',
+      camelcase: true,
     })) as ResourceDistributionRow[];
 
-    const dist = resourceDistributions.find(d => d['resourceIndex#'] === resourceRow.index);
+    const dist = resourceDistributions.find(d => d.resourceIndex === resourceRow.index);
 
     if (!dist) return null;
 

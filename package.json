@@ -4,7 +4,7 @@
   "private": true,
   "license": "ISC",
   "workspaces": [
-    "src/modules/*"
+    "src/modules/**/*"
   ],
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
@@ -57,6 +57,7 @@
     "elastic-builder": "^2.18.1",
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
+    "glob": "^10.3.1",
     "got": "^11.8.2",
     "graphql": "^16.6.0",
     "graphql-subscriptions": "^2.0.0",
