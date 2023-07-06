@@ -38,3 +38,4 @@ dist
 start.sh
 *.generated.ts
 
+*.local.*
