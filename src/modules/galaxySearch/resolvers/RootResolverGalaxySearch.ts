@@ -70,9 +70,10 @@ export class RootResolver {
     const presentResults = results.filter(isPresent);
 
     const pureOidRegex = searchTextIsEsQuery ? /"query":"(\d+)"/ : /^\d+$/;
+    const oidFromSearch = searchText.trim().match(pureOidRegex)?.[1];
 
-    if (presentResults.length === 0 && searchText.trim().match(pureOidRegex)?.[1]) {
-      const exactOidMatch = await this.objectService.getOne(searchText.trim());
+    if (presentResults.length === 0 && oidFromSearch) {
+      const exactOidMatch = await this.objectService.getOne(oidFromSearch);
 
       if (exactOidMatch) presentResults.push(exactOidMatch);
     }
