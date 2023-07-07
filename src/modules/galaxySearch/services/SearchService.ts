@@ -82,7 +82,7 @@ export class SearchService {
               .query(searchText)
               .fuzziness('AUTO')
               .fields(['accountName^2', 'resourceName', 'resourceClass', 'resourceClassId', '*']),
-            esb.multiMatchQuery().query(searchText).fields(['id^5', 'stationId^5', '*']),
+            esb.multiMatchQuery().query(searchText).fields(['id^10', 'stationId^5', '*']),
           ])
           .tieBreaker(1.0)
       );
