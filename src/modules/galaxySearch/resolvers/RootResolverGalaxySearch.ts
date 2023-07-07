@@ -67,13 +67,13 @@ export class RootResolver {
       })
     );
 
-    if (results.length === 0 && searchText.trim().match(/^\d+$/)) {
+    const presentResults = results.filter(isPresent);
+
+    if (presentResults.length === 0 && searchText.trim().match(/^\d+$/)) {
       const exactOidMatch = await this.objectService.getOne(searchText.trim());
 
-      if (exactOidMatch) results.push(exactOidMatch);
+      if (exactOidMatch) presentResults.push(exactOidMatch);
     }
-
-    const presentResults = results.filter(isPresent);
 
     const total = rawResults?.hits?.total;
     const totalResultCount = (typeof total === 'object' ? total.value : total) ?? 0;

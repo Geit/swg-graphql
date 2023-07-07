@@ -43,6 +43,7 @@ export class SearchService {
     const scoreFunctionQuery = esb
       .functionScoreQuery()
       .functions([
+        esb.weightScoreFunction().filter(esb.matchQuery('id', searchText)).weight(100),
         esb.weightScoreFunction().filter(esb.matchQuery('type', 'Account')).weight(30),
         esb.weightScoreFunction().filter(esb.existsQuery('stationId')).weight(10),
       ])
