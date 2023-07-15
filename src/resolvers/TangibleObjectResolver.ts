@@ -24,6 +24,15 @@ export class ShipPartSummary {
 }
 
 @ObjectType()
+class StajTier {
+  @Field()
+  name!: string;
+
+  @Field()
+  color: string;
+}
+
+@ObjectType()
 class ShipPartStat {
   @Field()
   name!: string;
@@ -33,6 +42,9 @@ class ShipPartStat {
 
   @Field(() => Float, { nullable: true })
   percentile: number | null;
+
+  @Field(() => StajTier, { nullable: true })
+  stajTier: StajTier | null;
 }
 
 @Resolver(() => ITangibleObject)
