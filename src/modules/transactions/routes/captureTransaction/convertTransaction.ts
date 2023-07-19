@@ -32,6 +32,10 @@ interface TransactionParty {
   name: string;
   itemsReceived: TransactionItem[];
   creditsReceived: number;
+  wasOnline: boolean;
+  containedById?: string;
+  worldspaceLocation?: number[];
+  scene?: string;
 }
 
 const convertQueryItemToTransactionItem = (
@@ -88,6 +92,10 @@ export const convertTransactionLogToTransaction = async (tlog: TransactionLog): 
     name: PartyADetails.resolvedName,
     creditsReceived: parseInt(tlog.transaction_party_a_credits),
     itemsReceived: extractItemsReceived(tlog.transaction_party_a_items, enrichedItemDetails),
+    wasOnline: PartyADetails.session?.currentState === 'Playing' ?? false,
+    worldspaceLocation: PartyADetails.worldspaceLocation ?? undefined,
+    scene: PartyADetails.scene,
+    containedById: PartyADetails.containedById ?? undefined,
   };
 
   const PartyB: TransactionParty = {
@@ -96,6 +104,10 @@ export const convertTransactionLogToTransaction = async (tlog: TransactionLog): 
     name: PartyBDetails.resolvedName,
     creditsReceived: parseInt(tlog.transaction_party_b_credits),
     itemsReceived: extractItemsReceived(tlog.transaction_party_b_items, enrichedItemDetails),
+    wasOnline: PartyBDetails.session?.currentState === 'Playing' ?? false,
+    worldspaceLocation: PartyBDetails.worldspaceLocation ?? undefined,
+    scene: PartyBDetails.scene,
+    containedById: PartyBDetails.containedById ?? undefined,
   };
 
   return {

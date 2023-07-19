@@ -4,6 +4,12 @@ query getCharacters($objectIds: [ID!]!, $limit: Int) {
     id
     resolvedName
     ... on PlayerCreatureObject {
+      worldspaceLocation
+      scene
+      containedById
+      session {
+        currentState
+      }
       account {
         id
       }
