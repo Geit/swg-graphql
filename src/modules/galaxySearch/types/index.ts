@@ -66,7 +66,7 @@ export interface AccountDocument extends BaseDocument {
   accountName?: string;
   characters: string[];
   characterIds: string[];
-  stationId: string;
+  stationId: string[];
 }
 
 export type SearchDocument = AccountDocument | ObjectDocument | ResourceTypeDocument;
