@@ -39,7 +39,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
         const accountDoc: AccountDocument = {
           type: 'Account',
           id: object.account.id,
-          stationId: object.account.id,
+          stationId: [parseInt(object.account.id) << 32, parseInt(object.account.id) >>> 0].map(String),
           lastSeen: new Date().toISOString(),
           accountName: object.account.accountName ?? '',
           characterIds: object.account.characters?.map(c => c.id).filter(isPresent) ?? [],
