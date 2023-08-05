@@ -95,6 +95,10 @@ export class ServerObjectService {
       query.andWhere(qb => {
         if (!filters.objectIds) return;
 
+        // Always include at least one `whereIn` clause if objectIds is provided.
+        // This clause should never return an item.
+        qb.orWhereIn('OBJECTS.OBJECT_ID', ['-1']);
+
         // Keep number of items in each `whereIn` below 1000 because of Oracle Limit.
         const objectIdParts = chunk(filters.objectIds, 999);
 
