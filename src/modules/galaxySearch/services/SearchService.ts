@@ -3,6 +3,7 @@ import esb, { Query } from 'elastic-builder';
 import { mergeWith } from 'lodash';
 import { ENABLE_TEXT_SEARCH } from '@core/config';
 import { elasticClient } from '@core/utils/elasticClient';
+import { isPresent } from '@core/utils/utility-types';
 
 import { GALAXY_SEARCH_INDEX_NAME } from '../config';
 import { SearchDocument } from '../types';
@@ -42,11 +43,15 @@ export class SearchService {
 
     const scoreFunctionQuery = esb
       .functionScoreQuery()
-      .functions([
-        esb.weightScoreFunction().filter(esb.matchQuery('id', searchText)).weight(100),
-        esb.weightScoreFunction().filter(esb.matchQuery('type', 'Account')).weight(30),
-        esb.weightScoreFunction().filter(esb.existsQuery('stationId')).weight(10),
-      ])
+      .functions(
+        [
+          !filters.searchTextIsEsQuery
+            ? esb.weightScoreFunction().filter(esb.matchQuery('id', searchText)).weight(100)
+            : undefined,
+          esb.weightScoreFunction().filter(esb.matchQuery('type', 'Account')).weight(30),
+          esb.weightScoreFunction().filter(esb.existsQuery('stationId')).weight(10),
+        ].filter(isPresent)
+      )
       .boostMode('multiply');
 
     const mustQueries: Query[] = [];

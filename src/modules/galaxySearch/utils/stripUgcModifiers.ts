@@ -1,4 +1,4 @@
-const REGEX_COLOR_ESCAPE = /(\\#[A-Fa-f0-9]{6})/g;
+const REGEX_COLOR_ESCAPE = /(\\#[A-Fa-f0-9]{6}|\\#)/g;
 
 /**
  * Removes modifier tokens from user generated names. This is to be used to places
