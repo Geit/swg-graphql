@@ -23,6 +23,10 @@ export interface ObjectDocument extends BaseDocument {
     y: number;
     z: number;
   };
+  shipPart?: {
+    headlinePercentile: number;
+    reverseEngineeringLevel: number;
+  };
 
   // Only for Character Objects
   accountName?: string;

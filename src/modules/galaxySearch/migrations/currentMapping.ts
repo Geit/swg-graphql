@@ -20,6 +20,8 @@ export const currentMappingProperties: Record<string, MappingProperty> = {
   ownerStationId: { type: 'keyword' },
   template: { type: 'text' },
   templateId: { type: 'keyword' },
+  'shipPart.headlinePercentile': { type: 'float' },
+  'shipPart.reverseEngineeringLevel': { type: 'integer' },
 
   relevancyBump: { type: 'rank_feature' },
   resourceName: {

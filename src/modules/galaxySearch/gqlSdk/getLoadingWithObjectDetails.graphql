@@ -29,6 +29,10 @@ query getLoadingWithObjectDetails($loadWithIds: [ID!]!, $limit: Int, $excludeDel
           }
         }
       }
+      shipPartSummary {
+        headlinePercentile
+        reverseEngineeringLevel
+      }
     }
 
     ... on PlayerCreatureObject {

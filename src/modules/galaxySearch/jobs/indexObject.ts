@@ -97,6 +97,14 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
         z: location?.[2] ?? 0,
       },
 
+      ...('shipPartSummary' in object &&
+        object.shipPartSummary && {
+          shipPart: {
+            headlinePercentile: object.shipPartSummary.headlinePercentile,
+            reverseEngineeringLevel: object.shipPartSummary.headlinePercentile,
+          },
+        }),
+
       ...(object.deletionReason &&
         object.deletionDate && {
           deletionReason: object.deletionReason,
