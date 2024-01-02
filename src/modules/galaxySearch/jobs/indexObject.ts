@@ -101,7 +101,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
         object.shipPartSummary && {
           shipPart: {
             headlinePercentile: object.shipPartSummary.headlinePercentile,
-            reverseEngineeringLevel: object.shipPartSummary.headlinePercentile,
+            reverseEngineeringLevel: object.shipPartSummary.reverseEngineeringLevel,
           },
         }),
 
