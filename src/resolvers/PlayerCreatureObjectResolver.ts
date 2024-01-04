@@ -140,7 +140,7 @@ export class PlayerCreatureObjectResolver
       objectTypes: [TAGIFY('PLAY')],
     });
 
-    if (!objects || objects.length === 0) throw new Error('Character with no player object is invalid!');
+    if (!objects || objects.length === 0) throw new Error(`Character ${object.id} with no player object is invalid!`);
 
     return objects[0];
   }
