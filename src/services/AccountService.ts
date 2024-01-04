@@ -8,11 +8,38 @@ import db, { loginDb } from './db';
 /**
  * Derived from the PLAYERS table.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface PlayerRecord {
   CHARACTER_OBJECT: string;
   STATION_ID: number | null;
   CREATE_TIME: Date | null;
   LAST_LOGIN_TIME: Date | null;
+}
+
+interface SwgCharactersRecord {
+  STATION_ID: number;
+  CLUSTER_ID: number;
+  CHARACTER_NAME: string;
+  OBJECT_ID: number | null;
+  CHARACTER_TYPE: number | null;
+  TEMPLATE_ID: number | null;
+  ENABLED: string;
+}
+
+interface ClusterListRecord {
+  ID: number;
+  NAME: string | null;
+  NUM_CHARACTERS: number | null;
+  ADDRESS: string | null;
+  PORT: number | null;
+  SECRET: string | null;
+  LOCKED: string | null;
+  NOT_RECOMMENDED: string | null;
+  GROUP_ID: number;
+  ONLINE_PLAYER_LIMIT: number | null;
+  ONLINE_FREE_TRIAL_LIMIT: number | null;
+  FREE_TRIAL_CAN_CREATE_CHAR: string | null;
+  ONLINE_TUTORIAL_LIMIT: number | null;
 }
 
 interface AccountRewardEventRecord {
@@ -39,9 +66,10 @@ export class AccountService {
   private loginDb = loginDb;
 
   async getAllCharactersForAccount(stationId: number) {
-    const characters = await this.db
-      .select('CHARACTER_OBJECT')
-      .from<PlayerRecord>('PLAYERS')
+    const characters = await this.loginDb
+      .select('OBJECT_ID')
+      .from<SwgCharactersRecord>('SWG_CHARACTERS')
+      .innerJoin<ClusterListRecord>('CLUSTER_LIST', 'SWG_CHARACTERS.CLUSTER_ID', 'CLUSTER_LIST.ID')
       .where('STATION_ID', stationId);
 
     return characters;

@@ -69,7 +69,7 @@ export class AccountResolver implements ResolverInterface<Account> {
   ) {
     const characters = await this.accountService.getAllCharactersForAccount(account.id);
 
-    const characterIds = characters.map(char => char.CHARACTER_OBJECT);
+    const characterIds = characters.filter(isPresent).map(char => String(char.OBJECT_ID));
 
     return this.objectService.getMany({ excludeDeleted, objectIds: characterIds });
   }
@@ -91,7 +91,7 @@ export class AccountResolver implements ResolverInterface<Account> {
 
     const characters = await this.accountService.getAllCharactersForAccount(account.id);
 
-    const characterIds = characters.map(char => char.CHARACTER_OBJECT);
+    const characterIds = characters.filter(isPresent).map(char => String(char.OBJECT_ID));
 
     if (ENABLE_STRUCTURE_SHORTCUT && objectTypes && subsetOf(objectTypes, STRUCTURE_TYPE_IDS)) {
       const structureOids = (
