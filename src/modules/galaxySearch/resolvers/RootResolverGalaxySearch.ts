@@ -41,7 +41,7 @@ export class RootResolver {
 
     if (!rawResults)
       return {
-        totalResultCount: 0,
+        totalResults: 0,
         results: null,
       };
 
@@ -79,10 +79,10 @@ export class RootResolver {
     }
 
     const total = rawResults?.hits?.total;
-    const totalResultCount = (typeof total === 'object' ? total.value : total) ?? 0;
+    const totalResults = (typeof total === 'object' ? total.value : total) ?? 0;
 
     return {
-      totalResultCount,
+      totalResults,
       results: presentResults,
     };
   }

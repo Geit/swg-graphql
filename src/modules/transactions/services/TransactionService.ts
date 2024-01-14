@@ -1,8 +1,7 @@
 import { Service } from 'typedi';
 import esb, { Query } from 'elastic-builder';
 import z from 'zod';
-import { isPresent } from '@core/utils/utility-types';
-import { elasticClient } from '@core/utils/elasticClient';
+import { elasticClient, transformElasticResponse } from '@core/utils/elasticClient';
 
 import { Transaction, TransactionServiceResponse } from '../types/Transaction';
 
@@ -97,12 +96,6 @@ export class TransactionService {
       body: elasticBody.toJSON(),
     });
 
-    const total = elasticResponse.hits?.total;
-    const totalResults = (typeof total === 'object' ? total.value : total) ?? 0;
-
-    return {
-      totalResults,
-      results: elasticResponse.hits.hits.map(hit => hit._source).filter(isPresent),
-    };
+    return transformElasticResponse(elasticResponse);
   }
 }

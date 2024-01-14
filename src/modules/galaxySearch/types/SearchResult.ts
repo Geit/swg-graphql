@@ -41,7 +41,7 @@ export const SearchResultUnion: UnenrichedServerObject | UnenrichedAccount | Res
 @ObjectType()
 export class SearchResultDetails {
   @Field(() => Int, { description: 'Estimated number of results found for this search' })
-  totalResultCount: number;
+  totalResults: number;
 
   @Field(() => [SearchResultUnion], { description: 'Results in this page', nullable: true })
   results: (typeof SearchResultUnion)[] | null;
