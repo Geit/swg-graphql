@@ -117,21 +117,27 @@ export class CityResolver /* implements ResolverInterface<City> */ {
 
   @FieldResolver(() => CityStructureSummary)
   structureSummary(@Root() city: City) {
-    let decoCount = 0;
-    let terminalCount = 0;
-    let skillTrainerCount = 0;
+    const counts = {
+      decoCount: 0,
+      terminalCount: 0,
+      skillTrainerCount: 0,
+      lowCostCount: 0,
+      mediumCostCount: 0,
+      highCostCount: 0,
+      registerCount: 0,
+    };
 
     city.structures.forEach(s => {
-      if (s.type & StructureTypeFlags.Decoration) decoCount += 1;
-      if (s.type & StructureTypeFlags.MissionTerminal) terminalCount += 1;
-      if (s.type & StructureTypeFlags.SkillTrainer) skillTrainerCount += 1;
+      if (s.type & StructureTypeFlags.Decoration) counts.decoCount += 1;
+      if (s.type & StructureTypeFlags.MissionTerminal) counts.terminalCount += 1;
+      if (s.type & StructureTypeFlags.SkillTrainer) counts.skillTrainerCount += 1;
+      if (s.type & StructureTypeFlags.CostCityLow) counts.lowCostCount += 1;
+      if (s.type & StructureTypeFlags.CostCityMedium) counts.mediumCostCount += 1;
+      if (s.type & StructureTypeFlags.CostCityHigh) counts.highCostCount += 1;
+      if (s.type & StructureTypeFlags.Register) counts.registerCount += 1;
     });
 
-    return {
-      decoCount,
-      terminalCount,
-      skillTrainerCount,
-    };
+    return counts;
   }
 }
 

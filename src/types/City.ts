@@ -115,4 +115,16 @@ export class CityStructureSummary {
 
   @Field(() => Int, { description: 'Number of skill trainers within the city' })
   skillTrainerCount: number;
+
+  @Field(() => Int, { description: 'Number of low cost structures within the city' })
+  lowCostCount: number;
+
+  @Field(() => Int, { description: 'Number of medium cost structures within the city' })
+  mediumCostCount: number;
+
+  @Field(() => Int, { description: 'Number of high cost structures within the city' })
+  highCostCount: number;
+
+  @Field(() => Int, { description: 'Number of registered structures within the city' })
+  registerCount: number;
 }
