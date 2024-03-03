@@ -104,3 +104,15 @@ export class City {
   @Field(() => [CityStructure], { description: 'Information about the structures that make up the city' })
   structures: CityStructure[];
 }
+
+@ObjectType()
+export class CityStructureSummary {
+  @Field(() => Int, { description: 'Number of decorations within the city' })
+  decoCount: number;
+
+  @Field(() => Int, { description: 'Number of terminals within the city' })
+  terminalCount: number;
+
+  @Field(() => Int, { description: 'Number of skill trainers within the city' })
+  skillTrainerCount: number;
+}

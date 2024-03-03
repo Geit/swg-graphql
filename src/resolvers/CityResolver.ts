@@ -4,7 +4,7 @@ import { Service } from 'typedi';
 import { ServerObjectService } from '../services/ServerObjectService';
 import { StringFileLoader } from '../services/StringFileLoader';
 import { BuildingObject, CellObject, PlayerCreatureObject } from '../types';
-import { City, Citizen, CityStructure } from '../types/City';
+import { City, Citizen, CityStructure, CityStructureSummary } from '../types/City';
 
 enum StructureTypeFlags {
   Register = 1 << 0,
@@ -113,6 +113,25 @@ export class CityResolver /* implements ResolverInterface<City> */ {
     }
 
     return null;
+  }
+
+  @FieldResolver(() => CityStructureSummary)
+  structureSummary(@Root() city: City) {
+    let decoCount = 0;
+    let terminalCount = 0;
+    let skillTrainerCount = 0;
+
+    city.structures.forEach(s => {
+      if (s.type & StructureTypeFlags.Decoration) decoCount += 1;
+      if (s.type & StructureTypeFlags.MissionTerminal) terminalCount += 1;
+      if (s.type & StructureTypeFlags.SkillTrainer) skillTrainerCount += 1;
+    });
+
+    return {
+      decoCount,
+      terminalCount,
+      skillTrainerCount,
+    };
   }
 }
 
