@@ -166,4 +166,16 @@ export class CityStructureResolver /* implements ResolverInterface<Citizen> */ {
   object(@Root() structure: CityStructure) {
     return this.objectService.getOne(structure.id);
   }
+
+  @FieldResolver(() => [String], {
+    description: 'Flag names for the type bits set on the structure',
+    nullable: false,
+  })
+  typeBitNames(@Root() structure: CityStructure) {
+    return Object.entries(StructureTypeFlags).flatMap(([key, value]) => {
+      if (typeof value !== 'string' && structure.type & value) return [key];
+
+      return [];
+    });
+  }
 }
