@@ -26,7 +26,8 @@ export class NameResolutionService {
 
       return strings[object.nameStringText] || `@${object.nameStringTable}:${object.nameStringText}`;
     }
+
     // TODO: Come up with some better default name (perhaps based on the object type or template?)
-    return 'UNKNOWN';
+    return object.nameStringText || 'UNKNOWN';
   }
 }
