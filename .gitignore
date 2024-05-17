@@ -35,6 +35,8 @@ data/**/*
 !data/planet-servers.example.json
 dist
 
+src/modules/legends*
+
 start.sh
 *.generated.ts
 
