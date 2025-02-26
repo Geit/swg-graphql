@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType, createUnionType } from 'type-graphql';
+import { Field, ID, Int, Float, ObjectType, createUnionType } from 'type-graphql';
 import { Account, UnenrichedAccount, UnenrichedServerObject, PlayerCreatureObject } from '@core/types';
 
 export const RollupPartyEntity: UnenrichedServerObject | UnenrichedAccount = createUnionType({
@@ -42,7 +42,7 @@ export class TransactionRollupParty {
   @Field(() => [TransactionRollupItem])
   itemsReceived: TransactionRollupItem[];
 
-  @Field(() => Int)
+  @Field(() => Float)
   creditsReceived: number;
 }
 
@@ -54,7 +54,7 @@ export class TransactionRollup {
   @Field()
   untilDate: string;
 
-  @Field(() => Int)
+  @Field(() => Float)
   totalValue: number;
 
   @Field(() => Int)
