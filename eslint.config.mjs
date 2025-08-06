@@ -1,48 +1,28 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { defineConfig, globalIgnores } from 'eslint/config';
-import { fixupConfigRules, fixupPluginRules } from '@eslint/compat';
-import prettier from 'eslint-plugin-prettier';
-import promise from 'eslint-plugin-promise';
-import jest from 'eslint-plugin-jest';
 import globals from 'globals';
-import babelParser from '@babel/eslint-parser';
-import typescriptEslintEslintPlugin from '@typescript-eslint/eslint-plugin';
-import tsParser from '@typescript-eslint/parser';
 import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import pluginPromise from 'eslint-plugin-promise';
+import importPlugin from 'eslint-plugin-import';
+import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   globalIgnores(['**/*.d.ts', '**/.next', '**/public', '**/node_modules', '**/build', '**/*.generated.ts']),
+  eslintPluginPrettierRecommended,
+  importPlugin.flatConfigs.recommended,
+  pluginPromise.configs['flat/recommended'],
+  tseslint.config(js.configs.recommended, tseslint.configs.recommended),
   {
-    extends: fixupConfigRules(
-      compat.extends(
-        'eslint:recommended',
-        'prettier',
-        'plugin:eslint-comments/recommended',
-        'plugin:promise/recommended',
-        'plugin:jest/recommended',
-        'plugin:import/errors',
-        'plugin:import/typescript',
-        'plugin:@typescript-eslint/recommended'
-      )
-    ),
-
-    plugins: {
-      prettier,
-      promise: fixupPluginRules(promise),
-      jest: fixupPluginRules(jest),
+    files: ['**/*.{ts,tsx}'],
+    extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'error',
+      'no-shadow': 'off',
+      '@typescript-eslint/no-shadow': ['error'],
     },
-
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.node,
@@ -50,13 +30,8 @@ export default defineConfig([
         ...globals.browser,
       },
 
-      parser: babelParser,
       ecmaVersion: 2020,
       sourceType: 'module',
-
-      parserOptions: {
-        requireConfigFile: false,
-      },
     },
 
     settings: {
@@ -66,12 +41,6 @@ export default defineConfig([
     },
 
     rules: {
-      'eslint-comments/no-unused-disable': 'error',
-      'jest/consistent-test-it': 'error',
-      'jest/expect-expect': 'error',
-      'jest/prefer-spy-on': 'error',
-      'jest/prefer-to-contain': 'error',
-      'jest/prefer-to-have-length': 'error',
       'array-callback-return': 'error',
       camelcase: 'error',
       'default-case': 'error',
@@ -178,6 +147,8 @@ export default defineConfig([
       'import/extensions': 'error',
       'import/no-unresolved': ['error'],
       'import/named': 'off',
+      'import/no-named-as-default': 'off',
+      'import/no-named-as-default-member': 'off',
 
       'import/order': [
         'error',
@@ -185,24 +156,6 @@ export default defineConfig([
           'newlines-between': 'always',
         },
       ],
-    },
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx'],
-
-    plugins: {
-      '@typescript-eslint': fixupPluginRules(typescriptEslintEslintPlugin),
-    },
-
-    languageOptions: {
-      parser: tsParser,
-    },
-
-    rules: {
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': 'error',
-      'no-shadow': 'off',
-      '@typescript-eslint/no-shadow': ['error'],
     },
   },
 ]);
