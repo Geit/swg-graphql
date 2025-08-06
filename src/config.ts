@@ -31,6 +31,11 @@ export const ORA_DATABASE = process.env.ORA_DATABASE ?? 'swg';
 export const ORA_DOMAIN = process.env.ORA_DOMAIN ?? 'swg';
 
 /**
+ * Whether to use the thin client for Oracle. Only supported for Oracle 12+
+ */
+export const ORA_USE_THIN_CLIENT = process.env.ORA_USE_THIN_CLIENT === '1';
+
+/**
  * The port to expose the GraphQL server on.
  */
 export const PORT = parseInt(process.env.PORT ?? '4000');

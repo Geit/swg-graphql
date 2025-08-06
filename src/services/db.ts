@@ -1,4 +1,5 @@
 import knex from 'knex';
+import oracledb from 'oracledb';
 
 import {
   ORA_CONN_STRING,
@@ -14,7 +15,10 @@ import {
   ORA_LOGIN_HOST,
   ORA_LOGIN_PASS,
   ORA_LOGIN_USER,
+  ORA_USE_THIN_CLIENT,
 } from '../config';
+
+if (!ORA_USE_THIN_CLIENT) oracledb.initOracleClient();
 
 /**
  * Creates a simple Knex object connected to our Oracle DB.
