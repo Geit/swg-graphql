@@ -1,17 +1,20 @@
 {
   "__schema": {
     "queryType": {
-      "name": "Query"
+      "name": "Query",
+      "kind": "OBJECT"
     },
     "mutationType": null,
     "subscriptionType": {
-      "name": "Subscription"
+      "name": "Subscription",
+      "kind": "OBJECT"
     },
     "types": [
       {
         "kind": "OBJECT",
         "name": "Account",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "accountName",
@@ -57,6 +60,111 @@
                   "name": "PlayerCreatureObject",
                   "ofType": null
                 }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "historicalSessions",
+            "description": null,
+            "args": [
+              {
+                "name": "afterDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-30d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "beforeDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "from",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "0",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "50",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortDirection",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortField",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "SessionResult",
+                "ofType": null
               }
             },
             "isDeprecated": false,
@@ -246,6 +354,7 @@
         "kind": "OBJECT",
         "name": "AccountVeteranRewardEntry",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "character",
@@ -345,6 +454,7 @@
         "kind": "SCALAR",
         "name": "Boolean",
         "description": "The `Boolean` scalar type represents `true` or `false`.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -355,6 +465,7 @@
         "kind": "OBJECT",
         "name": "BuildingObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -1240,6 +1351,7 @@
         "kind": "OBJECT",
         "name": "CellObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -2101,6 +2213,7 @@
         "kind": "OBJECT",
         "name": "CitiesResult",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -2152,6 +2265,7 @@
         "kind": "OBJECT",
         "name": "Citizen",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "allegiance",
@@ -2299,6 +2413,7 @@
         "kind": "OBJECT",
         "name": "City",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "citizenCount",
@@ -2701,6 +2816,22 @@
             "deprecationReason": null
           },
           {
+            "name": "structureSummary",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CityStructureSummary",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "structures",
             "description": "Information about the structures that make up the city",
             "args": [],
@@ -2790,6 +2921,7 @@
         "kind": "OBJECT",
         "name": "CityObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -3419,6 +3551,7 @@
         "kind": "OBJECT",
         "name": "CityStructure",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",
@@ -3479,6 +3612,154 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "typeBitNames",
+            "description": "Flag names for the type bits set on the structure",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CityStructureSummary",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "decoCount",
+            "description": "Number of decorations within the city",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "highCostCount",
+            "description": "Number of high cost structures within the city",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "lowCostCount",
+            "description": "Number of low cost structures within the city",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "mediumCostCount",
+            "description": "Number of medium cost structures within the city",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "registerCount",
+            "description": "Number of registered structures within the city",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "skillTrainerCount",
+            "description": "Number of skill trainers within the city",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "terminalCount",
+            "description": "Number of terminals within the city",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -3490,6 +3771,7 @@
         "kind": "OBJECT",
         "name": "CreatureObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -4475,6 +4757,7 @@
         "kind": "INPUT_OBJECT",
         "name": "DateRangeInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -4510,6 +4793,7 @@
         "kind": "SCALAR",
         "name": "Float",
         "description": "The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -4520,6 +4804,7 @@
         "kind": "OBJECT",
         "name": "Guild",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "abbreviation",
@@ -4791,6 +5076,7 @@
         "kind": "OBJECT",
         "name": "GuildEnemy",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "guild",
@@ -4854,6 +5140,7 @@
         "kind": "OBJECT",
         "name": "GuildMember",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "allegianceOid",
@@ -5009,6 +5296,7 @@
         "kind": "OBJECT",
         "name": "GuildObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -5638,6 +5926,7 @@
         "kind": "OBJECT",
         "name": "GuildsResult",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -5689,6 +5978,7 @@
         "kind": "OBJECT",
         "name": "HarvesterInstallationObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "activateStartTime",
@@ -6688,9 +6978,134 @@
         "possibleTypes": null
       },
       {
+        "kind": "OBJECT",
+        "name": "HistoricalSessionByIdentifierAggregation",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "accountIds",
+            "description": "The account IDs captured in this group",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "accounts",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Account",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "identifier",
+            "description": "The key for this group.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "identifierType",
+            "description": "The identifier type for this group.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "nonMultiAccountApprovedSessions",
+            "description": "The number of sessions in this group that weren't multi-account approved",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "uniqueAccounts",
+            "description": "The number of accounts captured in this group",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "SCALAR",
         "name": "ID",
         "description": "The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `\"4\"`) or integer (such as `4`) input value will be accepted as an ID.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -6701,6 +7116,7 @@
         "kind": "INTERFACE",
         "name": "IInstallationObject",
         "description": "An installation object.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "activateStartTime",
@@ -7625,6 +8041,7 @@
         "kind": "INTERFACE",
         "name": "IIntangibleObject",
         "description": "An object that cannot exist in the world, it is purely virtual.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -8272,6 +8689,7 @@
         "kind": "INTERFACE",
         "name": "IServerObject",
         "description": "Basic object which all other objects tend to inherit from.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -8976,6 +9394,7 @@
         "kind": "INTERFACE",
         "name": "ITangibleObject",
         "description": "An object that can exist in the world.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -9864,6 +10283,7 @@
         "kind": "INTERFACE",
         "name": "IUniverseObject",
         "description": "A UniverseObject is an object that is global to the entire server cluster.  UniverseObjects represent global data (such as Resource Classes) or objects with no definite location (such as Resource Pools).",
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -10504,6 +10924,7 @@
         "kind": "OBJECT",
         "name": "InstallationObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "activateStartTime",
@@ -11422,6 +11843,7 @@
         "kind": "SCALAR",
         "name": "Int",
         "description": "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -11432,6 +11854,7 @@
         "kind": "INPUT_OBJECT",
         "name": "IntRangeInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -11483,6 +11906,7 @@
         "kind": "OBJECT",
         "name": "IntangibleObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -12124,6 +12548,7 @@
         "kind": "OBJECT",
         "name": "IpData",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "autonomousSystemNumber",
@@ -12279,6 +12704,7 @@
         "kind": "OBJECT",
         "name": "Login",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "accountName",
@@ -12514,6 +12940,7 @@
         "kind": "OBJECT",
         "name": "LoginsResult",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -12565,6 +12992,7 @@
         "kind": "OBJECT",
         "name": "ManfSchematicObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -13450,6 +13878,7 @@
         "kind": "OBJECT",
         "name": "ObjVarFloat",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "floatValue",
@@ -13509,6 +13938,7 @@
         "kind": "OBJECT",
         "name": "ObjVarFloatArray",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "floatValues",
@@ -13576,6 +14006,7 @@
         "kind": "OBJECT",
         "name": "ObjVarInt",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "intValue",
@@ -13635,6 +14066,7 @@
         "kind": "OBJECT",
         "name": "ObjVarIntArray",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "intValues",
@@ -13702,6 +14134,7 @@
         "kind": "OBJECT",
         "name": "ObjVarString",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -13761,6 +14194,7 @@
         "kind": "OBJECT",
         "name": "ObjVarStringArray",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -13828,6 +14262,7 @@
         "kind": "UNION",
         "name": "ObjVarUnion",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -13869,6 +14304,7 @@
         "kind": "OBJECT",
         "name": "PlanetWatcherFrameEnd",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "frameTime",
@@ -13928,6 +14364,7 @@
         "kind": "OBJECT",
         "name": "PlanetWatcherGameServerStatus",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "hostName",
@@ -14035,6 +14472,7 @@
         "kind": "OBJECT",
         "name": "PlanetWatcherNodeStatusUpdate",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cellIndex",
@@ -14178,6 +14616,7 @@
         "kind": "OBJECT",
         "name": "PlanetWatcherObjectUpdate",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "aiActivity",
@@ -14373,6 +14812,7 @@
         "kind": "OBJECT",
         "name": "PlayerCreatureObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "account",
@@ -14759,6 +15199,111 @@
               "kind": "OBJECT",
               "name": "Guild",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "historicalSessions",
+            "description": null,
+            "args": [
+              {
+                "name": "afterDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-30d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "beforeDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "from",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "0",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "50",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortDirection",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortField",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "SessionResult",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -15559,6 +16104,7 @@
         "kind": "OBJECT",
         "name": "PlayerObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "activeQuests",
@@ -16544,6 +17090,7 @@
         "kind": "OBJECT",
         "name": "PropertyListEntry",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "listId",
@@ -16583,6 +17130,7 @@
         "kind": "ENUM",
         "name": "PropertyListIds",
         "description": "SWG Property List IDs",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -16672,6 +17220,7 @@
         "kind": "OBJECT",
         "name": "Query",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "account",
@@ -16853,6 +17402,216 @@
                 "kind": "OBJECT",
                 "name": "GuildsResult",
                 "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "historicalSessions",
+            "description": null,
+            "args": [
+              {
+                "name": "accountId",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "afterDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-30d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "beforeDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "clientGuid",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "clientIp",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "from",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "0",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "50",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortDirection",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortField",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "SessionResult",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "historicalSessionsByIdentifier",
+            "description": null,
+            "args": [
+              {
+                "name": "afterDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-30d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "beforeDate",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "identifier",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"clientGuid\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "HistoricalSessionByIdentifierAggregation",
+                  "ofType": null
+                }
               }
             },
             "isDeprecated": false,
@@ -17530,6 +18289,7 @@
         "kind": "OBJECT",
         "name": "RecentLoginsResult",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -17581,6 +18341,7 @@
         "kind": "OBJECT",
         "name": "ResourceCirculationData",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "containerObjects",
@@ -17624,6 +18385,7 @@
         "kind": "OBJECT",
         "name": "ResourceContainerObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -18513,6 +19275,7 @@
         "kind": "OBJECT",
         "name": "ResourceType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "attributes",
@@ -18672,6 +19435,7 @@
         "kind": "OBJECT",
         "name": "ResourceTypeAttribute",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "attributeId",
@@ -18727,6 +19491,7 @@
         "kind": "OBJECT",
         "name": "ResourceTypeFractalData",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "amplitude",
@@ -18914,6 +19679,7 @@
         "kind": "OBJECT",
         "name": "ResourceTypePlanetDistribution",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "planetId",
@@ -18981,6 +19747,7 @@
         "kind": "OBJECT",
         "name": "ResourceTypeResult",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -19032,6 +19799,7 @@
         "kind": "UNION",
         "name": "RollupPartyEntity",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -19053,6 +19821,7 @@
         "kind": "UNION",
         "name": "SearchResult",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -19154,6 +19923,7 @@
         "kind": "OBJECT",
         "name": "SearchResultDetails",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -19176,7 +19946,7 @@
             "deprecationReason": null
           },
           {
-            "name": "totalResultCount",
+            "name": "totalResults",
             "description": "Estimated number of results found for this search",
             "args": [],
             "type": {
@@ -19201,6 +19971,7 @@
         "kind": "OBJECT",
         "name": "ServerObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -19825,6 +20596,7 @@
         "kind": "OBJECT",
         "name": "Session",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "account",
@@ -20076,6 +20848,7 @@
         "kind": "OBJECT",
         "name": "SessionResult",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -20098,7 +20871,7 @@
             "deprecationReason": null
           },
           {
-            "name": "totalResultCount",
+            "name": "totalResults",
             "description": "Estimated number of results found for this search",
             "args": [],
             "type": {
@@ -20123,6 +20896,7 @@
         "kind": "ENUM",
         "name": "SessionState",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -20170,6 +20944,7 @@
         "kind": "OBJECT",
         "name": "ShipObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -21623,6 +22398,7 @@
         "kind": "OBJECT",
         "name": "ShipPartStat",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -21690,6 +22466,7 @@
         "kind": "OBJECT",
         "name": "ShipPartSummary",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "headlinePercentile",
@@ -21773,6 +22550,7 @@
         "kind": "OBJECT",
         "name": "Skill",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "apprenticeshipsRequired",
@@ -22268,6 +23046,7 @@
         "kind": "OBJECT",
         "name": "SkillMod",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",
@@ -22311,6 +23090,7 @@
         "kind": "OBJECT",
         "name": "StajTier",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "color",
@@ -22354,6 +23134,7 @@
         "kind": "SCALAR",
         "name": "String",
         "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -22364,6 +23145,7 @@
         "kind": "OBJECT",
         "name": "Subscription",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "planetWatcherFrameEnd",
@@ -22603,6 +23385,7 @@
         "kind": "OBJECT",
         "name": "TangibleObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "appearanceData",
@@ -23440,6 +24223,7 @@
         "kind": "OBJECT",
         "name": "Transaction",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "arePartiesSameAccount",
@@ -23571,6 +24355,7 @@
         "kind": "OBJECT",
         "name": "TransactionItem",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "basicName",
@@ -23674,6 +24459,7 @@
         "kind": "OBJECT",
         "name": "TransactionParty",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "creditsReceived",
@@ -23773,6 +24559,7 @@
         "kind": "OBJECT",
         "name": "TransactionRollup",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "fromDate",
@@ -23855,7 +24642,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "Float",
                 "ofType": null
               }
             },
@@ -23888,6 +24675,7 @@
         "kind": "OBJECT",
         "name": "TransactionRollupItem",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "basicName",
@@ -24007,6 +24795,7 @@
         "kind": "OBJECT",
         "name": "TransactionRollupParty",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "creditsReceived",
@@ -24017,7 +24806,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "Float",
                 "ofType": null
               }
             },
@@ -24102,6 +24891,7 @@
         "kind": "OBJECT",
         "name": "TransactionServiceResponse",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "results",
@@ -24153,6 +24943,7 @@
         "kind": "ENUM",
         "name": "TransactionType",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -24200,6 +24991,7 @@
         "kind": "OBJECT",
         "name": "UniverseObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bankBalance",
@@ -24829,6 +25621,7 @@
         "kind": "OBJECT",
         "name": "WeaponObject",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "accuracy",
@@ -25822,6 +26615,7 @@
         "kind": "OBJECT",
         "name": "__Directive",
         "description": "A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL's execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -25938,6 +26732,7 @@
         "kind": "ENUM",
         "name": "__DirectiveLocation",
         "description": "A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -26063,6 +26858,7 @@
         "kind": "OBJECT",
         "name": "__EnumValue",
         "description": "One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -26130,6 +26926,7 @@
         "kind": "OBJECT",
         "name": "__Field",
         "description": "Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -26250,6 +27047,7 @@
         "kind": "OBJECT",
         "name": "__InputValue",
         "description": "Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -26345,6 +27143,7 @@
         "kind": "OBJECT",
         "name": "__Schema",
         "description": "A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "description",
@@ -26456,6 +27255,7 @@
         "kind": "OBJECT",
         "name": "__Type",
         "description": "The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.\n\nDepending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name, description and optional `specifiedByURL`, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "kind",
@@ -26659,6 +27459,18 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "isOneOf",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -26670,6 +27482,7 @@
         "kind": "ENUM",
         "name": "__TypeKind",
         "description": "An enum describing what kind of type a given `__Type` is.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -26779,6 +27592,15 @@
             "deprecationReason": null
           }
         ]
+      },
+      {
+        "name": "oneOf",
+        "description": "Indicates exactly one field must be supplied and this field must not be `null`.",
+        "isRepeatable": false,
+        "locations": [
+          "INPUT_OBJECT"
+        ],
+        "args": []
       },
       {
         "name": "skip",
