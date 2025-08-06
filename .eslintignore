@@ -1,8 +1,0 @@
-/**/*.d.ts
-.next
-public
-
-node_modules
-build
-
-*.generated.ts

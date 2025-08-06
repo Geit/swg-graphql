@@ -100,7 +100,7 @@ class PlanetWatcher {
 
       // If the above made a 0 length buffer, then make a totally new buffer to ensure GC.
       if (this.queuedMessages.length === 0) this.queuedMessages = Buffer.alloc(0);
-    } catch (err) {
+    } catch {
       this.queuedMessages = Buffer.alloc(0);
     }
   }

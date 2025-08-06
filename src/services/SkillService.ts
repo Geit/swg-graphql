@@ -88,7 +88,10 @@ export class SkillService {
 
   private db = db;
 
-  constructor(private readonly dataTable: DataTableService, private readonly stringService: StringFileLoader) {
+  constructor(
+    private readonly dataTable: DataTableService,
+    private readonly stringService: StringFileLoader
+  ) {
     this.loadSkillData();
   }
 

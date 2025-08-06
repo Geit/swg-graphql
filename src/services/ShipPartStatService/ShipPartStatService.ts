@@ -54,7 +54,7 @@ export class ShipPartStatService {
   shipPartMap = new Map<number, ShipPart>();
   bestInClassForPartMap = new Map<ShipPartType, StatBestInClassMap>();
 
-  loadingHandle: false | Promise<any> = false;
+  loadingHandle: false | Promise<unknown> = false;
 
   stajTiers: StajTier[] = [];
   stajPartData: Map<PartShortName, Map<string, StajPartData>> = new Map();
@@ -139,7 +139,7 @@ export class ShipPartStatService {
     try {
       const stajFile = await fs.readFile(filePath, { encoding: 'utf-8' });
       return stajFile;
-    } catch (err) {
+    } catch {
       return null;
     }
   }
@@ -199,7 +199,7 @@ export class ShipPartStatService {
 
     const bestInClassForStat = this.bestInClassForPartMap.get(part.type);
 
-    const stajDataForPart = this.stajPartData.get(`${part.type[0].toLowerCase()}${part.reLevel % 10}` as any);
+    const stajDataForPart = this.stajPartData.get(`${part.type[0].toLowerCase()}${part.reLevel % 10}` as PartShortName);
 
     const classData = COMPONENT_CLASS_DATA[part.type];
     const [attributeNames, objvars] = await Promise.all([

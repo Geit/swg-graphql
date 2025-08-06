@@ -11,7 +11,10 @@ import { getFactionNameFromCrc } from '../utils/getFactionNameFromCrc';
 @Resolver(() => Guild)
 @Service()
 export class GuildResolver /* implements ResolverInterface<Guild> */ {
-  constructor(private readonly objectService: ServerObjectService, private readonly stringService: StringFileLoader) {
+  constructor(
+    private readonly objectService: ServerObjectService,
+    private readonly stringService: StringFileLoader
+  ) {
     // Do nothing
   }
 
@@ -48,7 +51,10 @@ export class GuildResolver /* implements ResolverInterface<Guild> */ {
 @Resolver(() => GuildMember)
 @Service()
 export class GuildMemberResolver /* implements ResolverInterface<GuildMember> */ {
-  constructor(private readonly objectService: ServerObjectService, private readonly stringService: StringFileLoader) {
+  constructor(
+    private readonly objectService: ServerObjectService,
+    private readonly stringService: StringFileLoader
+  ) {
     // Do nothing
   }
 

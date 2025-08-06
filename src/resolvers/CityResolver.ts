@@ -54,7 +54,10 @@ const specialisationNameLookup = new Map([
 @Resolver(() => City)
 @Service()
 export class CityResolver /* implements ResolverInterface<City> */ {
-  constructor(private readonly objectService: ServerObjectService, private readonly stringService: StringFileLoader) {
+  constructor(
+    private readonly objectService: ServerObjectService,
+    private readonly stringService: StringFileLoader
+  ) {
     // Do nothing
   }
 
@@ -144,7 +147,10 @@ export class CityResolver /* implements ResolverInterface<City> */ {
 @Resolver(() => Citizen)
 @Service()
 export class CitizenResolver /* implements ResolverInterface<Citizen> */ {
-  constructor(private readonly objectService: ServerObjectService, private readonly stringService: StringFileLoader) {
+  constructor(
+    private readonly objectService: ServerObjectService,
+    private readonly stringService: StringFileLoader
+  ) {
     // Do nothing
   }
 

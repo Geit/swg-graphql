@@ -87,11 +87,10 @@ export const createPlanetWatcherSubscriber = (topic: string) => {
               });
             }
           }
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
           return asyncIterator.return!();
         },
         throw(error: Error) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           return asyncIterator.throw!(error);
         },
         [Symbol.asyncIterator]() {

@@ -47,7 +47,7 @@ const convertQueryItemToTransactionItem = (
     basicName: item.basicName,
     template: `${item.template || item.templateId}`,
     staticName: item.staticItemName ?? undefined,
-    count: Math.max('count' in item ? item.count ?? 1 : 1, 1),
+    count: Math.max('count' in item ? (item.count ?? 1) : 1, 1),
   };
 };
 
@@ -92,7 +92,7 @@ export const convertTransactionLogToTransaction = async (tlog: TransactionLog): 
     name: PartyADetails.resolvedName,
     creditsReceived: parseInt(tlog.transaction_party_a_credits),
     itemsReceived: extractItemsReceived(tlog.transaction_party_a_items, enrichedItemDetails),
-    wasOnline: PartyADetails.session?.currentState === 'Playing' ?? false,
+    wasOnline: PartyADetails.session?.currentState === 'Playing',
     worldspaceLocation: PartyADetails.worldspaceLocation ?? undefined,
     scene: PartyADetails.scene,
     containedById: PartyADetails.containedById ?? undefined,
@@ -104,7 +104,7 @@ export const convertTransactionLogToTransaction = async (tlog: TransactionLog): 
     name: PartyBDetails.resolvedName,
     creditsReceived: parseInt(tlog.transaction_party_b_credits),
     itemsReceived: extractItemsReceived(tlog.transaction_party_b_items, enrichedItemDetails),
-    wasOnline: PartyBDetails.session?.currentState === 'Playing' ?? false,
+    wasOnline: PartyBDetails.session?.currentState === 'Playing',
     worldspaceLocation: PartyBDetails.worldspaceLocation ?? undefined,
     scene: PartyBDetails.scene,
     containedById: PartyBDetails.containedById ?? undefined,
