@@ -21,7 +21,6 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { mergeWith } from 'lodash';
 import { ZodError } from 'zod';
 import { glob } from 'glob';
-import 'express-async-errors';
 
 import { PORT, DISABLE_AUTH } from './config';
 import { checkKibanaToken } from './context/kibana-auth';
