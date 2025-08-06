@@ -79,7 +79,7 @@ export const CITY_UPDATE_INTERVAL = parseInt(process.env.CITY_UPDATE_INTERVAL ??
 /**
  * Whether to use a seperate DB connection for accessing login related tables
  */
-export const ENABLE_SEPERATE_LOGIN_DB = Boolean(process.env.ENABLE_SEPERATE_LOGIN_DB) || false;
+export const ENABLE_SEPARATE_LOGIN_DB = Boolean(process.env.ENABLE_SEPARATE_LOGIN_DB) || false;
 
 /**
  * Connection string used to pass custom properties to the underlying connection.

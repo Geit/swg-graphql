@@ -7,7 +7,7 @@ import {
   ORA_HOST,
   ORA_PASS,
   ORA_USER,
-  ENABLE_SEPERATE_LOGIN_DB,
+  ENABLE_SEPARATE_LOGIN_DB,
   ORA_LOGIN_CONN_STRING,
   ORA_LOGIN_DATABASE,
   ORA_LOGIN_DOMAIN,
@@ -31,7 +31,7 @@ const defaultDbConnector = knex({
   },
 });
 
-export const loginDb = ENABLE_SEPERATE_LOGIN_DB
+export const loginDb = ENABLE_SEPARATE_LOGIN_DB
   ? knex({
       client: 'oracledb',
       connection: {
