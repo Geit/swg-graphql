@@ -1,5 +1,5 @@
 import { BaseContext, ContextFunction } from '@apollo/server';
-import { ExpressContextFunctionArgument } from '@as-integrations/express4';
+import { ExpressContextFunctionArgument } from '@as-integrations/express5';
 
 export interface ContextType extends BaseContext {
   isAuthenticated: boolean;
