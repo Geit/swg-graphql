@@ -15,7 +15,6 @@
     "@types/express": "^5.0.3",
     "@types/lodash": "^4.14.192",
     "@types/node": "^18.15.11",
-    "caxa": "^3.0.1",
     "eslint": "9.32.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -36,10 +35,8 @@
     "start-dev-sh": "./start.sh",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
     "build": "rimraf build && yarn run tsc",
-    "build-dist": "yarn run build && yarn run caxa:linux",
     "codegen:main": "graphql-codegen --config codegen.yml || echo \"Could not regenerate root schema, server must be running, skipping for now\" && exit 0",
-    "codegen": "yarn codegen:main && yarn workspaces run codegen",
-    "caxa:linux": "node caxa-build.js"
+    "codegen": "yarn codegen:main && yarn workspaces run codegen"
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",

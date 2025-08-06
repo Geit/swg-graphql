@@ -28,6 +28,3 @@ The [GraphQL Playground](https://github.com/graphql/graphql-playground) will be 
 See `./src/config.ts` for all environment variables used for configuration. As a bare minimum you will likely need to configure `ORA_HOST`.
 
 If you do not wish to authorise with a Kibana server, run with  `DISABLE_AUTH=1 yarn start-dev`.
-
-### `yarn build-dist`
-Compiles the Typescript down to JS and then uses @vercel/pkg to build a single executable, which is output in the `dist/` folder.
