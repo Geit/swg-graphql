@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto';
 import express, { ErrorRequestHandler } from 'express';
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { GraphQLError } from 'graphql';
@@ -20,9 +20,8 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { mergeWith } from 'lodash';
 import { ZodError } from 'zod';
-import 'express-async-errors';
-
 import { glob } from 'glob';
+import 'express-async-errors';
 
 import { PORT, DISABLE_AUTH } from './config';
 import { checkKibanaToken } from './context/kibana-auth';

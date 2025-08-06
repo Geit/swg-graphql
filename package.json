@@ -12,6 +12,7 @@
     "@graphql-codegen/introspection": "^3.0.1",
     "@types/async": "^3.2.18",
     "@types/cors": "^2.8.13",
+    "@types/express": "^5.0.3",
     "@types/lodash": "^4.14.192",
     "@types/node": "^18.15.11",
     "@typescript-eslint/eslint-plugin": "5.57.0",
@@ -43,7 +44,8 @@
     "caxa:linux": "node caxa-build.js"
   },
   "dependencies": {
-    "@apollo/server": "^4.5.0",
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/express4": "^1.1.2",
     "@bull-board/express": "^5.0.0",
     "@elastic/elasticsearch": "^8.5.0",
     "@graphql-tools/schema": "^9.0.17",
@@ -59,7 +61,7 @@
     "express-async-errors": "^3.1.1",
     "glob": "^9.3.3",
     "got": "^11.8.2",
-    "graphql": "^16.6.0",
+    "graphql": "^16.11.0",
     "graphql-subscriptions": "^2.0.0",
     "graphql-ws": "^5.12.1",
     "knex": "^2.4.2",
