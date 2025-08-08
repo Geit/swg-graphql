@@ -1,7 +1,9 @@
-import { Field, Int, ID, ObjectType } from 'type-graphql';
+import { Field, Int, ID, ObjectType, createUnionType } from 'type-graphql';
 
 import { IServerObject } from './ServerObject';
 import { ITangibleObject } from './TangibleObject';
+import { PlayerCreatureObject } from './PlayerCreatureObject';
+import { Guild } from './Guild';
 
 @ObjectType({ implements: [ITangibleObject, IServerObject] })
 export class BuildingObject extends ITangibleObject {
@@ -23,3 +25,11 @@ export class BuildingObject extends ITangibleObject {
   @Field(() => ID, { nullable: true, description: 'The ID of the city that this structure resides within' })
   cityId: string | null;
 }
+
+export const AccessListEntry: PlayerCreatureObject | Guild = createUnionType({
+  name: 'AccessListEntry',
+  types: () => [PlayerCreatureObject, Guild] as const,
+  resolveType: value => {
+    return value.constructor.name;
+  },
+});

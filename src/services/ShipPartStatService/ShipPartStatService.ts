@@ -6,7 +6,7 @@ import { Inject, Service } from 'typedi';
 import { ShipPartSummary } from '../../resolvers/TangibleObjectResolver';
 import getStringCrc from '../../utils/crc';
 import { DataTableService } from '../DataTableService';
-import { ObjVarService } from '../ObjVarService';
+import { floatObjvar, ObjVarService } from '../ObjVarService';
 import { StringFileLoader } from '../StringFileLoader';
 
 import {
@@ -208,7 +208,16 @@ export class ShipPartStatService {
     ]);
 
     const stats = classData.stats.map(stat => {
-      const value = objvars.find(ov => ov.name === stat.objVarKey)?.value as number;
+      const value = objvars.find(floatObjvar(stat.objVarKey))?.value;
+
+      if (!value) {
+        return {
+          name: attributeNames[stat.name] ?? stat.name,
+          value: 0,
+          percentile: 0,
+          stajTier: null,
+        };
+      }
 
       const bestInClassForReLevel = bestInClassForStat?.get(stat.name);
       const bestInClassStat = bestInClassForReLevel?.get(part.reLevel);

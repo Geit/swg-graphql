@@ -16,6 +16,90 @@ interface ObjectVariablesRecord {
   VALUE: string;
 }
 
+interface BaseObjvarType {
+  name: string;
+  type: unknown;
+  value: unknown;
+}
+
+interface ObjVarString extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.STRING;
+  value: string;
+}
+
+interface ObjVarNetworkId extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.NETWORK_ID;
+  value: string;
+}
+
+interface ObjVarStringArray extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.STRING_ARRAY;
+  value: string[];
+}
+
+interface ObjVarNetworkIdArray extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.NETWORK_ID_ARRAY;
+  value: string[];
+}
+
+interface ObjVarFloat extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.REAL;
+  value: number;
+}
+
+interface ObjVarFloatArray extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.REAL_ARRAY;
+  value: number[];
+}
+
+interface ObjVarInt extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.INT;
+  value: number;
+}
+
+interface ObjVarIntArray extends BaseObjvarType {
+  name: string;
+  type: DynamicVariableType.INT_ARRAY;
+  value: number[];
+}
+
+type ObjVar =
+  | ObjVarString
+  | ObjVarStringArray
+  | ObjVarNetworkId
+  | ObjVarNetworkIdArray
+  | ObjVarFloatArray
+  | ObjVarFloat
+  | ObjVarInt
+  | ObjVarIntArray;
+
+export const stringArrayObjvar =
+  (objvarName: string) =>
+  (t: ObjVar): t is ObjVarNetworkIdArray =>
+    t.name === objvarName && t.type === DynamicVariableType.STRING_ARRAY;
+
+export const networkIdArrayObjvar =
+  (objvarName: string) =>
+  (t: ObjVar): t is ObjVarNetworkIdArray =>
+    t.name === objvarName && t.type === DynamicVariableType.NETWORK_ID_ARRAY;
+
+export const stringObjvar =
+  (objvarName: string) =>
+  (t: ObjVar): t is ObjVarString =>
+    t.name === objvarName && t.type === DynamicVariableType.STRING;
+
+export const floatObjvar =
+  (objvarName: string) =>
+  (t: ObjVar): t is ObjVarFloat =>
+    t.name === objvarName && t.type === DynamicVariableType.REAL;
+
 @Service()
 export class ObjVarService {
   private db = db;
@@ -37,24 +121,35 @@ export class ObjVarService {
     return [...objvars.map(ov => ObjVarService.convertObjVar(ov.NAME, ov.TYPE, ov.VALUE))];
   }
 
-  static convertObjVar(name: string, type: number, value: string) {
-    let actualValue: string | string[] | number | number[] = value;
-
+  static convertObjVar(name: string, type: number, value: string): ObjVar {
     if (type === DynamicVariableType.INT || type === DynamicVariableType.REAL) {
-      actualValue = Number(value);
-    } else if (type === DynamicVariableType.INT_ARRAY || type === DynamicVariableType.REAL_ARRAY) {
-      actualValue = value.split(':').filter(Boolean).map(Number);
-    } else if (type === DynamicVariableType.STRING || type === DynamicVariableType.NETWORK_ID) {
-      // no-op, technically.
-      actualValue = value;
-    } else if (type === DynamicVariableType.STRING_ARRAY || type === DynamicVariableType.NETWORK_ID_ARRAY) {
-      actualValue = value.split(':').filter(Boolean);
+      return {
+        name,
+        type,
+        value: Number(value),
+      };
+    }
+
+    if (type === DynamicVariableType.INT_ARRAY || type === DynamicVariableType.REAL_ARRAY) {
+      return {
+        name,
+        type,
+        value: value.split(':').filter(Boolean).map(Number),
+      };
+    }
+
+    if (type === DynamicVariableType.STRING_ARRAY || type === DynamicVariableType.NETWORK_ID_ARRAY) {
+      return {
+        name,
+        type,
+        value: value.split(':').filter(Boolean),
+      };
     }
 
     return {
       name,
       type,
-      value: actualValue,
+      value,
     };
   }
 }
