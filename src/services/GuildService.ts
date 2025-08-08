@@ -42,10 +42,10 @@ export class GuildService {
   async getGuildForPlayer(playerId: string) {
     await this.updateGuildsIfNeeded();
 
-    const cityId = this._memberIdToGuildId.get(playerId);
+    const guildId = this._memberIdToGuildId.get(playerId);
 
-    if (cityId) {
-      return this._guilds.get(cityId) ?? null;
+    if (guildId) {
+      return this._guilds.get(guildId) ?? null;
     }
 
     return null;
@@ -74,10 +74,7 @@ export class GuildService {
       const guildToUpdate = guilds.get(data.id);
 
       if (guildToUpdate) {
-        guilds.set(data.id, {
-          ...guildToUpdate,
-          ...data,
-        });
+        guilds.set(data.id, Object.assign(guildToUpdate, data));
       } else {
         const newGuild = new Guild();
         guilds.set(data.id, Object.assign(newGuild, data));
