@@ -22,7 +22,7 @@ export class GuildService {
   @Inject()
   private readonly propertyListService: PropertyListService;
 
-  private _guilds: Map<string, Partial<Guild>> = new Map();
+  private _guilds: Map<string, Guild> = new Map();
   private _memberIdToGuildId: Map<GuildMember['id'], Guild['id']> = new Map();
   private _currentUpdateCycle: Promise<void> | null = null;
   private lastUpdateTime = 0;
@@ -67,7 +67,7 @@ export class GuildService {
   private async _updateGuilds() {
     const results = await knexDb.first().from<GuildObjectRecord>('GUILD_OBJECTS');
 
-    const guilds: Map<string, Partial<Guild>> = new Map();
+    const guilds: Map<string, Guild> = new Map();
     const memberIdToGuildId: Map<GuildMember['id'], Guild['id']> = new Map();
 
     const updateGuildData = (data: Partial<Guild> & Pick<Guild, 'id'>) => {
@@ -79,7 +79,8 @@ export class GuildService {
           ...data,
         });
       } else {
-        guilds.set(data.id, data);
+        const newGuild = new Guild();
+        guilds.set(data.id, Object.assign(newGuild, data));
       }
     };
 
@@ -146,8 +147,7 @@ export class GuildService {
         case PropertyListIds.GuildAbbrevs: {
           // GuildNames is in format `id:abbr`
           const [id, abbreviation] = pList.value.split(':');
-          guilds.set(id, {
-            ...guilds.get(id),
+          updateGuildData({
             id,
             abbreviation,
           });
