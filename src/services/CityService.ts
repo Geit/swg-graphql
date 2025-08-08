@@ -87,19 +87,17 @@ export class CityService {
     // This should give us
     const pLists = await this.propertyListService.load({ objectId: String(results.OBJECT_ID) });
 
-    const cities = new Map();
+    const cities = new Map<string, City>();
     const citizenIdToCityId: Map<Citizen['id'], City['id']> = new Map();
     const structureIdToCityId: Map<CityStructure['id'], City['id']> = new Map();
     const updateCityData = (data: Partial<City> & Pick<City, 'id'>) => {
       const cityToUpdate = cities.get(data.id);
 
       if (cityToUpdate) {
-        cities.set(data.id, {
-          ...cityToUpdate,
-          ...data,
-        });
+        cities.set(data.id, Object.assign(cityToUpdate, data));
       } else {
-        cities.set(data.id, data);
+        const newCity = new City();
+        cities.set(data.id, Object.assign(newCity, data));
       }
     };
 
@@ -248,7 +246,6 @@ export class CityService {
 
             citizens.push({
               id,
-              citizenId,
               name,
               skillTemplate: null,
               level: null,
