@@ -1,17 +1,16 @@
-import { Arg, FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { Arg, FieldResolver, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { BuildingObjectService } from '../services/BuildingObjectService';
 import { NameResolutionService } from '../services/NameResolutionService';
-import { ObjVarService, stringArrayObjvar, stringObjvar } from '../services/ObjVarService';
+import { ObjVarService, stringObjvar } from '../services/ObjVarService';
+import { ServerObjectService } from '../services/ServerObjectService';
+import { PropertyListService } from '../services/PropertyListService';
 import { BuildingObject, IServerObject, PlayerCreatureObject } from '../types';
-
-import { ServerObjectService } from '@core/services/ServerObjectService';
-import { PropertyListService } from '@core/services/PropertyListService';
-import { PropertyListIds } from '@core/types/PropertyList';
-import { AccessListEntry } from '@core/types/BuildingObject';
-import { GuildService } from '@core/services/GuildService';
-import { isPresent } from '@core/utils/utility-types';
+import { PropertyListIds } from '../types/PropertyList';
+import { AccessListEntry } from '../types/BuildingObject';
+import { GuildService } from '../services/GuildService';
+import { isPresent } from '../utils/utility-types';
 
 @Resolver(() => BuildingObject)
 @Service()
@@ -67,24 +66,16 @@ export class BuildingObjectResolver implements ResolverInterface<BuildingObject>
     return this.nameResolutionService.resolveName(object, resolveCustomNames);
   }
 
-  async #fetchObjvarAccessList(objectId: string, objVar: string) {
-    // Fetch from VAR_ADMIN_LIST. Can only be PlayerCharacterObjects in practice, but the
-    // data store will allow guilds too.
-    const objvars = await this.objvarService.getObjVarsForObject(objectId);
-
-    const adminList = objvars.find(stringArrayObjvar(objVar));
-
-    return this.objectService.getMany({ objectIds: adminList?.value ?? [] });
-  }
-
   @FieldResolver(() => [PlayerCreatureObject])
   adminList(@Root() object: IServerObject) {
-    return this.#fetchObjvarAccessList(object.id, 'player_structure.admin.adminList');
+    return this.buildingObjectService.fetchObjvarAccessList(object.id, 'player_structure.admin.adminList');
   }
 
-  @FieldResolver(() => [PlayerCreatureObject])
-  hopperList(@Root() object: IServerObject) {
-    return this.#fetchObjvarAccessList(object.id, 'player_structure.hopper.hopperList');
+  @FieldResolver(() => Int)
+  async adminListCount(@Root() object: IServerObject) {
+    const adminList = await this.adminList(object);
+
+    return adminList.length;
   }
 
   async #fetchPropertyListAccessList(
@@ -117,8 +108,22 @@ export class BuildingObjectResolver implements ResolverInterface<BuildingObject>
     return this.#fetchPropertyListAccessList(object.id, PropertyListIds.Allowed);
   }
 
+  @FieldResolver(() => Int)
+  async entryListCount(@Root() object: IServerObject) {
+    const entryList = await this.entryList(object);
+
+    return entryList.length;
+  }
+
   @FieldResolver(() => [AccessListEntry])
   banList(@Root() object: IServerObject) {
     return this.#fetchPropertyListAccessList(object.id, PropertyListIds.Banned);
+  }
+
+  @FieldResolver(() => Int)
+  async banListCount(@Root() object: IServerObject) {
+    const banList = await this.banList(object);
+
+    return banList.length;
   }
 }

@@ -1,13 +1,17 @@
-import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { FieldResolver, Int, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { Service } from 'typedi';
 
 import { InstallationObjectService } from '../services/InstallationObjectService';
-import { IInstallationObject, IServerObject } from '../types';
+import { IInstallationObject, IServerObject, PlayerCreatureObject } from '../types';
+import { BuildingObjectService } from '../services/BuildingObjectService';
 
 @Resolver(() => IInstallationObject)
 @Service()
 export class InstallationObjectResolver implements ResolverInterface<IInstallationObject> {
-  constructor(private readonly installationObjectService: InstallationObjectService) {
+  constructor(
+    private readonly installationObjectService: InstallationObjectService,
+    private readonly buildingObjectService: BuildingObjectService
+  ) {
     // Do nothing
   }
 
@@ -45,5 +49,17 @@ export class InstallationObjectResolver implements ResolverInterface<IInstallati
   async powerRate(@Root() object: IServerObject) {
     const io = await this.installationObjectService.load(object.id);
     return io?.POWER_RATE ?? null;
+  }
+
+  @FieldResolver(() => [PlayerCreatureObject])
+  hopperList(@Root() object: IServerObject) {
+    return this.buildingObjectService.fetchObjvarAccessList(object.id, 'player_structure.hopper.hopperList');
+  }
+
+  @FieldResolver(() => Int)
+  async hopperListCount(@Root() object: IServerObject) {
+    const hopperList = await this.hopperList(object);
+
+    return hopperList.length;
   }
 }
