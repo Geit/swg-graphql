@@ -4,9 +4,9 @@ import { Service } from 'typedi';
 import knexDb from './db';
 
 /**
- * Derived from harvester_installation_objects.tab
+ * Derived from ship_object.tab
  *
- * See {@link HarvesterInstallationObject} for descriptions of each field.
+ * See {@link ShipObject} for descriptions of each field.
  */
 interface ShipObjectRecord {
   OBJECT_ID: number;

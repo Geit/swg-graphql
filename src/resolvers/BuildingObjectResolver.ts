@@ -85,22 +85,22 @@ export class BuildingObjectResolver implements ResolverInterface<BuildingObject>
     // Fetch from property list. Can be PlayerCharacters, guilds, factions(?)
     const propertyList = await this.propertyListService.load({ objectId, listId: propertyListId });
 
-    const entryListPromises = propertyList
-      .map(ple => {
-        const [prefix, id] = ple.value.split(':');
+    const entryListPromises = propertyList.map(ple => {
+      const [prefix, id] = ple.value.split(':');
 
-        // `c` is a Network ID
-        if (prefix === 'c') return this.objectService.getOne(id);
-        // `g` is a guild name, which is unused. `G` is a Guild ID.
-        if (prefix === 'G') return this.guildService.getGuild(id);
+      // `c` is a Network ID
+      if (prefix === 'c') return this.objectService.getOne(id);
+      // `g` is a guild name, which is unused. `G` is a Guild ID.
+      if (prefix === 'G') return this.guildService.getGuild(id);
 
-        // `n` is numeric, but I dunno what that means for permissions
-        // `u` and `U` are unknown. Return nothing in that case
-        return undefined;
-      })
-      .filter(isPresent);
+      // `n` is numeric, but I dunno what that means for permissions
+      // `u` and `U` are unknown. Return nothing in that case
+      return undefined;
+    });
 
-    return entryListPromises;
+    const result = (await Promise.all(entryListPromises)).filter(isPresent);
+
+    return result;
   }
 
   @FieldResolver(() => [AccessListEntry])
