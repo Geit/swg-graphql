@@ -78,7 +78,7 @@ export class CreatureObjectResolver implements ResolverInterface<CreatureObject>
   }
 
   @FieldResolver()
-  async persitedBuffs(@Root() object: IServerObject) {
+  async persistedBuffs(@Root() object: IServerObject) {
     const creature = await this.creatureObjectService.load(object.id);
     return creature?.PERSISTED_BUFFS ?? null;
   }

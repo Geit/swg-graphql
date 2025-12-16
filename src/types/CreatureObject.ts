@@ -54,7 +54,7 @@ export class CreatureObject extends ITangibleObject {
     description:
       'Packed/encoded string containing any buffs that will be reapplied to the creature when it is next active',
   })
-  persitedBuffs: string | null;
+  persistedBuffs: string | null;
 
   @Field(() => [Float], {
     nullable: true,
