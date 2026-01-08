@@ -39,29 +39,12 @@ function concatIfArray<T>(objValue: T, srcValue: T) {
 }
 
 const findAndLoadModules = async () => {
-  const moduleEntryPoints = await glob('modules/**/index.module.{ts,js}', {
-    cwd: __dirname,
-    absolute: true,
-  });
-
-  const importPromises = moduleEntryPoints.map(entry =>
-    import(entry).then(m => {
-      const maybeModule = m.default as Module | { __esModule: boolean; default: Module };
-      if (
-        maybeModule &&
-        typeof maybeModule === 'object' &&
-        '__esModule' in maybeModule &&
-        typeof maybeModule.default === 'function'
-      ) {
-        return maybeModule.default;
-      }
-      return maybeModule as Module;
-    })
-  );
+  const moduleEntryPoints = await glob('modules/**/index.module.{ts,js}', { cwd: __dirname });
+  const importPromises = moduleEntryPoints.map(entry => import(entry).then(m => m.default as Module));
 
   const importedModules = await Promise.all(importPromises);
 
-  const moduleResults = await Promise.all(importedModules.map(bootstrapModule => bootstrapModule?.()));
+  const moduleResults = await Promise.all(importedModules.map(bootstrapModule => bootstrapModule()));
   const validModules = moduleResults.filter(isPresent);
 
   validModules.forEach(vm => {
