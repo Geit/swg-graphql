@@ -40,7 +40,7 @@ function concatIfArray<T>(objValue: T, srcValue: T) {
 
 const findAndLoadModules = async () => {
   const moduleEntryPoints = await glob('modules/**/index.module.{ts,js}', { cwd: __dirname });
-  const importPromises = moduleEntryPoints.map(entry => import(entry).then(m => m.default as Module));
+  const importPromises = moduleEntryPoints.map(entry => import(`./${entry}`).then(m => m.default as Module));
 
   const importedModules = await Promise.all(importPromises);
 

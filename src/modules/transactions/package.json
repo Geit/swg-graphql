@@ -9,8 +9,8 @@
     "@elastic/elasticsearch": "^8.5.0",
     "dataloader": "^2.2.2",
     "elastic-builder": "^2.18.1",
-    "express": "^4.18.2",
-    "graphql-request": "^5.2.0",
+    "express": "^5.2.1",
+    "graphql-request": "^7.4.0",
     "graphql-tag": "^2.12.6",
     "lodash": "^4.17.21",
     "p-limit": "3.1.0",
@@ -19,9 +19,9 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^3.2.2",
-    "@graphql-codegen/typescript": "^3.0.2",
-    "@graphql-codegen/typescript-graphql-request": "^4.5.9",
-    "@graphql-codegen/typescript-operations": "^3.0.2"
+    "@graphql-codegen/cli": "^6.1.0",
+    "@graphql-codegen/typescript": "^5.0.7",
+    "@graphql-codegen/typescript-graphql-request": "^6.4.0",
+    "@graphql-codegen/typescript-operations": "^5.0.7"
   }
 }
