@@ -8,9 +8,9 @@ interface ApiKeysDocument {
   roles: string[];
 }
 
-const serverConfigFile = path.join(__dirname, '../../data/api-keys.json');
+const apiKeyConfigFile = path.join(__dirname, '../../data/api-keys.json');
 const apiKeys: Record<string, ApiKeysDocument | undefined> = JSON.parse(
-  readFileSync(serverConfigFile, { encoding: 'ascii' })
+  readFileSync(apiKeyConfigFile, { encoding: 'ascii' })
 );
 
 // eslint-disable-next-line require-await
