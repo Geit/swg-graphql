@@ -1,5 +1,4 @@
 import { Service } from 'typedi';
-import got from 'got';
 
 import { STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL } from '../config';
 
@@ -115,7 +114,10 @@ export class AccountService {
     if (!StationIdAccountNameMap.has(stationId)) {
       const endpoint = STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL.replace('{STATION_ID}', stationId.toString());
 
-      const newPromise = got(endpoint).then(res => (res.body === 'NULL' ? null : res.body));
+      const newPromise = fetch(endpoint).then(async res => {
+        const body = await res.text();
+        return body === 'NULL' ? null : body;
+      });
 
       StationIdAccountNameMap.set(stationId, newPromise);
 

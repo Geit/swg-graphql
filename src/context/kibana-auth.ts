@@ -1,4 +1,3 @@
-import got from 'got';
 import { GraphQLError } from 'graphql';
 
 import { ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC_SEARCH_URL } from '../config';
@@ -17,33 +16,42 @@ interface ElasticHasPrivlagesResponse {
 }
 
 export const checkKibanaToken = async (token: string) => {
-  const result = await got
-    .get<ElasticHasPrivlagesResponse>(`${ELASTIC_SEARCH_URL}_security/user/_has_privileges`, {
-      headers: {
-        authorization: token,
-      },
-      allowGetBody: true,
-      json: {
-        application: [
-          {
-            application: `kibana-${ELASTIC_KIBANA_INDEX}`,
-            privileges: [ELASTIC_REQUIRED_PRIVILEGE],
-            resources: ['*'],
-          },
-        ],
-      },
-      responseType: 'json',
-    })
-    .catch(() => {
-      throw new GraphQLError('Error while confirming authorization', {
-        extensions: {
-          code: 'FORBIDDEN',
-          myExtension: 'swg-graphql',
+  const response = await fetch(`${ELASTIC_SEARCH_URL}_security/user/_has_privileges`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      authorization: token,
+    },
+    body: JSON.stringify({
+      application: [
+        {
+          application: `kibana-${ELASTIC_KIBANA_INDEX}`,
+          privileges: [ELASTIC_REQUIRED_PRIVILEGE],
+          resources: ['*'],
         },
-      });
+      ],
+    }),
+  }).catch(() => {
+    throw new GraphQLError('Error while confirming authorization', {
+      extensions: {
+        code: 'FORBIDDEN',
+        myExtension: 'swg-graphql',
+      },
     });
+  });
 
-  if (!result.body.has_all_requested) {
+  if (!response.ok) {
+    throw new GraphQLError('Error while confirming authorization', {
+      extensions: {
+        code: 'FORBIDDEN',
+        myExtension: 'swg-graphql',
+      },
+    });
+  }
+
+  const result = (await response.json()) as ElasticHasPrivlagesResponse;
+
+  if (!result.has_all_requested) {
     throw new GraphQLError('Incorrect authorization', {
       extensions: {
         code: 'FORBIDDEN',
