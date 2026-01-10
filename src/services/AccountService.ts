@@ -119,6 +119,11 @@ export class AccountService {
         return body === 'NULL' ? null : body;
       });
 
+      newPromise.catch(err => {
+        StationIdAccountNameMap.delete(stationId);
+        throw err;
+      });
+
       StationIdAccountNameMap.set(stationId, newPromise);
 
       return newPromise;
