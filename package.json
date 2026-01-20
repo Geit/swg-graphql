@@ -24,11 +24,10 @@
     "eslint-plugin-promise": "7.2.1",
     "extract-files": "11",
     "globals": "^17.0.0",
-    "jest": "^30.2.0",
     "prettier": "3.7.4",
-    "tsc-alias": "^1.8.16",
     "ts-node": "10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.16",
     "type-fest": "^5.3.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.52.0",
@@ -41,7 +40,8 @@
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
     "build": "rimraf build && yarn run tsc && tsc-alias",
     "codegen:main": "graphql-codegen --config codegen.yml || echo \"Could not regenerate root schema, server must be running, skipping for now\" && exit 0",
-    "codegen": "yarn codegen:main && yarn workspaces run codegen"
+    "codegen": "yarn codegen:main && yarn workspaces run codegen",
+    "dump-schema": "ts-node -r tsconfig-paths/register scripts/dump-oracle-schema.ts"
   },
   "dependencies": {
     "@apollo/server": "^5.2.0",
