@@ -63,7 +63,7 @@ export class MarketSearchAttributeResolver {
 
   private async toMarketSearchAttribute(attr: ParsedSearchAttribute): Promise<MarketSearchAttribute> {
     const normalizedName = normalizeAttributeName(attr.name);
-    const displayName = await this.stringService.loadFromRef(attr.name);
+    const displayName = await this.resolveDisplayName(attr.name);
 
     return {
       name: attr.name,
@@ -73,5 +73,25 @@ export class MarketSearchAttributeResolver {
       dataType: attr.dataType as SearchAttributeDataType,
       enumValues: attr.enumValues,
     };
+  }
+
+  /**
+   * Resolves the display name for an attribute.
+   * First tries to load it as a string reference (e.g., "@obj_attr_n:efficiency").
+   * If not a ref format, extracts the key and looks it up in obj_attr_n.
+   */
+  private resolveDisplayName(name: string): Promise<string> {
+    // If it's a string reference format (contains :), try loading it directly
+    if (name.includes(':')) {
+      return this.stringService.loadFromRef(name);
+    }
+
+    // Otherwise, extract the attribute key (last part after . or the whole name)
+    // e.g., "ship_component.ship_component_hitpoints" -> "ship_component_hitpoints"
+    const dotIndex = name.lastIndexOf('.');
+    const attrKey = dotIndex !== -1 ? name.slice(dotIndex + 1) : name;
+
+    // Try looking it up in obj_attr_n
+    return this.stringService.loadFromRef(`obj_attr_n:${attrKey}`, attrKey);
   }
 }
