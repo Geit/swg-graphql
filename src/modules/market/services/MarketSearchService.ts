@@ -74,7 +74,7 @@ export class MarketSearchService {
     }
 
     // Category filters
-    if (filters.category !== undefined) {
+    if (filters.category) {
       filterQueries.push(esb.termQuery('category', filters.category));
     }
     if (filters.categories?.length) {
@@ -97,16 +97,16 @@ export class MarketSearchService {
     // Price range (buy now price)
     if (filters.priceRange) {
       const priceQuery = esb.rangeQuery('buyNowPrice');
-      if (filters.priceRange.min !== undefined) priceQuery.gte(filters.priceRange.min);
-      if (filters.priceRange.max !== undefined) priceQuery.lte(filters.priceRange.max);
+      if (filters.priceRange.min) priceQuery.gte(filters.priceRange.min);
+      if (filters.priceRange.max) priceQuery.lte(filters.priceRange.max);
       filterQueries.push(priceQuery);
     }
 
     // Bid range (current bid)
     if (filters.bidRange) {
       const bidQuery = esb.rangeQuery('currentBid');
-      if (filters.bidRange.min !== undefined) bidQuery.gte(filters.bidRange.min);
-      if (filters.bidRange.max !== undefined) bidQuery.lte(filters.bidRange.max);
+      if (filters.bidRange.min) bidQuery.gte(filters.bidRange.min);
+      if (filters.bidRange.max) bidQuery.lte(filters.bidRange.max);
       filterQueries.push(bidQuery);
     }
 
@@ -115,12 +115,12 @@ export class MarketSearchService {
       for (const af of filters.attributeFilters) {
         const fieldName = `attributes.${af.name}`;
 
-        if (af.exactValue !== undefined) {
+        if (af.exactValue) {
           filterQueries.push(esb.termQuery(fieldName, af.exactValue));
-        } else if (af.minValue !== undefined || af.maxValue !== undefined) {
+        } else if (af.minValue || af.maxValue) {
           const rangeQuery = esb.rangeQuery(fieldName);
-          if (af.minValue !== undefined) rangeQuery.gte(af.minValue);
-          if (af.maxValue !== undefined) rangeQuery.lte(af.maxValue);
+          if (af.minValue) rangeQuery.gte(af.minValue);
+          if (af.maxValue) rangeQuery.lte(af.maxValue);
           filterQueries.push(rangeQuery);
         }
       }
