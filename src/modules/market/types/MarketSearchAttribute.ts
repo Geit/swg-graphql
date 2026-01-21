@@ -1,4 +1,4 @@
-import { Field, ObjectType, registerEnumType } from 'type-graphql';
+import { Field, Int, ObjectType, registerEnumType } from 'type-graphql';
 
 export enum SearchAttributeDataType {
   INT = 'int',
@@ -31,4 +31,13 @@ export class MarketSearchAttribute {
 
   @Field(() => [String], { description: 'Possible values for enum-type attributes' })
   enumValues: string[];
+}
+
+@ObjectType({ description: 'Paginated search result for market search attributes' })
+export class MarketSearchAttributeSearchResult {
+  @Field(() => Int)
+  totalResults: number;
+
+  @Field(() => [MarketSearchAttribute])
+  results: MarketSearchAttribute[];
 }

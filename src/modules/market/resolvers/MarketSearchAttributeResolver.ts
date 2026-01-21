@@ -1,7 +1,7 @@
-import { Arg, Authorized, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Int, Query, Resolver } from 'type-graphql';
 import { Service } from 'typedi';
 
-import { MarketSearchAttribute, SearchAttributeDataType } from '../types';
+import { MarketSearchAttribute, MarketSearchAttributeSearchResult, SearchAttributeDataType } from '../types';
 import { SearchAttributeService } from '../services/SearchAttributeService';
 import { normalizeAttributeName, ParsedSearchAttribute } from '../utils/parseAdvancedSearchAttribute';
 
@@ -15,23 +15,34 @@ export class MarketSearchAttributeResolver {
     private readonly stringService: StringFileLoader
   ) {}
 
-  @Query(() => [MarketSearchAttribute], { description: 'Get all searchable market attributes' })
-  @Authorized()
-  marketSearchAttributes(): Promise<MarketSearchAttribute[]> {
-    const attributes = this.searchAttributeService.getAllAttributes();
-    return Promise.all(attributes.map(attr => this.toMarketSearchAttribute(attr)));
-  }
-
-  @Query(() => [MarketSearchAttribute], {
-    description: 'Get searchable attributes for a specific game object type (includes inherited attributes)',
+  @Query(() => MarketSearchAttributeSearchResult, {
+    description: 'Get searchable market attributes with optional filtering and pagination',
   })
   @Authorized()
-  marketSearchAttributesForType(
-    @Arg('gameObjectType', { description: 'The game object type (e.g., "armor_body", "weapon_ranged_rifle")' })
-    gameObjectType: string
-  ): Promise<MarketSearchAttribute[]> {
-    const attributes = this.searchAttributeService.getAttributesForType(gameObjectType);
-    return Promise.all(attributes.map(attr => this.toMarketSearchAttribute(attr)));
+  async marketSearchAttributes(
+    @Arg('gameObjectType', {
+      nullable: true,
+      description: 'Filter by game object type (includes inherited attributes)',
+    })
+    gameObjectType?: string,
+    @Arg('from', () => Int, { defaultValue: 0 }) from?: number,
+    @Arg('size', () => Int, { defaultValue: 50 }) size?: number
+  ): Promise<MarketSearchAttributeSearchResult> {
+    const attributes = gameObjectType
+      ? this.searchAttributeService.getAttributesForType(gameObjectType)
+      : this.searchAttributeService.getAllAttributes();
+
+    const totalResults = attributes.length;
+
+    // Apply pagination
+    const paginatedAttributes = attributes.slice(from ?? 0, (from ?? 0) + (size ?? 50));
+
+    const results = await Promise.all(paginatedAttributes.map(attr => this.toMarketSearchAttribute(attr)));
+
+    return {
+      totalResults,
+      results,
+    };
   }
 
   @Query(() => [String], { description: 'Get all game object types that have searchable attributes' })
