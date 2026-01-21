@@ -87,6 +87,7 @@ export interface GetManyFilters {
   limit: number;
   offset?: number;
   afterId?: string;
+  sortOrder?: 'asc' | 'desc';
   activeOnly?: boolean;
   locationId?: string;
   category?: number;
@@ -97,12 +98,10 @@ export class AuctionService {
   private db = knexDb;
 
   private prepareQuery(filters: Partial<GetManyFilters>) {
-    // Use ascending order for cursor-based pagination, descending for offset-based
-    const useCursor = filters.afterId !== undefined;
     let query = this.db
       .select()
       .from<MarketAuctionRecord>('MARKET_AUCTIONS')
-      .orderBy('ITEM_ID', useCursor ? 'asc' : 'desc');
+      .orderBy('ITEM_ID', filters.sortOrder ?? 'desc');
 
     if (filters.activeOnly) {
       query = query.where('ACTIVE', 1);

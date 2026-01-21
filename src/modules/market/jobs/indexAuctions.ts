@@ -45,6 +45,7 @@ export async function indexAuctions(): Promise<void> {
     const auctions = await auctionService.getMany({
       limit: batchSize,
       afterId: lastId,
+      sortOrder: 'asc',
       activeOnly: true,
     });
     console.timeEnd(`${batchLabel} - fetch auctions`);
