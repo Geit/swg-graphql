@@ -77,6 +77,23 @@ export class AuctionLocationService {
     });
   }
 
+  /**
+   * Bulk loads all locations into a Map.
+   */
+  async loadAll(): Promise<Map<string, AuctionLocation>> {
+    console.time('Loading all auction locations');
+    const results = await knexDb.select().from<AuctionLocationRecord>('AUCTION_LOCATIONS');
+
+    const map = new Map<string, AuctionLocation>();
+    for (const record of results) {
+      const location = AuctionLocationService.convertRecord(record);
+      map.set(location.id, location);
+    }
+    console.timeEnd('Loading all auction locations');
+    console.log(`Loaded ${map.size} locations`);
+    return map;
+  }
+
   private static convertRecord(record: AuctionLocationRecord): AuctionLocation {
     // Parse LOCATION_NAME format: "planet.region.vendorName"
     const parts = record.LOCATION_NAME?.split('.') ?? [];

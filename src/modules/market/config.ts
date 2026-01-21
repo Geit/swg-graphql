@@ -10,15 +10,11 @@ export const ADVANCED_SEARCH_ATTRIBUTE_DATATABLE = 'commodity/advanced_search_at
 
 /**
  * Batch size for indexing auctions.
+ * Higher values reduce Oracle round-trips but increase memory usage.
  */
-export const AUCTION_INDEX_BATCH_SIZE = parseInt(process.env.AUCTION_INDEX_BATCH_SIZE ?? '') || 500;
+export const AUCTION_INDEX_BATCH_SIZE = parseInt(process.env.AUCTION_INDEX_BATCH_SIZE ?? '') || 2000;
 
 /**
- * Interval for incremental auction sync (in cron format).
+ * Interval for auction sync (in cron format).
  */
-export const AUCTION_SYNC_INTERVAL = process.env.AUCTION_SYNC_INTERVAL ?? '*/3 * * * *';
-
-/**
- * Interval for full auction re-index (in cron format).
- */
-export const AUCTION_FULL_SYNC_INTERVAL = process.env.AUCTION_FULL_SYNC_INTERVAL ?? '0 3 * * *';
+export const AUCTION_SYNC_INTERVAL = process.env.AUCTION_SYNC_INTERVAL ?? '0 * * * *';

@@ -58,13 +58,14 @@ export const coreMarketMappingProperties: Record<string, MappingProperty> = {
 
 /**
  * Maps search attribute data type to ES field type.
+ * Numeric types use ignore_malformed to drop mismatched values instead of failing the document.
  */
 function dataTypeToEsType(dataType: SearchAttributeDataType): MappingProperty {
   switch (dataType) {
     case 'int':
-      return { type: 'integer' };
+      return { type: 'integer', ignore_malformed: true };
     case 'float':
-      return { type: 'float' };
+      return { type: 'float', ignore_malformed: true };
     case 'string':
       return { type: 'keyword' };
     case 'enum':

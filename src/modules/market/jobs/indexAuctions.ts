@@ -12,34 +12,37 @@ import { elasticClient } from '@core/utils/elasticClient';
 
 export interface IndexAuctionsJob {
   jobName: 'indexAuctions';
-  full: boolean;
 }
 
 /**
- * Indexes active market auctions to Elasticsearch.
- * @param fullIndex - If true, performs a full re-index and cleans up stale documents.
+ * Indexes active market auctions to Elasticsearch and cleans up stale documents.
+ * Uses bulk loading and cursor-based pagination for performance.
  */
-export async function indexAuctions(fullIndex: boolean): Promise<void> {
-  console.log(`Starting ${fullIndex ? 'full' : 'incremental'} auction indexing`);
+export async function indexAuctions(): Promise<void> {
+  console.log('Starting auction indexing');
+  console.time('Total indexing time');
 
   const auctionService = Container.get(AuctionService);
   const locationService = Container.get(AuctionLocationService);
 
+  // Bulk load locations and bids upfront (small datasets)
+  // Attributes are too large (~7.5M rows) so we fetch per-batch
+  const [locationsMap, bidsMap] = await Promise.all([locationService.loadAll(), auctionService.loadAllActiveBids()]);
+
   const batchSize = AUCTION_INDEX_BATCH_SIZE;
-  let offset = 0;
+  let lastId: string | undefined;
   let hasMore = true;
   let totalIndexed = 0;
 
-  // Track indexed IDs for cleanup during full index
   const indexedIds = new Set<string>();
 
   while (hasMore) {
-    console.time(`Indexing batch at offset ${offset}`);
+    console.time(`Indexing batch after ${lastId ?? 'start'}`);
 
-    // Fetch auctions
+    // Fetch auctions using cursor-based pagination
     const auctions = await auctionService.getMany({
       limit: batchSize,
-      offset,
+      afterId: lastId,
       activeOnly: true,
     });
 
@@ -48,34 +51,32 @@ export async function indexAuctions(fullIndex: boolean): Promise<void> {
       break;
     }
 
-    // Build and save documents - DataLoaders will batch the lookups
-    const savePromises = auctions.map(async auction => {
-      const [location, attrs, bid] = await Promise.all([
-        locationService.getOne(auction.locationId),
-        auctionService.getAttributesForItem(auction.id),
-        auctionService.getBidForItem(auction.id),
-      ]);
+    // Fetch attributes for this batch via DataLoader
+    const attributesBatch = await Promise.all(auctions.map(auction => auctionService.getAttributesForItem(auction.id)));
 
-      const doc = buildDocument(auction, location, attrs, bid);
+    // Build documents using pre-loaded maps + fetched attributes
+    const docs = auctions.map((auction, i) => {
+      const location = locationsMap.get(auction.locationId) ?? null;
+      const attrs = attributesBatch[i];
+      const bid = bidsMap.get(auction.id) ?? null;
+
       indexedIds.add(auction.id);
-
-      return saveDocument(doc);
+      return buildDocument(auction, location, attrs, bid);
     });
 
-    await Promise.all(savePromises);
+    // Save documents in batch
+    await Promise.all(docs.map(doc => saveDocument(doc)));
 
-    console.timeEnd(`Indexing batch at offset ${offset}`);
+    console.timeEnd(`Indexing batch after ${lastId ?? 'start'}`);
     totalIndexed += auctions.length;
-    offset += batchSize;
+    lastId = auctions[auctions.length - 1].id;
     hasMore = auctions.length === batchSize;
   }
 
   console.log(`Indexed ${totalIndexed} auctions`);
+  console.timeEnd('Total indexing time');
 
-  // Clean up stale documents during full index
-  if (fullIndex) {
-    await cleanupStaleDocuments(indexedIds);
-  }
+  await cleanupStaleDocuments(indexedIds);
 }
 
 /**

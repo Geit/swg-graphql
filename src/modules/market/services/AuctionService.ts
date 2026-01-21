@@ -86,6 +86,7 @@ export interface AuctionBid {
 export interface GetManyFilters {
   limit: number;
   offset?: number;
+  afterId?: string; // Cursor-based pagination: fetch items with ITEM_ID > afterId
   activeOnly?: boolean;
   locationId?: string;
   category?: number;
@@ -95,8 +96,12 @@ export interface GetManyFilters {
 export class AuctionService {
   private db = knexDb;
 
-  private prepareQuery(filters: Partial<GetManyFilters>) {
-    let query = this.db.select().from<MarketAuctionRecord>('MARKET_AUCTIONS').orderBy('ITEM_ID', 'desc');
+  private prepareQuery(filters: Partial<GetManyFilters>, useCursor = false) {
+    // Use ascending order for cursor-based pagination
+    let query = this.db
+      .select()
+      .from<MarketAuctionRecord>('MARKET_AUCTIONS')
+      .orderBy('ITEM_ID', useCursor ? 'asc' : 'desc');
 
     if (filters.activeOnly) {
       query = query.where('ACTIVE', 1);
@@ -107,13 +112,24 @@ export class AuctionService {
     if (filters.category) {
       query = query.where('CATEGORY', filters.category);
     }
+    if (filters.afterId) {
+      query = query.where('ITEM_ID', '>', filters.afterId);
+    }
 
     return query;
   }
 
   async getMany(filters: Partial<GetManyFilters>): Promise<Auction[]> {
-    const query = this.prepareQuery(filters);
-    query.limit(filters.limit ?? 1000).offset(filters.offset ?? 0);
+    const useCursor = filters.afterId !== undefined;
+    const query = this.prepareQuery(filters, useCursor);
+
+    if (useCursor) {
+      // Cursor-based: no offset needed
+      query.limit(filters.limit ?? 1000);
+    } else {
+      // Offset-based (legacy)
+      query.limit(filters.limit ?? 1000).offset(filters.offset ?? 0);
+    }
 
     const records = await query;
     return records.map(AuctionService.convertRecord);
@@ -204,6 +220,61 @@ export class AuctionService {
   );
 
   getBidForItem = this.bidsLoader.load.bind(this.bidsLoader);
+
+  /**
+   * Bulk loads all attributes for active auctions into a Map.
+   * Much faster than per-item lookups for full index.
+   */
+  async loadAllActiveAttributes(): Promise<Map<string, AuctionAttribute[]>> {
+    console.time('Loading all auction attributes');
+    const records = await this.db
+      .select('a.*')
+      .from<MarketAuctionAttributeRecord>('MARKET_AUCTION_ATTRIBUTES as a')
+      .join('MARKET_AUCTIONS as m', 'a.ITEM_ID', 'm.ITEM_ID')
+      .where('m.ACTIVE', 1);
+
+    const map = new Map<string, AuctionAttribute[]>();
+    for (const record of records) {
+      const itemId = String(record.ITEM_ID);
+      if (!map.has(itemId)) {
+        map.set(itemId, []);
+      }
+      map.get(itemId)!.push({
+        itemId,
+        attributeName: record.ATTRIBUTE_NAME,
+        attributeValue: record.ATTRIBUTE_VALUE,
+      });
+    }
+    console.timeEnd('Loading all auction attributes');
+    console.log(`Loaded ${records.length} attributes for ${map.size} items`);
+    return map;
+  }
+
+  /**
+   * Bulk loads all bids for active auctions into a Map.
+   */
+  async loadAllActiveBids(): Promise<Map<string, AuctionBid>> {
+    console.time('Loading all auction bids');
+    const records = await this.db
+      .select('b.*')
+      .from<MarketAuctionBidRecord>('MARKET_AUCTION_BIDS as b')
+      .join('MARKET_AUCTIONS as m', 'b.ITEM_ID', 'm.ITEM_ID')
+      .where('m.ACTIVE', 1);
+
+    const map = new Map<string, AuctionBid>();
+    for (const record of records) {
+      const itemId = String(record.ITEM_ID);
+      map.set(itemId, {
+        itemId,
+        bidderId: record.BIDDER_ID ? String(record.BIDDER_ID) : null,
+        bid: record.BID,
+        maxProxyBid: record.MAX_PROXY_BID,
+      });
+    }
+    console.timeEnd('Loading all auction bids');
+    console.log(`Loaded ${map.size} bids`);
+    return map;
+  }
 
   private static convertRecord(record: MarketAuctionRecord): Auction {
     return {

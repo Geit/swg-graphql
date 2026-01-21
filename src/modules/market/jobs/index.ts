@@ -1,6 +1,6 @@
 import { Queue, Worker } from 'bullmq';
 
-import { AUCTION_SYNC_INTERVAL, AUCTION_FULL_SYNC_INTERVAL } from '../config';
+import { AUCTION_SYNC_INTERVAL } from '../config';
 
 import { indexAuctions, IndexAuctionsJob } from './indexAuctions';
 
@@ -45,7 +45,7 @@ export const startJobs = async () => {
       console.log(`Starting job ${job.name} with id ${job.id}`);
       switch (job.data.jobName) {
         case 'indexAuctions':
-          await indexAuctions(job.data.full);
+          await indexAuctions();
           break;
 
         default:
@@ -60,13 +60,11 @@ export const startJobs = async () => {
     }
   );
 
-  // Incremental sync (every 3 minutes by default)
-  console.log(`Setting up incremental indexAuctions repeatable job with pattern: ${AUCTION_SYNC_INTERVAL}`);
+  console.log(`Setting up indexAuctions repeatable job with pattern: ${AUCTION_SYNC_INTERVAL}`);
   await marketQueue.add(
     'indexAuctions',
     {
       jobName: 'indexAuctions',
-      full: false,
     },
     {
       repeat: {
@@ -76,23 +74,7 @@ export const startJobs = async () => {
     }
   );
 
-  // Full sync (daily at 3 AM by default)
-  console.log(`Setting up full indexAuctions repeatable job with pattern: ${AUCTION_FULL_SYNC_INTERVAL}`);
-  await marketQueue.add(
-    'indexAuctions',
-    {
-      jobName: 'indexAuctions',
-      full: true,
-    },
-    {
-      repeat: {
-        immediately: false,
-        pattern: AUCTION_FULL_SYNC_INTERVAL,
-      },
-    }
-  );
-
-  console.log('Market sync jobs scheduled');
+  console.log('Market sync job scheduled');
 
   return {
     queues: [marketQueue],

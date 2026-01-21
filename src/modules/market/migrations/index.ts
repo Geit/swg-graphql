@@ -5,6 +5,9 @@ import { buildFullMapping, coreMarketMappingProperties } from './currentMapping'
 
 import { elasticClient } from '@core/utils/elasticClient';
 
+// Increased field limit to accommodate all item attributes from the datatable
+const MAX_TOTAL_FIELDS = 3000;
+
 export async function initialMarketIndexSetup() {
   console.log(`Attempting to setup the ${MARKET_INDEX_NAME} index in Elastic`);
 
@@ -27,6 +30,14 @@ export async function initialMarketIndexSetup() {
 
   try {
     if (indexExists) {
+      // Update settings for existing index (increase field limit if needed)
+      await elasticClient.indices.putSettings({
+        index: MARKET_INDEX_NAME,
+        body: {
+          'index.mapping.total_fields.limit': MAX_TOTAL_FIELDS,
+        },
+      });
+
       await elasticClient.indices.putMapping({
         index: MARKET_INDEX_NAME,
         body: {
@@ -38,6 +49,10 @@ export async function initialMarketIndexSetup() {
       await elasticClient.indices.create({
         index: MARKET_INDEX_NAME,
         body: {
+          settings: {
+            'index.mapping.total_fields.limit': MAX_TOTAL_FIELDS,
+            'index.mapping.ignore_malformed': true,
+          },
           mappings: {
             properties: mappingProperties,
           },
