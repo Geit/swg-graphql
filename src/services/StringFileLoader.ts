@@ -32,6 +32,7 @@ export class StringFileLoader {
   /**
    * Loads a string from a reference in the format "@file_name:key" or "file_name:key".
    * Returns the resolved string, or the fallback if not found.
+   * Key lookup is case-insensitive.
    * @param ref - String reference (e.g., "@obj_attr_n:efficiency")
    * @param fallback - Value to return if the string is not found (defaults to the key)
    */
@@ -40,7 +41,22 @@ export class StringFileLoader {
     if (!parsed) return fallback ?? ref;
 
     const strings = await this.load(parsed.fileName);
-    return strings[parsed.key] ?? fallback ?? parsed.key;
+
+    // Try exact match first, then case-insensitive
+    const exactMatch = strings[parsed.key];
+    if (exactMatch !== undefined) {
+      return exactMatch;
+    }
+
+    // Case-insensitive lookup
+    const keyLower = parsed.key.toLowerCase();
+    for (const [key, value] of Object.entries(strings)) {
+      if (key.toLowerCase() === keyLower && value !== undefined) {
+        return value;
+      }
+    }
+
+    return fallback ?? parsed.key;
   }
 
   static batchFunction(fileNames: readonly string[]) {
