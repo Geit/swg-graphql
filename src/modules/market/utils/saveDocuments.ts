@@ -10,7 +10,7 @@ const elasticDocumentSaver = new DataLoader(_saveDocuments, { cache: false });
 async function _saveDocuments(documents: readonly MarketListingDocument[]) {
   const body = documents.flatMap(doc => [{ index: { _index: MARKET_INDEX_NAME, _id: `${doc.type}:${doc.id}` } }, doc]);
 
-  const results = await elasticClient.bulk({ body });
+  const results = await elasticClient.bulk({ body, refresh: false });
 
   if (results.errors) {
     console.log('Errors while storing market listing documents');

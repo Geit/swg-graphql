@@ -30,21 +30,21 @@ export async function indexAuctions(): Promise<void> {
   const [locationsMap, bidsMap] = await Promise.all([locationService.loadAll(), auctionService.loadAllActiveBids()]);
 
   const batchSize = AUCTION_INDEX_BATCH_SIZE;
-  let offset = 0;
+  let lastId: string | undefined;
   let hasMore = true;
   let totalIndexed = 0;
 
   const indexedIds = new Set<string>();
 
   while (hasMore) {
-    const batchLabel = `Batch at offset ${offset}`;
+    const batchLabel = `Batch after ${lastId ?? 'start'}`;
     console.time(batchLabel);
 
-    // Stage 1: Fetch auctions
+    // Stage 1: Fetch auctions using cursor-based pagination
     console.time(`${batchLabel} - fetch auctions`);
     const auctions = await auctionService.getMany({
       limit: batchSize,
-      offset,
+      afterId: lastId,
       activeOnly: true,
     });
     console.timeEnd(`${batchLabel} - fetch auctions`);
@@ -78,8 +78,9 @@ export async function indexAuctions(): Promise<void> {
 
     console.timeEnd(batchLabel);
     totalIndexed += auctions.length;
-    offset += batchSize;
-    hasMore = auctions.length === batchSize;
+    lastId = auctions[auctions.length - 1].id;
+    // Continue if we got any results - only stop on empty batch
+    hasMore = auctions.length > 0;
   }
 
   console.log(`Indexed ${totalIndexed} auctions`);
