@@ -84,8 +84,8 @@ export class MarketSearchAttributeResolver {
   private resolveEnumValues(values: string[]): Promise<SearchAttributeEnumValue[]> {
     return Promise.all(
       values.map(async name => ({
-        name,
-        displayName: await this.stringService.loadFromRef(name),
+        name: name.replace(' <<<a_blank_space>>>', ''),
+        displayName: (await this.stringService.loadFromRef(name)).replace(' <<<a_blank_space>>>', ''),
       }))
     );
   }
