@@ -11,7 +11,7 @@ export interface IndexResourcesJob {
 
 type ResourceResultType = GetResourceListingQuery['resources']['results'][number];
 
-const RESOURCES_PER_PAGE = 1000;
+const RESOURCES_PER_PAGE = 5000;
 
 export async function indexResources(fullIndex: boolean) {
   let hasMorePages = true;
