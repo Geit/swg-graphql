@@ -86,7 +86,6 @@ export interface AuctionBid {
 export interface GetManyFilters {
   limit: number;
   offset?: number;
-  afterId?: string; // Cursor-based pagination: fetch items with ITEM_ID > afterId
   activeOnly?: boolean;
   locationId?: string;
   category?: number;
@@ -96,12 +95,8 @@ export interface GetManyFilters {
 export class AuctionService {
   private db = knexDb;
 
-  private prepareQuery(filters: Partial<GetManyFilters>, useCursor = false) {
-    // Use ascending order for cursor-based pagination
-    let query = this.db
-      .select()
-      .from<MarketAuctionRecord>('MARKET_AUCTIONS')
-      .orderBy('ITEM_ID', useCursor ? 'asc' : 'desc');
+  private prepareQuery(filters: Partial<GetManyFilters>) {
+    let query = this.db.select().from<MarketAuctionRecord>('MARKET_AUCTIONS').orderBy('ITEM_ID', 'desc');
 
     if (filters.activeOnly) {
       query = query.where('ACTIVE', 1);
@@ -112,24 +107,13 @@ export class AuctionService {
     if (filters.category) {
       query = query.where('CATEGORY', filters.category);
     }
-    if (filters.afterId) {
-      query = query.where('ITEM_ID', '>', filters.afterId);
-    }
 
     return query;
   }
 
   async getMany(filters: Partial<GetManyFilters>): Promise<Auction[]> {
-    const useCursor = filters.afterId !== undefined;
-    const query = this.prepareQuery(filters, useCursor);
-
-    if (useCursor) {
-      // Cursor-based: no offset needed
-      query.limit(filters.limit ?? 1000);
-    } else {
-      // Offset-based (legacy)
-      query.limit(filters.limit ?? 1000).offset(filters.offset ?? 0);
-    }
+    const query = this.prepareQuery(filters);
+    query.limit(filters.limit ?? 1000).offset(filters.offset ?? 0);
 
     const records = await query;
     return records.map(AuctionService.convertRecord);

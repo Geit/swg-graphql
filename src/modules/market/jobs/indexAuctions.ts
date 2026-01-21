@@ -30,31 +30,37 @@ export async function indexAuctions(): Promise<void> {
   const [locationsMap, bidsMap] = await Promise.all([locationService.loadAll(), auctionService.loadAllActiveBids()]);
 
   const batchSize = AUCTION_INDEX_BATCH_SIZE;
-  let lastId: string | undefined;
+  let offset = 0;
   let hasMore = true;
   let totalIndexed = 0;
 
   const indexedIds = new Set<string>();
 
   while (hasMore) {
-    console.time(`Indexing batch after ${lastId ?? 'start'}`);
+    const batchLabel = `Batch at offset ${offset}`;
+    console.time(batchLabel);
 
-    // Fetch auctions using cursor-based pagination
+    // Stage 1: Fetch auctions
+    console.time(`${batchLabel} - fetch auctions`);
     const auctions = await auctionService.getMany({
       limit: batchSize,
-      afterId: lastId,
+      offset,
       activeOnly: true,
     });
+    console.timeEnd(`${batchLabel} - fetch auctions`);
 
     if (auctions.length === 0) {
       hasMore = false;
       break;
     }
 
-    // Fetch attributes for this batch via DataLoader
+    // Stage 2: Fetch attributes for this batch via DataLoader
+    console.time(`${batchLabel} - fetch attributes`);
     const attributesBatch = await Promise.all(auctions.map(auction => auctionService.getAttributesForItem(auction.id)));
+    console.timeEnd(`${batchLabel} - fetch attributes`);
 
-    // Build documents using pre-loaded maps + fetched attributes
+    // Stage 3: Build documents using pre-loaded maps + fetched attributes
+    console.time(`${batchLabel} - build documents`);
     const docs = auctions.map((auction, i) => {
       const location = locationsMap.get(auction.locationId) ?? null;
       const attrs = attributesBatch[i];
@@ -63,13 +69,16 @@ export async function indexAuctions(): Promise<void> {
       indexedIds.add(auction.id);
       return buildDocument(auction, location, attrs, bid);
     });
+    console.timeEnd(`${batchLabel} - build documents`);
 
-    // Save documents in batch
+    // Stage 4: Save documents to Elasticsearch
+    console.time(`${batchLabel} - save to ES`);
     await Promise.all(docs.map(doc => saveDocument(doc)));
+    console.timeEnd(`${batchLabel} - save to ES`);
 
-    console.timeEnd(`Indexing batch after ${lastId ?? 'start'}`);
+    console.timeEnd(batchLabel);
     totalIndexed += auctions.length;
-    lastId = auctions[auctions.length - 1].id;
+    offset += batchSize;
     hasMore = auctions.length === batchSize;
   }
 
