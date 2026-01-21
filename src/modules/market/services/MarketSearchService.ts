@@ -3,6 +3,7 @@ import esb, { Query } from 'elastic-builder';
 
 import { MARKET_INDEX_NAME } from '../config';
 import { MarketListingDocument } from '../types';
+import { GameObjectType, getCategoryName } from '../utils/gameObjectType';
 
 import { ENABLE_TEXT_SEARCH } from '@core/config';
 import { elasticClient, transformElasticResponse } from '@core/utils/elasticClient';
@@ -12,6 +13,7 @@ export interface MarketSearchFilters {
   category?: number;
   categories?: number[];
   categoryHierarchy?: string;
+  includeCategoryChildren?: boolean;
   planet?: string;
   planets?: string[];
   priceRange?: { min?: number; max?: number };
@@ -75,15 +77,37 @@ export class MarketSearchService {
 
     // Category filters
     if (filters.category) {
-      filterQueries.push(esb.termQuery('category', filters.category));
+      if (filters.includeCategoryChildren === false) {
+        // Exact category match only
+        filterQueries.push(esb.termQuery('category', filters.category));
+      } else {
+        // Default: include child categories - convert to hierarchy search
+        const categoryName = getCategoryName(filters.category);
+        if (categoryName !== 'unknown') {
+          filterQueries.push(esb.termQuery('categoryHierarchy', categoryName));
+        } else {
+          // Fallback to exact match if category name not found
+          filterQueries.push(esb.termQuery('category', filters.category));
+        }
+      }
     }
     if (filters.categories?.length) {
       filterQueries.push(esb.termsQuery('category', filters.categories));
     }
 
-    // Hierarchical category search (e.g., 'armor' matches all armor types)
+    // Hierarchical category search by name (e.g., 'armor' matches all armor types)
     if (filters.categoryHierarchy) {
-      filterQueries.push(esb.termQuery('categoryHierarchy', filters.categoryHierarchy));
+      if (filters.includeCategoryChildren === false) {
+        // Match exact category only - convert name to numeric value
+        const gotKey = `GOT_${filters.categoryHierarchy}` as keyof typeof GameObjectType;
+        const categoryValue = GameObjectType[gotKey];
+        if (categoryValue !== undefined) {
+          filterQueries.push(esb.termQuery('category', categoryValue));
+        }
+      } else {
+        // Default: match any listing that has this category in its hierarchy
+        filterQueries.push(esb.termQuery('categoryHierarchy', filters.categoryHierarchy));
+      }
     }
 
     // Planet filters

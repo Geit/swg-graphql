@@ -27,6 +27,11 @@ export class MarketSearchResolver {
       description: 'Filter by category hierarchy (e.g., "armor" matches all armor types)',
     })
     categoryHierarchy?: string,
+    @Arg('includeCategoryChildren', {
+      defaultValue: true,
+      description: 'When true, includes listings from all child categories',
+    })
+    includeCategoryChildren?: boolean,
     @Arg('planet', { nullable: true }) planet?: string,
     @Arg('planets', () => [String], { nullable: true }) planets?: string[],
     @Arg('priceRange', () => MarketPriceRangeInput, { nullable: true }) priceRange?: MarketPriceRangeInput,
@@ -46,6 +51,7 @@ export class MarketSearchResolver {
       category,
       categories,
       categoryHierarchy,
+      includeCategoryChildren,
       planet,
       planets,
       priceRange,
