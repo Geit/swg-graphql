@@ -22,14 +22,14 @@ export class MarketSearchAttributeResolver {
   async marketSearchAttributes(
     @Arg('gameObjectType', {
       nullable: true,
-      description: 'Filter by game object type (includes inherited attributes)',
+      description: 'Filter by game object type (includes attributes from all child types)',
     })
     gameObjectType?: string,
     @Arg('from', () => Int, { defaultValue: 0 }) from?: number,
     @Arg('size', () => Int, { defaultValue: 50 }) size?: number
   ): Promise<MarketSearchAttributeSearchResult> {
     const attributes = gameObjectType
-      ? this.searchAttributeService.getAttributesForType(gameObjectType)
+      ? this.searchAttributeService.getAttributesForCategory(gameObjectType)
       : this.searchAttributeService.getAllAttributes();
 
     const totalResults = attributes.length;

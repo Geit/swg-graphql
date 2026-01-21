@@ -7,6 +7,7 @@ import {
   ParsedSearchAttribute,
   ParsedSearchAttributeData,
 } from '../utils/parseAdvancedSearchAttribute';
+import { GameObjectType, isTypeOf } from '../utils/gameObjectType';
 
 /**
  * Service for managing search attribute data loaded from the datatable.
@@ -70,6 +71,62 @@ export class SearchAttributeService {
   getAttributesForType(gameObjectType: string): ParsedSearchAttribute[] {
     if (!this.data) return [];
     return getAttributesForType(gameObjectType, this.data.attributes, this.data.typeHierarchy);
+  }
+
+  /**
+   * Gets all attributes for a category, including attributes from all descendant types.
+   * E.g., 'ship_component' returns attributes for ship_component, ship_component_engine, etc.
+   */
+  getAttributesForCategory(gameObjectType: string): ParsedSearchAttribute[] {
+    if (!this.data) return [];
+
+    // Find all types that are descendants of the given type (or the type itself)
+    const descendantTypes = this.getDescendantTypes(gameObjectType);
+
+    // Collect unique attributes from all descendant types
+    const seenAttributes = new Set<string>();
+    const result: ParsedSearchAttribute[] = [];
+
+    for (const attr of this.data.attributes) {
+      if (descendantTypes.has(attr.gameObjectType) && !seenAttributes.has(attr.name)) {
+        result.push(attr);
+        seenAttributes.add(attr.name);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets all types that are descendants of the given type (including the type itself).
+   * Uses the GOT bitmask hierarchy where child types share the parent's masked value.
+   */
+  private getDescendantTypes(gameObjectType: string): Set<string> {
+    if (!this.data) return new Set([gameObjectType]);
+
+    const descendants = new Set<string>();
+
+    // Look up the numeric value for the parent type
+    const gotKey = `GOT_${gameObjectType}` as keyof typeof GameObjectType;
+    const parentValue = GameObjectType[gotKey];
+
+    if (parentValue === undefined) {
+      // Type not found in GOT enum, fall back to exact match
+      descendants.add(gameObjectType);
+      return descendants;
+    }
+
+    // Find all types that are the parent or a child of it
+    for (const typeName of this.data.gameObjectTypes) {
+      const typeKey = `GOT_${typeName}` as keyof typeof GameObjectType;
+      const typeValue = GameObjectType[typeKey];
+
+      if (typeValue !== undefined && isTypeOf(typeValue, parentValue)) {
+        descendants.add(typeName);
+      }
+    }
+
+    return descendants;
   }
 
   /**
