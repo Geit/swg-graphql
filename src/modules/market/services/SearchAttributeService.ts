@@ -74,21 +74,29 @@ export class SearchAttributeService {
   }
 
   /**
-   * Gets all attributes for a category, including attributes from all descendant types.
-   * E.g., 'ship_component' returns attributes for ship_component, ship_component_engine, etc.
+   * Gets all attributes for a category, including:
+   * - Attributes inherited from parent types
+   * - Attributes from all descendant types
+   * E.g., 'armor_body' returns attributes for armor (parent), armor_body, and any children.
    */
   getAttributesForCategory(gameObjectType: string): ParsedSearchAttribute[] {
     if (!this.data) return [];
 
-    // Find all types that are descendants of the given type (or the type itself)
+    // Get parent types from the hierarchy
+    const parentTypes = new Set(this.buildCategoryHierarchy(gameObjectType));
+
+    // Get descendant types
     const descendantTypes = this.getDescendantTypes(gameObjectType);
 
-    // Collect unique attributes from all descendant types
+    // Combine parent and descendant types
+    const allTypes = new Set([...parentTypes, ...descendantTypes]);
+
+    // Collect unique attributes from all relevant types
     const seenAttributes = new Set<string>();
     const result: ParsedSearchAttribute[] = [];
 
     for (const attr of this.data.attributes) {
-      if (descendantTypes.has(attr.gameObjectType) && !seenAttributes.has(attr.name)) {
+      if (allTypes.has(attr.gameObjectType) && !seenAttributes.has(attr.name)) {
         result.push(attr);
         seenAttributes.add(attr.name);
       }

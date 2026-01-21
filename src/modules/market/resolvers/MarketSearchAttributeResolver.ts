@@ -1,7 +1,12 @@
 import { Arg, Authorized, Int, Query, Resolver } from 'type-graphql';
 import { Service } from 'typedi';
 
-import { MarketSearchAttribute, MarketSearchAttributeSearchResult, SearchAttributeDataType } from '../types';
+import {
+  MarketSearchAttribute,
+  MarketSearchAttributeSearchResult,
+  SearchAttributeDataType,
+  SearchAttributeEnumValue,
+} from '../types';
 import { SearchAttributeService } from '../services/SearchAttributeService';
 import { normalizeAttributeName, ParsedSearchAttribute } from '../utils/parseAdvancedSearchAttribute';
 
@@ -64,6 +69,7 @@ export class MarketSearchAttributeResolver {
   private async toMarketSearchAttribute(attr: ParsedSearchAttribute): Promise<MarketSearchAttribute> {
     const normalizedName = normalizeAttributeName(attr.name);
     const displayName = await this.resolveDisplayName(attr.name);
+    const enumValues = await this.resolveEnumValues(attr.enumValues);
 
     return {
       name: attr.name,
@@ -71,8 +77,17 @@ export class MarketSearchAttributeResolver {
       displayName,
       gameObjectType: attr.gameObjectType,
       dataType: attr.dataType as SearchAttributeDataType,
-      enumValues: attr.enumValues,
+      enumValues,
     };
+  }
+
+  private resolveEnumValues(values: string[]): Promise<SearchAttributeEnumValue[]> {
+    return Promise.all(
+      values.map(async name => ({
+        name,
+        displayName: await this.stringService.loadFromRef(name),
+      }))
+    );
   }
 
   /**
