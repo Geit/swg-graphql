@@ -86,7 +86,7 @@ export interface AuctionBid {
 export interface GetManyFilters {
   limit: number;
   offset?: number;
-  afterId?: string;
+  beforeId?: string;
   sortOrder?: 'asc' | 'desc';
   activeOnly?: boolean;
   locationId?: string;
@@ -112,8 +112,8 @@ export class AuctionService {
     if (filters.category) {
       query = query.where('CATEGORY', filters.category);
     }
-    if (filters.afterId) {
-      query = query.where('ITEM_ID', '>', filters.afterId);
+    if (filters.beforeId) {
+      query = query.where('ITEM_ID', '<', filters.beforeId);
     }
 
     return query;
@@ -122,7 +122,7 @@ export class AuctionService {
   async getMany(filters: Partial<GetManyFilters>): Promise<Auction[]> {
     const query = this.prepareQuery(filters);
 
-    if (filters.afterId !== undefined) {
+    if (filters.beforeId !== undefined) {
       query.limit(filters.limit ?? 1000);
     } else {
       query.limit(filters.limit ?? 1000).offset(filters.offset ?? 0);
