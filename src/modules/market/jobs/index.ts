@@ -68,7 +68,6 @@ export const startJobs = async () => {
     },
     {
       repeat: {
-        immediately: true,
         pattern: AUCTION_SYNC_INTERVAL,
       },
     }

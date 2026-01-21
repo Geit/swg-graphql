@@ -84,7 +84,6 @@ export const startJobs = async () => {
     },
     {
       repeat: {
-        immediately: true,
         pattern: '*/10 * * * *',
       },
     }
@@ -104,7 +103,6 @@ export const startJobs = async () => {
     },
     {
       repeat: {
-        immediately: true,
         pattern: '*/10 * * * *',
       },
     }
@@ -118,7 +116,6 @@ export const startJobs = async () => {
     },
     {
       repeat: {
-        immediately: true,
         pattern: '0 7 * * *',
       },
     }
