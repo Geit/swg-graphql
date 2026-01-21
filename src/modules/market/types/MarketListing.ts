@@ -1,5 +1,7 @@
 import { Field, ID, Int, ObjectType, Float, InputType } from 'type-graphql';
 
+import { IServerObject } from '@core/types';
+
 @ObjectType()
 export class MarketListingAttribute {
   @Field()
@@ -13,6 +15,9 @@ export class MarketListingAttribute {
 export class MarketListing {
   @Field(() => ID)
   id: string;
+
+  @Field(() => IServerObject, { nullable: true, description: 'The item being sold' })
+  item?: IServerObject;
 
   @Field(() => String)
   itemName: string;
@@ -38,11 +43,20 @@ export class MarketListing {
   @Field(() => ID, { nullable: true })
   ownerId: string | null;
 
+  @Field(() => IServerObject, { nullable: true, description: 'The seller' })
+  owner?: IServerObject;
+
   @Field(() => ID, { nullable: true })
   creatorId: string | null;
 
+  @Field(() => IServerObject, { nullable: true, description: 'The original item creator' })
+  creator?: IServerObject;
+
   @Field(() => ID)
   locationId: string;
+
+  @Field(() => IServerObject, { nullable: true, description: 'The vendor/bazaar location' })
+  location?: IServerObject;
 
   @Field(() => String, { nullable: true })
   planet: string | null;
@@ -61,6 +75,9 @@ export class MarketListing {
 
   @Field(() => ID, { nullable: true, description: 'Current highest bidder' })
   bidderId: string | null;
+
+  @Field(() => IServerObject, { nullable: true, description: 'The current highest bidder' })
+  bidder?: IServerObject;
 
   @Field(() => Int)
   itemSize: number;
