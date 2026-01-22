@@ -36,7 +36,7 @@ export class MarketSearchAttributeResolver {
     })
     includeCategoryChildren?: boolean,
     @Arg('from', () => Int, { defaultValue: 0 }) from?: number,
-    @Arg('size', () => Int, { defaultValue: 50 }) size?: number
+    @Arg('size', () => Int, { defaultValue: 1000 }) size?: number
   ): Promise<MarketSearchAttributeSearchResult> {
     let attributes;
     if (gameObjectType) {
