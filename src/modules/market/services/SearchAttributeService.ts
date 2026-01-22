@@ -4,8 +4,11 @@ import {
   loadAdvancedSearchAttribute,
   buildCategoryHierarchy,
   getAttributesForType,
+  resolveAttributeName,
+  resolveEnumValue,
   ParsedSearchAttribute,
   ParsedSearchAttributeData,
+  SearchAttribute,
 } from '../utils/parseAdvancedSearchAttribute';
 import { GameObjectType, isTypeOf } from '../utils/gameObjectType';
 
@@ -38,6 +41,9 @@ export class SearchAttributeService {
         attributes: [],
         typeHierarchy: new Map(),
         gameObjectTypes: new Set(),
+        attributesByType: new Map(),
+        aliasesByType: new Map(),
+        noChildInheritTypes: new Set(),
       };
       this.initialized = true;
     }
@@ -67,10 +73,17 @@ export class SearchAttributeService {
   /**
    * Gets all attributes that apply to a given game object type,
    * including inherited attributes from parent types.
+   * Since inheritance is applied during parsing, this returns all attributes
+   * directly from the attributesByType map.
    */
   getAttributesForType(gameObjectType: string): ParsedSearchAttribute[] {
     if (!this.data) return [];
-    return getAttributesForType(gameObjectType, this.data.attributes, this.data.typeHierarchy);
+    return getAttributesForType(
+      gameObjectType,
+      this.data.attributes,
+      this.data.typeHierarchy,
+      this.data.attributesByType
+    );
   }
 
   /**
@@ -103,6 +116,46 @@ export class SearchAttributeService {
     }
 
     return result;
+  }
+
+  /**
+   * Resolves an attribute name to its canonical SearchAttribute.
+   * Handles both direct attribute names and aliases.
+   */
+  resolveAttributeName(gameObjectType: string, inputName: string): SearchAttribute | null {
+    if (!this.data) return null;
+    return resolveAttributeName(gameObjectType, inputName, this.data.attributesByType, this.data.aliasesByType);
+  }
+
+  /**
+   * Resolves an enum value to its canonical form for a given attribute.
+   * Handles both direct enum values and aliases.
+   */
+  resolveEnumValue(searchAttribute: SearchAttribute, inputValue: string): string {
+    return resolveEnumValue(searchAttribute, inputValue);
+  }
+
+  /**
+   * Gets the raw SearchAttribute map for a game object type.
+   * Returns attributes including inherited ones.
+   */
+  getSearchableAttributes(gameObjectType: string): Map<string, SearchAttribute> {
+    return this.data?.attributesByType.get(gameObjectType) ?? new Map();
+  }
+
+  /**
+   * Gets the alias map for a game object type.
+   * Returns a map of alias name -> canonical attribute name.
+   */
+  getAttributeAliases(gameObjectType: string): Map<string, string> {
+    return this.data?.aliasesByType.get(gameObjectType) ?? new Map();
+  }
+
+  /**
+   * Checks if a game object type has the "no child inherit" flag set.
+   */
+  hasNoChildInherit(gameObjectType: string): boolean {
+    return this.data?.noChildInheritTypes.has(gameObjectType) ?? false;
   }
 
   /**
