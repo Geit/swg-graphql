@@ -56,4 +56,8 @@ export class StringFileLoader {
 
     return null;
   }
+
+  static batchFunction(fileNames: readonly string[]) {
+    return Promise.all(fileNames.map(fileName => loadStringFile(fileName)));
+  }
 }
