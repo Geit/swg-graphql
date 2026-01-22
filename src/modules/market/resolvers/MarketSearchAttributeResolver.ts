@@ -96,16 +96,16 @@ export class MarketSearchAttributeResolver {
    * If not a ref format, extracts the key and looks it up in obj_attr_n, then stat_n.
    */
   private async resolveDisplayName(name: string): Promise<string> {
+    // Extract the attribute key (last part after . or the whole name)
+    // e.g., "ship_component.ship_component_hitpoints" -> "ship_component_hitpoints"
+    const dotIndex = name.lastIndexOf('.');
+    const attrKey = dotIndex !== -1 ? name.slice(dotIndex + 1) : name;
+
     // If it's a string reference format (contains :), try loading it directly
     if (name.includes(':')) {
       const result = await this.stringService.tryLoadFromRef(name);
       if (result !== null) return result;
     }
-
-    // Extract the attribute key (last part after . or the whole name)
-    // e.g., "ship_component.ship_component_hitpoints" -> "ship_component_hitpoints"
-    const dotIndex = name.lastIndexOf('.');
-    const attrKey = dotIndex !== -1 ? name.slice(dotIndex + 1) : name;
 
     // Try looking it up in obj_attr_n first
     const objAttrResult = await this.stringService.tryLoadFromRef(`obj_attr_n:${attrKey}`);
