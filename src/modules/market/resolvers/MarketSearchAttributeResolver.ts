@@ -102,8 +102,8 @@ export class MarketSearchAttributeResolver {
     const attrKey = dotIndex !== -1 ? name.slice(dotIndex + 1) : name;
 
     // If it's a string reference format (contains :), try loading it directly
-    if (name.includes(':')) {
-      const result = await this.stringService.tryLoadFromRef(name);
+    if (attrKey.includes(':')) {
+      const result = await this.stringService.tryLoadFromRef(attrKey);
       if (result !== null) return result;
     }
 
