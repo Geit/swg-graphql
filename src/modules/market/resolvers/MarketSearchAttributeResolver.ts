@@ -85,7 +85,7 @@ export class MarketSearchAttributeResolver {
     return Promise.all(
       values.map(async name => ({
         name: name.replace(' <<<a_blank_space>>>', ''),
-        displayName: (await this.stringService.loadFromRef(name)).replace(' <<<a_blank_space>>>', ''),
+        displayName: ((await this.stringService.tryLoadFromRef(name)) ?? name).replace(' <<<a_blank_space>>>', ''),
       }))
     );
   }
@@ -93,20 +93,29 @@ export class MarketSearchAttributeResolver {
   /**
    * Resolves the display name for an attribute.
    * First tries to load it as a string reference (e.g., "@obj_attr_n:efficiency").
-   * If not a ref format, extracts the key and looks it up in obj_attr_n.
+   * If not a ref format, extracts the key and looks it up in obj_attr_n, then stat_n.
    */
-  private resolveDisplayName(name: string): Promise<string> {
+  private async resolveDisplayName(name: string): Promise<string> {
     // If it's a string reference format (contains :), try loading it directly
     if (name.includes(':')) {
-      return this.stringService.loadFromRef(name);
+      const result = await this.stringService.tryLoadFromRef(name);
+      if (result !== null) return result;
     }
 
-    // Otherwise, extract the attribute key (last part after . or the whole name)
+    // Extract the attribute key (last part after . or the whole name)
     // e.g., "ship_component.ship_component_hitpoints" -> "ship_component_hitpoints"
     const dotIndex = name.lastIndexOf('.');
     const attrKey = dotIndex !== -1 ? name.slice(dotIndex + 1) : name;
 
-    // Try looking it up in obj_attr_n
-    return this.stringService.loadFromRef(`obj_attr_n:${attrKey}`, attrKey);
+    // Try looking it up in obj_attr_n first
+    const objAttrResult = await this.stringService.tryLoadFromRef(`obj_attr_n:${attrKey}`);
+    if (objAttrResult !== null) return objAttrResult;
+
+    // Then try stat_n
+    const statResult = await this.stringService.tryLoadFromRef(`stat_n:${attrKey}`);
+    if (statResult !== null) return statResult;
+
+    // Fallback to the key
+    return attrKey;
   }
 }

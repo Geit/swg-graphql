@@ -30,15 +30,13 @@ export class StringFileLoader {
   load = this.dataloader.load.bind(this.dataloader);
 
   /**
-   * Loads a string from a reference in the format "@file_name:key" or "file_name:key".
-   * Returns the resolved string, or the fallback if not found.
+   * Tries to load a string from a reference. Returns null if not found.
    * Key lookup is case-insensitive.
    * @param ref - String reference (e.g., "@obj_attr_n:efficiency")
-   * @param fallback - Value to return if the string is not found (defaults to the key)
    */
-  async loadFromRef(ref: string, fallback?: string): Promise<string> {
+  async tryLoadFromRef(ref: string): Promise<string | null> {
     const parsed = parseStringRef(ref);
-    if (!parsed) return fallback ?? ref;
+    if (!parsed) return null;
 
     const strings = await this.load(parsed.fileName);
 
@@ -56,10 +54,6 @@ export class StringFileLoader {
       }
     }
 
-    return fallback ?? parsed.key;
-  }
-
-  static batchFunction(fileNames: readonly string[]) {
-    return Promise.all(fileNames.map(fileName => loadStringFile(fileName)));
+    return null;
   }
 }
