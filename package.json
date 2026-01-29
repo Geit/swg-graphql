@@ -39,7 +39,7 @@
     "start-dev-sh": "./start.sh",
     "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
     "build": "rimraf build && yarn run tsc && tsc-alias",
-    "codegen:main": "graphql-codegen --config codegen.yml || echo \"Could not regenerate root schema, server must be running, skipping for now\" && exit 0",
+    "codegen:main": "graphql-codegen --config codegen.yml --verbose || echo \"Could not regenerate root schema, server must be running, skipping for now\" && exit 0",
     "codegen": "yarn codegen:main && yarn workspaces run codegen",
     "dump-schema": "ts-node -r tsconfig-paths/register scripts/dump-oracle-schema.ts"
   },
