@@ -61,6 +61,7 @@ export const coreMarketMappingProperties: Record<string, MappingProperty> = {
  * Numeric types use ignore_malformed to drop mismatched values instead of failing the document.
  */
 function dataTypeToEsType(dataType: SearchAttributeDataType): MappingProperty {
+  /* eslint-disable camelcase */
   switch (dataType) {
     case 'int':
       return { type: 'integer', ignore_malformed: true };
@@ -73,6 +74,7 @@ function dataTypeToEsType(dataType: SearchAttributeDataType): MappingProperty {
     default:
       return { type: 'keyword' };
   }
+  /* eslint-enable */
 }
 
 /**
