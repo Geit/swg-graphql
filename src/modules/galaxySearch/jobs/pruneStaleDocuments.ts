@@ -24,6 +24,7 @@ export async function pruneStaleDocuments(job: Job<GalaxySearchJobs>) {
 
   const result = await elasticClient.deleteByQuery({
     index: GALAXY_SEARCH_INDEX_NAME,
+    conflicts: 'proceed',
     query: {
       bool: {
         must: [
@@ -47,5 +48,7 @@ export async function pruneStaleDocuments(job: Job<GalaxySearchJobs>) {
     },
   });
 
-  await log(`Pruned ${result.deleted ?? 0} stale documents from the search index`);
+  await log(
+    `Pruned ${result.deleted ?? 0} stale documents from the search index (${result.version_conflicts ?? 0} conflicts skipped)`
+  );
 }
