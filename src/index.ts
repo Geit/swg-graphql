@@ -107,7 +107,7 @@ async function bootstrap() {
 
   // Build the schema by pulling in all the resolvers from the resolvers folder
   const resolvers: NonEmptyArray<string> = [
-    `${__dirname}/resolvers/*.{js,ts}`,
+    `${__dirname}/resolvers/!(*.test).{js,ts}`,
     ...(moduleResolvers?.flatMap(mr => mr) ?? []),
   ];
 
