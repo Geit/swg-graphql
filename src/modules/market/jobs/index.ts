@@ -42,10 +42,11 @@ export const startJobs = async () => {
   const marketWorker = new Worker<MarketJobs, QueueResultType, QueueJobNames>(
     MARKET_QUEUE_NAME,
     async job => {
-      console.log(`Starting job ${job.name} with id ${job.id}`);
+      const log = job.log.bind(job);
+      await log(`Starting job ${job.name} with id ${job.id}`);
       switch (job.data.jobName) {
         case 'indexAuctions':
-          await indexAuctions();
+          await indexAuctions(log);
           break;
 
         default:

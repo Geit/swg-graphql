@@ -10,6 +10,8 @@ import { saveDocument } from '../utils/saveDocuments';
 
 import { elasticClient } from '@core/utils/elasticClient';
 
+export type JobLogger = (message: string) => Promise<number>;
+
 export interface IndexAuctionsJob {
   jobName: 'indexAuctions';
 }
@@ -18,9 +20,9 @@ export interface IndexAuctionsJob {
  * Indexes active market auctions to Elasticsearch and cleans up stale documents.
  * Uses bulk loading and cursor-based pagination for performance.
  */
-export async function indexAuctions(): Promise<void> {
-  console.log('Starting auction indexing');
-  console.time('Total indexing time');
+export async function indexAuctions(log: JobLogger): Promise<void> {
+  await log('Starting auction indexing');
+  const totalStart = Date.now();
 
   const auctionService = Container.get(AuctionService);
   const locationService = Container.get(AuctionLocationService);
@@ -38,17 +40,17 @@ export async function indexAuctions(): Promise<void> {
 
   while (hasMore) {
     const batchLabel = `Batch after ${lastId ?? 'start'}`;
-    console.time(batchLabel);
+    const batchStart = Date.now();
 
     // Stage 1: Fetch auctions using cursor-based pagination
-    console.time(`${batchLabel} - fetch auctions`);
+    const fetchStart = Date.now();
     const auctions = await auctionService.getMany({
       limit: batchSize,
       beforeId: lastId,
       sortOrder: 'desc',
       activeOnly: true,
     });
-    console.timeEnd(`${batchLabel} - fetch auctions`);
+    await log(`${batchLabel} - fetch auctions: ${Date.now() - fetchStart}ms`);
 
     if (auctions.length === 0) {
       hasMore = false;
@@ -56,12 +58,12 @@ export async function indexAuctions(): Promise<void> {
     }
 
     // Stage 2: Fetch attributes for this batch via DataLoader
-    console.time(`${batchLabel} - fetch attributes`);
+    const attrStart = Date.now();
     const attributesBatch = await Promise.all(auctions.map(auction => auctionService.getAttributesForItem(auction.id)));
-    console.timeEnd(`${batchLabel} - fetch attributes`);
+    await log(`${batchLabel} - fetch attributes: ${Date.now() - attrStart}ms`);
 
     // Stage 3: Build documents using pre-loaded maps + fetched attributes
-    console.time(`${batchLabel} - build documents`);
+    const buildStart = Date.now();
     const docs = auctions.map((auction, i) => {
       const location = locationsMap.get(auction.locationId) ?? null;
       const attrs = attributesBatch[i];
@@ -70,24 +72,24 @@ export async function indexAuctions(): Promise<void> {
       indexedIds.add(auction.id);
       return buildDocument(auction, location, attrs, bid);
     });
-    console.timeEnd(`${batchLabel} - build documents`);
+    await log(`${batchLabel} - build documents: ${Date.now() - buildStart}ms`);
 
     // Stage 4: Save documents to Elasticsearch
-    console.time(`${batchLabel} - save to ES`);
+    const saveStart = Date.now();
     await Promise.all(docs.map(doc => saveDocument(doc)));
-    console.timeEnd(`${batchLabel} - save to ES`);
+    await log(`${batchLabel} - save to ES: ${Date.now() - saveStart}ms`);
 
-    console.timeEnd(batchLabel);
+    await log(`${batchLabel}: ${Date.now() - batchStart}ms`);
     totalIndexed += auctions.length;
     lastId = auctions[auctions.length - 1].id;
     // Continue if we got any results - only stop on empty batch
     hasMore = auctions.length > 0;
   }
 
-  console.log(`Indexed ${totalIndexed} auctions`);
-  console.timeEnd('Total indexing time');
+  await log(`Indexed ${totalIndexed} auctions`);
+  await log(`Total indexing time: ${Date.now() - totalStart}ms`);
 
-  await cleanupStaleDocuments(indexedIds);
+  await cleanupStaleDocuments(log, indexedIds);
 }
 
 /**
@@ -157,8 +159,8 @@ function buildDocument(
 /**
  * Removes documents from ES that are no longer active in the database.
  */
-async function cleanupStaleDocuments(activeIds: Set<string>): Promise<void> {
-  console.log('Starting cleanup of stale market listing documents');
+async function cleanupStaleDocuments(log: JobLogger, activeIds: Set<string>): Promise<void> {
+  await log('Starting cleanup of stale market listing documents');
 
   try {
     // Delete documents that aren't in the active set
@@ -176,8 +178,8 @@ async function cleanupStaleDocuments(activeIds: Set<string>): Promise<void> {
       },
     });
 
-    console.log(`Cleaned up ${result.deleted ?? 0} stale documents`);
+    await log(`Cleaned up ${result.deleted ?? 0} stale documents`);
   } catch (err) {
-    console.error('Error cleaning up stale documents:', err);
+    await log(`Error cleaning up stale documents: ${err}`);
   }
 }

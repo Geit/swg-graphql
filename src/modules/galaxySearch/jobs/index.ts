@@ -43,7 +43,8 @@ export const startJobs = async () => {
   const galaxySearchWorker = new Worker<GalaxySearchJobs, QueueResultType, QueueJobNames>(
     GALAXY_SEARCH_QUEUE_NAME,
     async job => {
-      console.log(`Starting job ${job.name} with id ${job.id}`);
+      const log = job.log.bind(job);
+      await log(`Starting job ${job.name} with id ${job.id}`);
       switch (job.data.jobName) {
         case 'checkRecentLogins':
           await checkRecentLogins(job);
@@ -54,7 +55,7 @@ export const startJobs = async () => {
           break;
 
         case 'indexResources':
-          await indexResources(job.data.full);
+          await indexResources(log, job.data.full);
           break;
 
         default:
