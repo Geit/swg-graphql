@@ -13,7 +13,7 @@ interface ObjectVariablesRecord {
   OBJECT_ID: number;
   NAME: string;
   TYPE: number;
-  VALUE: string;
+  VALUE: string | null;
 }
 
 interface BaseObjvarType {
@@ -121,7 +121,7 @@ export class ObjVarService {
     return [...objvars.map(ov => ObjVarService.convertObjVar(ov.NAME, ov.TYPE, ov.VALUE))];
   }
 
-  static convertObjVar(name: string, type: number, value: string): ObjVar {
+  static convertObjVar(name: string, type: number, value: string | null): ObjVar {
     if (type === DynamicVariableType.INT || type === DynamicVariableType.REAL) {
       return {
         name,
@@ -134,7 +134,7 @@ export class ObjVarService {
       return {
         name,
         type,
-        value: value.split(':').filter(Boolean).map(Number),
+        value: value?.split(':').filter(Boolean).map(Number) ?? [],
       };
     }
 
@@ -142,14 +142,14 @@ export class ObjVarService {
       return {
         name,
         type,
-        value: value.split(':').filter(Boolean),
+        value: value?.split(':').filter(Boolean) ?? [],
       };
     }
 
     return {
       name,
       type,
-      value,
+      value: value ?? '',
     };
   }
 }
