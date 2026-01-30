@@ -26,6 +26,7 @@ describe('PlanetWatcherResolvers', () => {
   describe('planetWatcherObject', () => {
     it('should transform object update payload', () => {
       const payload = {
+        planet: 'tatooine',
         data: [
           {
             networkId: BigInt(12345),
@@ -33,10 +34,10 @@ describe('PlanetWatcherResolvers', () => {
             locationZ: 200.3,
             authoritativeServer: 1,
             interestRadius: 50,
-            deleteObject: false,
+            deleteObject: 0,
             objectTypeTag: 1234,
             level: 80,
-            hibernating: false,
+            hibernating: 0,
             templateCrc: 987654,
             aiActivity: 0,
             creationType: 1,
@@ -67,6 +68,7 @@ describe('PlanetWatcherResolvers', () => {
 
     it('should handle multiple objects in payload', () => {
       const payload = {
+        planet: 'naboo',
         data: [
           {
             networkId: BigInt(111),
@@ -74,10 +76,10 @@ describe('PlanetWatcherResolvers', () => {
             locationZ: 20,
             authoritativeServer: 1,
             interestRadius: 30,
-            deleteObject: false,
+            deleteObject: 0,
             objectTypeTag: 100,
             level: 1,
-            hibernating: true,
+            hibernating: 1,
             templateCrc: 1000,
             aiActivity: 1,
             creationType: 0,
@@ -88,10 +90,10 @@ describe('PlanetWatcherResolvers', () => {
             locationZ: 60,
             authoritativeServer: 2,
             interestRadius: 40,
-            deleteObject: true,
+            deleteObject: 1,
             objectTypeTag: 200,
             level: 90,
-            hibernating: false,
+            hibernating: 0,
             templateCrc: 2000,
             aiActivity: 2,
             creationType: 1,
@@ -110,6 +112,7 @@ describe('PlanetWatcherResolvers', () => {
   describe('planetWatcherNodeStatus', () => {
     it('should transform node status update payload', () => {
       const payload = {
+        planet: 'tatooine',
         data: [
           {
             locationX: 1000,
@@ -138,6 +141,7 @@ describe('PlanetWatcherResolvers', () => {
 
     it('should convert isLoaded 0 to false', () => {
       const payload = {
+        planet: 'corellia',
         data: [
           {
             locationX: 500,
@@ -160,12 +164,15 @@ describe('PlanetWatcherResolvers', () => {
   describe('planetWatcherGameServerStatus', () => {
     it('should transform game server status payload with DNS lookup', async () => {
       const payload = {
+        planet: 'tatooine',
         data: [
           {
             isOnline: 1,
+            ipAddressLen: 11,
             ipAddress: '192.168.1.1',
             serverId: 5,
             systemPid: 12345,
+            sceneIdLen: 8,
             sceneId: 'tatooine',
           },
         ],
@@ -187,12 +194,15 @@ describe('PlanetWatcherResolvers', () => {
 
     it('should convert isOnline 0 to false', async () => {
       const payload = {
+        planet: 'naboo',
         data: [
           {
             isOnline: 0,
+            ipAddressLen: 8,
             ipAddress: '10.0.0.1',
             serverId: 1,
             systemPid: 1000,
+            sceneIdLen: 5,
             sceneId: 'naboo',
           },
         ],
@@ -207,10 +217,12 @@ describe('PlanetWatcherResolvers', () => {
   describe('planetWatcherFrameEnd', () => {
     it('should transform frame end payload', () => {
       const payload = {
+        planet: 'tatooine',
         data: [
           {
             serverId: 1,
             frameTime: 16.5,
+            profilerDataLen: 13,
             profilerData: 'profiler_info',
           },
         ],
@@ -229,10 +241,11 @@ describe('PlanetWatcherResolvers', () => {
 
     it('should handle multiple frame end entries', () => {
       const payload = {
+        planet: 'endor',
         data: [
-          { serverId: 1, frameTime: 15.0, profilerData: 'data1' },
-          { serverId: 2, frameTime: 17.5, profilerData: 'data2' },
-          { serverId: 3, frameTime: 20.0, profilerData: 'data3' },
+          { serverId: 1, frameTime: 15.0, profilerDataLen: 5, profilerData: 'data1' },
+          { serverId: 2, frameTime: 17.5, profilerDataLen: 5, profilerData: 'data2' },
+          { serverId: 3, frameTime: 20.0, profilerDataLen: 5, profilerData: 'data3' },
         ],
       };
 

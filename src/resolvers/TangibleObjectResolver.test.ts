@@ -251,7 +251,7 @@ describe('TangibleObjectResolver', () => {
     });
 
     it('should return null when no templateId', async () => {
-      const result = await resolver.shipPartSummary(createMockObject({ templateId: null }));
+      const result = await resolver.shipPartSummary(createMockObject({ templateId: undefined }));
 
       expect(mockShipPartStatService.lookupShipPartStats).not.toHaveBeenCalled();
       expect(result).toBeNull();

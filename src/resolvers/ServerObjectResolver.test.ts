@@ -121,7 +121,7 @@ describe('ServerObjectResolver', () => {
     });
 
     it('should return null when no templateId', async () => {
-      const result = await resolver.template(createMockObject({ templateId: null }));
+      const result = await resolver.template(createMockObject({ templateId: undefined }));
 
       expect(result).toBeNull();
     });
@@ -238,7 +238,7 @@ describe('ServerObjectResolver', () => {
     });
 
     it('should return null when no scene', async () => {
-      const result = await resolver.sceneName(createMockObject({ scene: null }));
+      const result = await resolver.sceneName(createMockObject({ scene: undefined }));
 
       expect(result).toBeNull();
     });
