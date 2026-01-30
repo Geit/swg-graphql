@@ -6,10 +6,11 @@ import { SEARCH_INDEXER_RECENT_LOGGED_IN_TIME } from '../config';
 import { checkRecentLogins, CheckRecentLoginsJob } from './checkRecentLogins';
 import { indexObject, IndexObjectJob } from './indexObject';
 import { indexResources, IndexResourcesJob } from './indexResources';
+import { pruneStaleDocuments, PruneStaleDocumentsJob } from './pruneStaleDocuments';
 
 export const GALAXY_SEARCH_QUEUE_NAME = 'galaxySearch' as const;
 
-export type GalaxySearchJobs = CheckRecentLoginsJob | IndexObjectJob | IndexResourcesJob;
+export type GalaxySearchJobs = CheckRecentLoginsJob | IndexObjectJob | IndexResourcesJob | PruneStaleDocumentsJob;
 
 type QueueJobNames = GalaxySearchJobs['jobName'];
 
@@ -56,6 +57,10 @@ export const startJobs = async () => {
 
         case 'indexResources':
           await indexResources(log, job.data.full);
+          break;
+
+        case 'pruneStaleDocuments':
+          await pruneStaleDocuments(job);
           break;
 
         default:
@@ -118,6 +123,19 @@ export const startJobs = async () => {
     {
       repeat: {
         pattern: '0 7 * * *',
+      },
+    }
+  );
+
+  console.log(`Setting up pruneStaleDocuments repeatable job`);
+  await galaxySearchQueue.add(
+    'pruneStaleDocuments',
+    {
+      jobName: 'pruneStaleDocuments',
+    },
+    {
+      repeat: {
+        pattern: '0 3 * * *',
       },
     }
   );
