@@ -25,6 +25,8 @@ export async function pruneStaleDocuments(job: Job<GalaxySearchJobs>) {
   const result = await elasticClient.deleteByQuery({
     index: GALAXY_SEARCH_INDEX_NAME,
     conflicts: 'proceed',
+    // eslint-disable-next-line camelcase
+    wait_for_completion: false,
     query: {
       bool: {
         must: [
@@ -48,7 +50,41 @@ export async function pruneStaleDocuments(job: Job<GalaxySearchJobs>) {
     },
   });
 
-  await log(
-    `Pruned ${result.deleted ?? 0} stale documents from the search index (${result.version_conflicts ?? 0} conflicts skipped)`
-  );
+  const taskId = result.task;
+
+  if (!taskId) {
+    await log('No task ID returned - deleteByQuery may have completed synchronously');
+    return;
+  }
+
+  await log(`Started prune task: ${taskId}`);
+
+  // Poll task status until complete
+  const POLL_INTERVAL_MS = 10_000;
+  let completed = false;
+
+  while (!completed) {
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+
+    // eslint-disable-next-line camelcase
+    const taskResponse = await elasticClient.tasks.get({ task_id: String(taskId) });
+    const task = taskResponse.task;
+    const status = task.status;
+
+    if (status) {
+      const progress = status.total ? Math.round(((status.deleted ?? 0) / status.total) * 100) : 0;
+      await log(`Progress: ${status.deleted ?? 0}/${status.total ?? '?'} (${progress}%) deleted`);
+    }
+
+    if (taskResponse.completed) {
+      completed = true;
+      const response = taskResponse.response as {
+        deleted?: number;
+        version_conflicts?: number;
+      };
+      await log(
+        `Prune complete: ${response?.deleted ?? 0} deleted, ${response?.version_conflicts ?? 0} conflicts skipped`
+      );
+    }
+  }
 }
