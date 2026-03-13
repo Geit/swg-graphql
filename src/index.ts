@@ -27,6 +27,7 @@ import { checkKibanaToken } from './context/kibana-auth';
 import { ContextType } from './context/types';
 import { getRequestContext } from './context';
 import { Module, ModuleExports } from './moduleTypes';
+import { AccountService } from './services/AccountService';
 import { isPresent } from './utils/utility-types';
 import { customAuthChecker } from './auth';
 
@@ -227,6 +228,12 @@ async function bootstrap() {
     },
     wsServer
   );
+
+  // Pre-warm the station ID -> account name cache
+  Container.get(AccountService)
+    .primeAllAccountNames()
+    .then(() => console.log('Account name cache primed'))
+    .catch(err => console.error('Failed to prime account name cache:', err));
 
   // Start the server on the port specified in the config.
   httpServer.listen(PORT, () => console.log(`Server is now running on http://localhost:${PORT}${GQL_PATH}`));

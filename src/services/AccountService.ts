@@ -1,6 +1,7 @@
+import DataLoader from 'dataloader';
 import { Service } from 'typedi';
 
-import { STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL } from '../config';
+import { GET_ALL_ACCOUNT_NAMES_SERVICE_URL, STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL } from '../config';
 
 import db, { loginDb } from './db';
 
@@ -57,8 +58,6 @@ interface AccountRewardItemRecord {
   CHARACTER_ID: number;
 }
 
-const StationIdAccountNameMap = new Map<number, Promise<string | null>>();
-
 @Service()
 export class AccountService {
   private db = db;
@@ -106,29 +105,46 @@ export class AccountService {
     }));
   }
 
+  private accountNameLoader = new DataLoader(
+    async (stationIds: readonly number[]) => {
+      if (!STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL) {
+        return stationIds.map(() => null);
+      }
+
+      const endpoint = STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL.replace('{STATION_ID}', stationIds.join(','));
+      const res = await fetch(endpoint);
+      const body = await res.text();
+
+      if (stationIds.length === 1) {
+        // Single ID — response is plain text (existing PHP behavior)
+        return [body === 'NULL' ? null : body];
+      }
+
+      // Multiple IDs — response is JSON: { "stationId": "username" | null }
+      const results: Record<string, string | null> = JSON.parse(body);
+      return stationIds.map(id => results[id.toString()] ?? null);
+    },
+    { cache: true }
+  );
+
+  async primeAllAccountNames() {
+    if (!GET_ALL_ACCOUNT_NAMES_SERVICE_URL) {
+      return;
+    }
+
+    const res = await fetch(GET_ALL_ACCOUNT_NAMES_SERVICE_URL);
+    const results = (await res.json()) as Record<string, string | null>;
+
+    for (const [stationId, username] of Object.entries(results)) {
+      this.accountNameLoader.prime(Number(stationId), username);
+    }
+  }
+
   getAccountNameFromStationId(stationId: number) {
     if (!STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL) {
       return null;
     }
 
-    if (!StationIdAccountNameMap.has(stationId)) {
-      const endpoint = STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL.replace('{STATION_ID}', stationId.toString());
-
-      const newPromise = fetch(endpoint).then(async res => {
-        const body = await res.text();
-        return body === 'NULL' ? null : body;
-      });
-
-      newPromise.catch(err => {
-        StationIdAccountNameMap.delete(stationId);
-        throw err;
-      });
-
-      StationIdAccountNameMap.set(stationId, newPromise);
-
-      return newPromise;
-    }
-
-    return StationIdAccountNameMap.get(stationId) ?? null;
+    return this.accountNameLoader.load(stationId);
   }
 }

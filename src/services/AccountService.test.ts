@@ -8,6 +8,7 @@ vi.mock('./db');
 // Mock the config module
 vi.mock('../config', () => ({
   STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL: 'http://example.com/account/{STATION_ID}',
+  GET_ALL_ACCOUNT_NAMES_SERVICE_URL: 'http://example.com/get_all_account_names',
 }));
 
 describe('AccountService', () => {
@@ -163,18 +164,57 @@ describe('AccountService', () => {
       expect(result2).toBe('CachedAccount');
     });
 
-    it('should make separate requests for different station IDs', async () => {
+    it('should batch concurrent requests into a single fetch', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
-        text: () => Promise.resolve('Account'),
+        text: () => Promise.resolve(JSON.stringify({ '4004': 'AccountA', '5005': 'AccountB' })),
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      await service.getAccountNameFromStationId(4004);
-      await service.getAccountNameFromStationId(5005);
+      const [result1, result2] = await Promise.all([
+        service.getAccountNameFromStationId(4004),
+        service.getAccountNameFromStationId(5005),
+      ]);
 
-      expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(mockFetch).toHaveBeenCalledWith('http://example.com/account/4004');
-      expect(mockFetch).toHaveBeenCalledWith('http://example.com/account/5005');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledWith('http://example.com/account/4004,5005');
+      expect(result1).toBe('AccountA');
+      expect(result2).toBe('AccountB');
+    });
+
+    it('should return null for missing IDs in batch response', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        text: () => Promise.resolve(JSON.stringify({ '6006': 'FoundAccount', '7007': null })),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      const [result1, result2] = await Promise.all([
+        service.getAccountNameFromStationId(6006),
+        service.getAccountNameFromStationId(7007),
+      ]);
+
+      expect(result1).toBe('FoundAccount');
+      expect(result2).toBeNull();
+    });
+  });
+
+  describe('primeAllAccountNames', () => {
+    it('should fetch all account names and prime the cache', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ '1001': 'AccountA', '2002': 'AccountB' }),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await service.primeAllAccountNames();
+
+      expect(mockFetch).toHaveBeenCalledWith('http://example.com/get_all_account_names');
+
+      // Subsequent lookups should use the primed cache without additional fetches
+      const result1 = await service.getAccountNameFromStationId(1001);
+      const result2 = await service.getAccountNameFromStationId(2002);
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(result1).toBe('AccountA');
+      expect(result2).toBe('AccountB');
     });
   });
 });

@@ -70,6 +70,8 @@ export const ELASTIC_KIBANA_INDEX = process.env.elasticKibanaIndex ?? '.kibana';
 
 export const STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL = process.env.STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL;
 
+export const GET_ALL_ACCOUNT_NAMES_SERVICE_URL = process.env.GET_ALL_ACCOUNT_NAMES_SERVICE_URL;
+
 /**
  * Frequency (in ms) at which to update swg-graphql's internal guild representation.
  */
