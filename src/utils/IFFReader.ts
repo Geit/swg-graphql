@@ -97,16 +97,28 @@ export class IffReader {
     return stack.type !== TAGIFY('FORM');
   }
 
+  /**
+   * Match a tag name, handling 3-char TAG3 names that may be padded with space or null.
+   */
+  private static matchesName(actual: string, search: string): boolean {
+    if (search.length === actual.length) return actual === search;
+    if (search.length < 4 && actual.length === 4) {
+      const padded = search.padEnd(4, ' ');
+      return actual === padded;
+    }
+    return false;
+  }
+
   getFormNameCount(name: string) {
     if (!Array.isArray(this.currentNode)) throw new Error('A form cannot be a child of a chunk!');
 
-    return this.currentNode.filter(n => IffReader.isForm(n) && n.subTypeName === name).length;
+    return this.currentNode.filter(n => IffReader.isForm(n) && IffReader.matchesName(n.subTypeName, name)).length;
   }
 
   hasForm(name: string) {
     if (!Array.isArray(this.currentNode)) throw new Error('A form cannot be a child of a chunk!');
 
-    return this.currentNode.filter(n => IffReader.isForm(n) && n.subTypeName === name).length > 0;
+    return this.currentNode.some(n => IffReader.isForm(n) && IffReader.matchesName(n.subTypeName, name));
   }
 
   enterForm(name: string, idx = 0) {
@@ -114,7 +126,7 @@ export class IffReader {
 
     const newForm = this.currentNode
       .filter(IffReader.isForm)
-      .filter(node => node.subTypeName === name)
+      .filter(node => IffReader.matchesName(node.subTypeName, name))
       .at(idx);
 
     if (!newForm) throw new Error(`No form named ${name} found!`);
@@ -132,7 +144,7 @@ export class IffReader {
 
     const newChunk = this.currentNode
       .filter(IffReader.isChunk)
-      .filter(node => node.typeName === name)
+      .filter(node => IffReader.matchesName(node.typeName, name))
       .at(idx);
 
     if (!newChunk) throw new Error(`No chunk named ${name} found!`);
