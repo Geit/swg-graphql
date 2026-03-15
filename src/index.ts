@@ -238,13 +238,24 @@ async function bootstrap() {
     .catch(err => console.error('Failed to prime account name cache:', err));
 
   // Graceful shutdown
-  const shutdown = async () => {
+  const shutdown = () => {
     console.log('Received shutdown signal, cleaning up...');
-    await Promise.all(moduleShutdowns.map(fn => fn()));
-    httpServer.close(() => {
-      console.log('Shutdown complete');
-      process.exit(0);
-    });
+    setTimeout(() => {
+      console.log('Shutdown timed out, forcing exit');
+      process.exit(1);
+    }, 10_000).unref();
+    Promise.all(moduleShutdowns.map(fn => fn()))
+      .then(() => {
+        httpServer.close(() => {
+          console.log('Shutdown complete');
+          process.exit(0);
+        });
+        return undefined;
+      })
+      .catch(err => {
+        console.error('Error during shutdown:', err);
+        process.exit(1);
+      });
   };
 
   process.on('SIGTERM', shutdown);
