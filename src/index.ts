@@ -258,8 +258,8 @@ async function bootstrap() {
       });
   };
 
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
 
   // Start the server on the port specified in the config.
   httpServer.listen(PORT, () => console.log(`Server is now running on http://localhost:${PORT}${GQL_PATH}`));
