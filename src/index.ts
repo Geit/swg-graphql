@@ -241,8 +241,10 @@ async function bootstrap() {
   const shutdown = async () => {
     console.log('Received shutdown signal, cleaning up...');
     await Promise.all(moduleShutdowns.map(fn => fn()));
-    httpServer.close();
-    console.log('Shutdown complete');
+    httpServer.close(() => {
+      console.log('Shutdown complete');
+      process.exit(0);
+    });
   };
 
   process.on('SIGTERM', shutdown);
