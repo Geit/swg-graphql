@@ -76,8 +76,16 @@ export const startJobs = async () => {
 
   console.log('Market sync job scheduled');
 
+  const shutdown = async () => {
+    console.log('Shutting down market worker...');
+    await marketWorker.close();
+    await marketQueue.close();
+    console.log('Market worker shut down');
+  };
+
   return {
     queues: [marketQueue],
     marketWorker,
+    shutdown,
   };
 };

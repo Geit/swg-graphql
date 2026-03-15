@@ -23,6 +23,11 @@ export interface ModuleExports {
    * Queues that the module manages. These will be exposed in the admin interface.
    */
   queues?: Queue[];
+
+  /**
+   * Called on SIGTERM/SIGINT to gracefully shut down workers and close connections.
+   */
+  shutdown?: () => Promise<void>;
 }
 
 export type Module = () => ModuleExports | Promise<ModuleExports | null> | null;

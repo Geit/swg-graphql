@@ -29,11 +29,11 @@ const marketModule: Module = async () => {
     }
   }
 
-  const { queues } = await startJobs();
+  const { queues, shutdown } = await startJobs();
 
   const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`];
 
-  return { moduleName: 'Market Search', queues, resolvers };
+  return { moduleName: 'Market Search', queues, resolvers, shutdown };
 };
 
 export default marketModule;

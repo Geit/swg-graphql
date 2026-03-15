@@ -87,6 +87,8 @@ async function bootstrap() {
 
   const modules = await findAndLoadModules();
 
+  const moduleShutdowns = modules.map(m => m.shutdown).filter(isPresent);
+
   const {
     queues: moduleQueues,
     resolvers: moduleResolvers,
@@ -234,6 +236,17 @@ async function bootstrap() {
     .primeAllAccountNames()
     .then(() => console.log('Account name cache primed'))
     .catch(err => console.error('Failed to prime account name cache:', err));
+
+  // Graceful shutdown
+  const shutdown = async () => {
+    console.log('Received shutdown signal, cleaning up...');
+    await Promise.all(moduleShutdowns.map(fn => fn()));
+    httpServer.close();
+    console.log('Shutdown complete');
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 
   // Start the server on the port specified in the config.
   httpServer.listen(PORT, () => console.log(`Server is now running on http://localhost:${PORT}${GQL_PATH}`));

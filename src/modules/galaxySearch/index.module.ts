@@ -17,11 +17,11 @@ const galaxySearchModule: Module = async () => {
     }
   }
 
-  const { queues } = await startJobs();
+  const { queues, shutdown } = await startJobs();
 
   const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`];
 
-  return { moduleName: 'Galaxy Search', queues, resolvers };
+  return { moduleName: 'Galaxy Search', queues, resolvers, shutdown };
 };
 
 export default galaxySearchModule;

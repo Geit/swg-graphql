@@ -141,8 +141,16 @@ export const startJobs = async () => {
   );
   console.log(`Repeatable jobs scheduled.`);
 
+  const shutdown = async () => {
+    console.log('Shutting down galaxy search worker...');
+    await galaxySearchWorker.close();
+    await galaxySearchQueue.close();
+    console.log('Galaxy search worker shut down');
+  };
+
   return {
     queues: [galaxySearchQueue],
     galaxySearchWorker,
+    shutdown,
   };
 };
