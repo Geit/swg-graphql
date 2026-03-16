@@ -125,21 +125,44 @@ export class PlayerCreatureObjectResolver
     const skills = await this.skills(object);
     const treeMap = new Map<string, { name: string | null; skills: Skill[] }>();
 
-    for (const skill of skills) {
+    for (const rawSkill of skills) {
       // Skip bare container skills with no meaningful data
-      if (skill.id === 'expertise') continue;
+      if (rawSkill.id === 'expertise') continue;
 
-      // Check if this skill belongs to an expertise tree — if so, group by that instead
+      const skill: Skill = { ...rawSkill };
+
+      // Check if this skill belongs to an expertise tree — if so, group by that
+      // and collapse multiple ranks into a single entry on the rank 1 skill
       const expertiseTree = this.skillService.getExpertiseTreeForSkill(skill.id);
       if (expertiseTree) {
         const key = `expertise_tree_${expertiseTree.treeId}`;
-        const existing = treeMap.get(key);
-        if (existing) {
-          existing.skills.push(skill);
-        } else {
-          const name =
-            expertiseTree.name ?? expertiseTree.stringId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-          treeMap.set(key, { name, skills: [skill] });
+        const rank1Id = this.skillService.getExpertiseRank1(skill.id);
+
+        if (!rank1Id) continue;
+
+        const treeEntry = treeMap.get(key);
+        const isRank1 = skill.id === rank1Id;
+
+        if (isRank1) {
+          // Add rank 1 skill with pointsAssigned tracking
+          const maxRank = this.skillService.getExpertiseMaxRank(rank1Id);
+          skill.pointsAssigned = 1;
+          skill.maxPointsAssigned = maxRank;
+
+          if (treeEntry) {
+            treeEntry.skills.push(skill);
+          } else {
+            const name =
+              expertiseTree.name ?? expertiseTree.stringId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            treeMap.set(key, { name, skills: [skill] });
+          }
+        } else if (treeEntry) {
+          // Higher rank — find the rank 1 entry and merge into it
+          const rank1Entry = treeEntry.skills.find(s => s.id === rank1Id);
+          if (rank1Entry) {
+            rank1Entry.pointsAssigned = (rank1Entry.pointsAssigned ?? 0) + 1;
+            this.mergeExpertiseGrants(rank1Entry, skill);
+          }
         }
         continue;
       }
@@ -217,5 +240,32 @@ export class PlayerCreatureObjectResolver
     if (!objects || objects.length === 0) throw new Error(`Character ${object.id} with no player object is invalid!`);
 
     return objects[0];
+  }
+
+  /**
+   * Merges grants (commands, skillMods, schematics) from a higher-rank expertise skill
+   * into the rank 1 entry. The rank1 object is already a spread copy in the skills array,
+   * so mutation is safe here.
+   */
+
+  private mergeExpertiseGrants(target: Skill, source: Skill) {
+    if (source.commands) {
+      Object.assign(target, { commands: [...(target.commands ?? []), ...source.commands] });
+    }
+    if (source.skillMods) {
+      const mergedMods = [...(target.skillMods ?? [])];
+      for (const mod of source.skillMods) {
+        const existing = mergedMods.find(m => m.id === mod.id);
+        if (existing) {
+          existing.value += mod.value;
+        } else {
+          mergedMods.push(mod);
+        }
+      }
+      Object.assign(target, { skillMods: mergedMods });
+    }
+    if (source.schematicsGranted) {
+      Object.assign(target, { schematicsGranted: [...(target.schematicsGranted ?? []), ...source.schematicsGranted] });
+    }
   }
 }

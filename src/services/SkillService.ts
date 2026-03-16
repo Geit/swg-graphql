@@ -68,7 +68,13 @@ export interface ExpertiseTreeInfo {
 
 interface SkillMod {
   id: string;
+  name: string | null;
   value: number;
+}
+
+interface SkillCommand {
+  id: string;
+  name: string | null;
 }
 
 interface SkillDataToAdd {
@@ -76,7 +82,7 @@ interface SkillDataToAdd {
   name: string | null;
   title: string | null;
   description: string | null;
-  commands: string[] | null;
+  commands: SkillCommand[] | null;
   skillMods: SkillMod[] | null;
   schematicsRevoked: string[] | null;
   schematicsGranted: string[] | null;
@@ -84,6 +90,8 @@ interface SkillDataToAdd {
   statsRequired: string[] | null;
   missionsRequired: string[] | null;
   preclusionSkills: string[] | null;
+  pointsAssigned: number | null;
+  maxPointsAssigned: number | null;
 }
 
 interface ExperienceRecord {
@@ -102,6 +110,8 @@ export class SkillService {
 
   private _skillMap = new Map<string, EnrichedSkillData>();
   private _expertiseSkillToTree = new Map<string, ExpertiseTreeInfo>();
+  private _expertiseRank1ForSkill = new Map<string, string>();
+  private _expertiseMaxRank = new Map<string, number>();
 
   private _levelData: PlayerLevelDatatableRow[] = [];
   private _xpTypesThatAffectLevel: Set<string> = new Set();
@@ -139,6 +149,8 @@ export class SkillService {
       expertiseData,
       expertiseTreeData,
       expertiseNames,
+      commandNames,
+      skillModNames,
     ] = await Promise.all([
       this.dataTable.load<PlayerLevelDatatableRow>({
         fileName: `player/player_level.iff`,
@@ -160,6 +172,8 @@ export class SkillService {
         camelcase: false,
       }),
       this.stringService.load('expertise_n'),
+      this.stringService.load('cmd_n'),
+      this.stringService.load('stat_n'),
     ]);
 
     this._levelData = levelData;
@@ -175,11 +189,28 @@ export class SkillService {
       });
     }
 
-    // Map each expertise skill to its tree info
+    // Map each expertise skill to its tree info and build rank groupings
+    const positionToRanks = new Map<string, { name: string; rank: number }[]>();
     for (const row of expertiseData) {
       const treeInfo = treeInfoMap.get(row.TREE);
       if (treeInfo) {
         this._expertiseSkillToTree.set(row.NAME, treeInfo);
+      }
+
+      const posKey = `${row.TREE},${row.TIER},${row.GRID}`;
+      const ranks = positionToRanks.get(posKey) ?? [];
+      ranks.push({ name: row.NAME, rank: row.RANK });
+      positionToRanks.set(posKey, ranks);
+    }
+
+    // For each grid position, map all ranks to the rank 1 skill and track max rank
+    for (const ranks of positionToRanks.values()) {
+      const rank1 = ranks.find(r => r.rank === 1);
+      if (!rank1) continue;
+
+      this._expertiseMaxRank.set(rank1.name, ranks.length);
+      for (const r of ranks) {
+        this._expertiseRank1ForSkill.set(r.name, rank1.name);
       }
     }
 
@@ -191,10 +222,20 @@ export class SkillService {
             return [
               {
                 id: skillModId,
+                name: skillModNames[skillModId] ?? null,
                 value: parseInt(skillModVal),
               },
             ];
           })
+        : null;
+
+      const commands: SkillCommand[] | null = skill.commands
+        ? skill.commands.split(',').map(
+            (cmdId): SkillCommand => ({
+              id: cmdId,
+              name: commandNames[cmdId.toLowerCase()] ?? null,
+            })
+          )
         : null;
 
       this._skillMap.set(skill.name, {
@@ -203,7 +244,7 @@ export class SkillService {
         name: skillNames[skill.name] ?? null,
         title: skillTitles[skill.name] ?? null,
         description: skillDescriptions[skill.name] ?? null,
-        commands: splitToArrayOrNull(skill.commands),
+        commands,
         skillMods,
         schematicsGranted: splitToArrayOrNull(skill.schematicsGranted),
         schematicsRevoked: splitToArrayOrNull(skill.schematicsRevoked),
@@ -211,6 +252,8 @@ export class SkillService {
         statsRequired: splitToArrayOrNull(skill.statsRequired),
         missionsRequired: splitToArrayOrNull(skill.missionsRequired),
         preclusionSkills: splitToArrayOrNull(skill.preclusionSkills),
+        pointsAssigned: null,
+        maxPointsAssigned: null,
       });
     }
   }
@@ -269,6 +312,20 @@ export class SkillService {
    */
   getExpertiseTreeForSkill(skillId: string): ExpertiseTreeInfo | null {
     return this._expertiseSkillToTree.get(skillId) ?? null;
+  }
+
+  /**
+   * Returns the rank 1 skill ID for an expertise skill, or null if not an expertise skill.
+   */
+  getExpertiseRank1(skillId: string): string | null {
+    return this._expertiseRank1ForSkill.get(skillId) ?? null;
+  }
+
+  /**
+   * Returns the maximum number of ranks for an expertise skill (by its rank 1 ID).
+   */
+  getExpertiseMaxRank(rank1SkillId: string): number {
+    return this._expertiseMaxRank.get(rank1SkillId) ?? 1;
   }
 
   /**

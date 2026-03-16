@@ -20,8 +20,20 @@ export class SkillMod {
   @Field()
   id: string;
 
+  @Field(() => String, { nullable: true })
+  name: string | null;
+
   @Field(() => Int)
   value: number;
+}
+
+@ObjectType()
+export class SkillCommand {
+  @Field()
+  id: string;
+
+  @Field(() => String, { nullable: true })
+  name: string | null;
 }
 
 @ObjectType()
@@ -38,8 +50,8 @@ export class Skill {
   @Field(() => String, { nullable: true })
   description: string | null;
 
-  @Field(() => [String], { nullable: true })
-  commands: string[] | null;
+  @Field(() => [SkillCommand], { nullable: true })
+  commands: SkillCommand[] | null;
 
   @Field(() => [SkillMod], { nullable: true })
   skillMods: SkillMod[] | null;
@@ -112,6 +124,18 @@ export class Skill {
 
   @Field(() => Int)
   ender: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Number of points assigned to this expertise (null for non-expertise skills)',
+  })
+  pointsAssigned: number | null;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Maximum number of points that can be assigned (null for non-expertise skills)',
+  })
+  maxPointsAssigned: number | null;
 }
 
 @ObjectType()
