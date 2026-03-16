@@ -217,7 +217,7 @@ export class SkillService {
 
     let current = this._skillMap.get(skillId);
     while (current) {
-      if (current.parent === 'skill_system_root') return current;
+      if (!current.parent) return current;
       current = this._skillMap.get(current.parent);
     }
 
