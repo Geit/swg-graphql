@@ -47,6 +47,25 @@ type PlayerLevelDatatableRow = CamelCasedProperties<{
   expertise_points: number;
 }>;
 
+interface ExpertiseRow {
+  NAME: string;
+  TREE: number;
+  TIER: number;
+  GRID: number;
+  RANK: number;
+}
+
+interface ExpertiseTreeRow {
+  expertise_tree_id: number;
+  expertise_tree_string_id: string;
+}
+
+export interface ExpertiseTreeInfo {
+  treeId: number;
+  stringId: string;
+  name: string | null;
+}
+
 interface SkillMod {
   id: string;
   value: number;
@@ -82,6 +101,7 @@ export class SkillService {
   loadingHandle: false | Promise<void> = false;
 
   private _skillMap = new Map<string, EnrichedSkillData>();
+  private _expertiseSkillToTree = new Map<string, ExpertiseTreeInfo>();
 
   private _levelData: PlayerLevelDatatableRow[] = [];
   private _xpTypesThatAffectLevel: Set<string> = new Set();
@@ -110,7 +130,16 @@ export class SkillService {
   }
 
   private async loadSkillDataFromDatatables() {
-    const [levelData, skillData, skillNames, skillTitles, skillDescriptions] = await Promise.all([
+    const [
+      levelData,
+      skillData,
+      skillNames,
+      skillTitles,
+      skillDescriptions,
+      expertiseData,
+      expertiseTreeData,
+      expertiseNames,
+    ] = await Promise.all([
       this.dataTable.load<PlayerLevelDatatableRow>({
         fileName: `player/player_level.iff`,
         camelcase: true,
@@ -122,10 +151,37 @@ export class SkillService {
       this.stringService.load('skl_n'),
       this.stringService.load('skl_t'),
       this.stringService.load('skl_d'),
+      this.dataTable.load<ExpertiseRow>({
+        fileName: `expertise/expertise.iff`,
+        camelcase: false,
+      }),
+      this.dataTable.load<ExpertiseTreeRow>({
+        fileName: `expertise/expertise_trees.iff`,
+        camelcase: false,
+      }),
+      this.stringService.load('expertise_n'),
     ]);
 
     this._levelData = levelData;
     this._xpTypesThatAffectLevel = new Set(levelData.map(ld => ld.xpType).filter(isPresent));
+
+    // Build expertise tree ID -> info map
+    const treeInfoMap = new Map<number, ExpertiseTreeInfo>();
+    for (const tree of expertiseTreeData) {
+      treeInfoMap.set(tree.expertise_tree_id, {
+        treeId: tree.expertise_tree_id,
+        stringId: tree.expertise_tree_string_id,
+        name: expertiseNames[tree.expertise_tree_string_id] ?? null,
+      });
+    }
+
+    // Map each expertise skill to its tree info
+    for (const row of expertiseData) {
+      const treeInfo = treeInfoMap.get(row.TREE);
+      if (treeInfo) {
+        this._expertiseSkillToTree.set(row.NAME, treeInfo);
+      }
+    }
 
     for (const skill of skillData) {
       const skillMods = skill.skillMods
@@ -209,8 +265,15 @@ export class SkillService {
   }
 
   /**
+   * Returns the expertise tree info for a skill, or null if it's not an expertise skill.
+   */
+  getExpertiseTreeForSkill(skillId: string): ExpertiseTreeInfo | null {
+    return this._expertiseSkillToTree.get(skillId) ?? null;
+  }
+
+  /**
    * Finds the tree root for a skill by walking up the parent chain.
-   * The tree root is the skill whose parent is 'skill_system_root'.
+   * The tree root is the skill whose parent is empty (i.e. a direct child of skill_system_root).
    */
   async getTreeRootForSkill(skillId: string): Promise<EnrichedSkillData | null> {
     await this.loadSkillData();
@@ -222,5 +285,18 @@ export class SkillService {
     }
 
     return null;
+  }
+
+  /**
+   * Returns the depth of a skill in its tree (0 = tree root, 1 = direct child, etc.)
+   */
+  getSkillDepth(skillId: string): number {
+    let depth = 0;
+    let current = this._skillMap.get(skillId);
+    while (current && current.parent) {
+      depth += 1;
+      current = this._skillMap.get(current.parent);
+    }
+    return depth;
   }
 }

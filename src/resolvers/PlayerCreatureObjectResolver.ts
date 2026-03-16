@@ -122,6 +122,21 @@ export class PlayerCreatureObjectResolver
     const treeMap = new Map<string, { name: string | null; skills: Skill[] }>();
 
     for (const skill of skills) {
+      // Check if this skill belongs to an expertise tree — if so, group by that instead
+      const expertiseTree = this.skillService.getExpertiseTreeForSkill(skill.id);
+      if (expertiseTree) {
+        const key = `expertise_tree_${expertiseTree.treeId}`;
+        const existing = treeMap.get(key);
+        if (existing) {
+          existing.skills.push(skill);
+        } else {
+          const name =
+            expertiseTree.name ?? expertiseTree.stringId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          treeMap.set(key, { name, skills: [skill] });
+        }
+        continue;
+      }
+
       const treeRoot = await this.skillService.getTreeRootForSkill(skill.id);
       if (!treeRoot) continue;
 
@@ -129,14 +144,20 @@ export class PlayerCreatureObjectResolver
       if (existing) {
         existing.skills.push(skill);
       } else {
-        treeMap.set(treeRoot.id, { name: treeRoot.name, skills: [skill] });
+        const name =
+          treeRoot.name ?? treeRoot.title ?? treeRoot.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        treeMap.set(treeRoot.id, { name, skills: [skill] });
       }
     }
 
     return Array.from(treeMap.entries()).map(([id, data]) => ({
       id,
       name: data.name,
-      skills: data.skills,
+      skills: data.skills.sort((a, b) => {
+        const depthA = this.skillService.getSkillDepth(a.id);
+        const depthB = this.skillService.getSkillDepth(b.id);
+        return depthA - depthB || a.xpCost - b.xpCost;
+      }),
     }));
   }
 
