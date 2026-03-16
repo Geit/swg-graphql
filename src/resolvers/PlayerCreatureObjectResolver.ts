@@ -15,6 +15,7 @@ import TAGIFY, { STRUCTURE_TYPE_IDS } from '../utils/tagify';
 import { isPresent, subsetOf } from '../utils/utility-types';
 import { Skill, SkillTree } from '../types/PlayerCreatureObject';
 import { SkillService } from '../services/SkillService';
+import { PlayerObjectService } from '../services/PlayerObjectService';
 
 import { CreatureObjectResolver } from './CreatureObjectResolver';
 
@@ -46,6 +47,9 @@ export class PlayerCreatureObjectResolver
 
   @Inject()
   skillService: SkillService;
+
+  @Inject()
+  playerObjectService: PlayerObjectService;
 
   @FieldResolver()
   async ownedObjects(
@@ -143,13 +147,35 @@ export class PlayerCreatureObjectResolver
       const category = await this.skillService.getCategoryForSkill(skill.id);
       if (!category) continue;
 
-      const existing = treeMap.get(category.id);
+      // Class profession phases (e.g. class_forcesensitive_phase1..4) are merged into
+      // a single group per profession. Other class categories (e.g. class_chronicles)
+      // remain separate.
+      const phaseMatch = category.id.match(/^(class_.+)_phase\d+$/);
+      const groupId = phaseMatch ? phaseMatch[1] : category.id;
+
+      const existing = treeMap.get(groupId);
       if (existing) {
         existing.skills.push(skill);
       } else {
-        const name =
-          category.name ?? category.title ?? category.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        treeMap.set(category.id, { name, skills: [skill] });
+        let name: string;
+        if (phaseMatch) {
+          const playerObj = await this.playerObject(object);
+          const [rawPlayer, skillTitles] = await Promise.all([
+            this.playerObjectService.load(playerObj.id),
+            this.stringFileService.load('ui_roadmap'),
+          ]);
+          const template = rawPlayer?.SKILL_TEMPLATE;
+          name =
+            (template && skillTitles[template]) ??
+            groupId
+              .replace(/^class_/, '')
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, c => c.toUpperCase());
+        } else {
+          name =
+            category.name ?? category.title ?? category.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+        treeMap.set(groupId, { name, skills: [skill] });
       }
     }
 
