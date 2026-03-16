@@ -67,9 +67,9 @@ export class MarketSearchService {
           .disMaxQuery()
           .queries([
             esb.matchPhraseQuery('itemName', filters.searchText).boost(3),
-            esb.matchQuery('itemName', filters.searchText).boost(2),
-            esb.matchQuery('userDescription', filters.searchText),
-            esb.matchQuery('vendorName', filters.searchText),
+            esb.matchQuery('itemName', filters.searchText).boost(2).operator('and'),
+            esb.matchQuery('userDescription', filters.searchText).operator('and'),
+            esb.matchQuery('vendorName', filters.searchText).operator('and'),
           ])
           .tieBreaker(0.3)
       );
