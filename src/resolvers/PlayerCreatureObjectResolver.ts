@@ -202,11 +202,37 @@ export class PlayerCreatureObjectResolver
       }
     }
 
-    return Array.from(treeMap.entries()).map(([id, data]) => ({
-      id,
-      name: data.name,
-      skills: data.skills.sort((a, b) => a.xpCost - b.xpCost),
-    }));
+    // Merge single-skill trees into a "General" catch-all
+    const generalSkills: Skill[] = [];
+    const keysToRemove: string[] = [];
+    for (const [key, data] of treeMap) {
+      if (data.skills.length === 1) {
+        generalSkills.push(data.skills[0]);
+        keysToRemove.push(key);
+      }
+    }
+    for (const key of keysToRemove) {
+      treeMap.delete(key);
+    }
+    if (generalSkills.length > 0) {
+      treeMap.set('general', { name: 'General', skills: generalSkills });
+    }
+
+    const treePriority = (id: string): number => {
+      if (id.startsWith('class_')) return 0;
+      if (id.startsWith('expertise_tree_')) return 1;
+      if (id.startsWith('pilot')) return 2;
+      if (id === 'general') return 3;
+      return 4;
+    };
+
+    return Array.from(treeMap.entries())
+      .sort(([idA], [idB]) => treePriority(idA) - treePriority(idB))
+      .map(([id, data]) => ({
+        id,
+        name: data.name,
+        skills: data.skills.sort((a, b) => a.xpCost - b.xpCost),
+      }));
   }
 
   @FieldResolver(() => Int)
