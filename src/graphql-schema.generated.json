@@ -382,6 +382,22 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "account",
+            "description": "The account associated with this risk profile.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Account",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "averageSuspicionScore",
             "description": null,
             "args": [],
@@ -454,6 +470,22 @@
             "deprecationReason": null
           },
           {
+            "name": "totalCreditVolume",
+            "description": "Total credit volume across all transactions in the scoring window.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "totalTransactions",
             "description": null,
             "args": [],
@@ -471,6 +503,58 @@
           },
           {
             "name": "tradingPartnerCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "AccountRiskProfileResponse",
+        "description": "Paginated list of account risk profiles.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "results",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "AccountRiskProfile",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalResults",
             "description": null,
             "args": [],
             "type": {
@@ -15455,11 +15539,11 @@
         "fields": [
           {
             "name": "labelTransaction",
-            "description": null,
+            "description": "Label a transaction as suspicious, legitimate, or uncertain for scoring performance tracking.",
             "args": [
               {
                 "name": "category",
-                "description": null,
+                "description": "Optional category: rmt, credit_laundering, same_account_abuse, or other.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -15471,7 +15555,7 @@
               },
               {
                 "name": "label",
-                "description": null,
+                "description": "The label to apply: suspicious, legitimate, or uncertain.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -15487,7 +15571,7 @@
               },
               {
                 "name": "labeledBy",
-                "description": null,
+                "description": "Identifier of the staff member creating this label.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -15503,7 +15587,7 @@
               },
               {
                 "name": "notes",
-                "description": null,
+                "description": "Optional free-text notes from the labeler.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -15515,7 +15599,7 @@
               },
               {
                 "name": "transactionId",
-                "description": null,
+                "description": "The ID of the transaction to label.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -18927,43 +19011,11 @@
           },
           {
             "name": "accountRiskProfile",
-            "description": null,
+            "description": "Returns a precomputed risk profile for a given account. Data is refreshed by a background job on a weekly schedule.",
             "args": [
               {
-                "name": "afterDate",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "\"now-30d\"",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "beforeDate",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "\"now\"",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
                 "name": "stationId",
-                "description": null,
+                "description": "The station ID of the account to profile.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -19136,6 +19188,147 @@
               "ofType": {
                 "kind": "OBJECT",
                 "name": "GuildsResult",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "highRiskAccounts",
+            "description": "Returns a paginated, filterable list of account risk profiles. Data is precomputed by a background job.",
+            "args": [
+              {
+                "name": "flags",
+                "description": "Filter to accounts with any of the specified suspicion flags in their top flags.",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "from",
+                "description": "Offset for pagination.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "0",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": "Maximum number of results to return.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "50",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "minFlaggedTransactions",
+                "description": "Minimum number of flagged transactions the account must have.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "minScore",
+                "description": "Minimum average suspicion score to include an account (0-100).",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "0",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortDirection",
+                "description": "Sort direction: ASC or DESC.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"DESC\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortField",
+                "description": "Field to sort by. One of: averageSuspicionScore, flaggedTransactions, totalTransactions, tradingPartnerCount, totalCreditVolume.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"averageSuspicionScore\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "stationId",
+                "description": "Filter by station ID (partial match).",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "AccountRiskProfileResponse",
                 "ofType": null
               }
             },
@@ -20230,11 +20423,11 @@
           },
           {
             "name": "scoringPerformance",
-            "description": null,
+            "description": "Returns precision and recall metrics for each suspicion flag, based on staff-applied labels. Used to tune scoring rules.",
             "args": [
               {
                 "name": "afterDate",
-                "description": null,
+                "description": "Only consider labels created after this date. Supports Elasticsearch date math expressions.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20460,117 +20653,24 @@
             "deprecationReason": null
           },
           {
-            "name": "suspiciousTransactions",
-            "description": null,
-            "args": [
-              {
-                "name": "afterDate",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "\"now-7d\"",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "beforeDate",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "\"now\"",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "flags",
-                "description": null,
-                "type": {
-                  "kind": "LIST",
-                  "name": null,
-                  "ofType": {
-                    "kind": "NON_NULL",
-                    "name": null,
-                    "ofType": {
-                      "kind": "SCALAR",
-                      "name": "String",
-                      "ofType": null
-                    }
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "from",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Int",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "0",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "limit",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Int",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "50",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "minScore",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Int",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": "50",
-                "isDeprecated": false,
-                "deprecationReason": null
-              }
-            ],
+            "name": "suspicionFlags",
+            "description": "Returns all valid suspicion flag definitions, including their point values and descriptions.",
+            "args": [],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "OBJECT",
-                "name": "SuspiciousTransactionResult",
-                "ofType": null
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "SuspicionFlagDefinition",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,
@@ -20578,11 +20678,11 @@
           },
           {
             "name": "tradeLabels",
-            "description": null,
+            "description": "Retrieve staff-applied labels for transactions, with optional filtering by transaction or label type.",
             "args": [
               {
                 "name": "from",
-                "description": null,
+                "description": "Offset for pagination.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20598,7 +20698,7 @@
               },
               {
                 "name": "label",
-                "description": null,
+                "description": "Filter by label type: suspicious, legitimate, or uncertain.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -20610,7 +20710,7 @@
               },
               {
                 "name": "limit",
-                "description": null,
+                "description": "Maximum number of results to return.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20626,7 +20726,7 @@
               },
               {
                 "name": "transactionId",
-                "description": null,
+                "description": "Filter to labels for a specific transaction.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -20659,11 +20759,11 @@
           },
           {
             "name": "tradeReport",
-            "description": null,
+            "description": "Returns a trade report for an account, summarising transaction volume and value with each unique trading partner, sorted by total value descending.",
             "args": [
               {
                 "name": "from",
-                "description": null,
+                "description": "Lower bound date filter (inclusive). Supports Elasticsearch date math expressions.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20679,7 +20779,7 @@
               },
               {
                 "name": "stationId",
-                "description": null,
+                "description": "The station ID of the account to generate the report for.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -20691,7 +20791,7 @@
               },
               {
                 "name": "until",
-                "description": null,
+                "description": "Upper bound date filter (exclusive). Supports Elasticsearch date math expressions.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20724,11 +20824,11 @@
           },
           {
             "name": "transaction",
-            "description": null,
+            "description": "Retrieve a single transaction by its ID.",
             "args": [
               {
                 "name": "transaction",
-                "description": null,
+                "description": "The transaction ID to look up.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20753,11 +20853,11 @@
           },
           {
             "name": "transactionRollup",
-            "description": null,
+            "description": "Returns an aggregated rollup of all transactions between two specific parties within a date range.",
             "args": [
               {
                 "name": "from",
-                "description": null,
+                "description": "Lower bound date filter (inclusive). Supports Elasticsearch date math expressions.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20773,7 +20873,7 @@
               },
               {
                 "name": "partyA",
-                "description": null,
+                "description": "Station ID or OID of the first party.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -20785,7 +20885,7 @@
               },
               {
                 "name": "partyB",
-                "description": null,
+                "description": "Station ID or OID of the second party.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -20797,7 +20897,7 @@
               },
               {
                 "name": "until",
-                "description": null,
+                "description": "Upper bound date filter (exclusive). Supports Elasticsearch date math expressions.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20822,11 +20922,11 @@
           },
           {
             "name": "transactions",
-            "description": null,
+            "description": "Search and filter transactions with pagination, sorting, and suspicion scoring filters.",
             "args": [
               {
                 "name": "afterDate",
-                "description": null,
+                "description": "Lower bound date filter (inclusive). Supports Elasticsearch date math expressions (e.g. \"now-30d\").",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20842,7 +20942,7 @@
               },
               {
                 "name": "arePartiesSameAccount",
-                "description": null,
+                "description": "Filter by whether the transaction parties belong to the same account. Null returns both.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Boolean",
@@ -20854,7 +20954,7 @@
               },
               {
                 "name": "beforeDate",
-                "description": null,
+                "description": "Upper bound date filter (exclusive). Supports Elasticsearch date math expressions (e.g. \"now\", \"now-7d\").",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20870,7 +20970,7 @@
               },
               {
                 "name": "from",
-                "description": null,
+                "description": "Offset for pagination.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20886,7 +20986,7 @@
               },
               {
                 "name": "limit",
-                "description": null,
+                "description": "Maximum number of results to return.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -20901,8 +21001,20 @@
                 "deprecationReason": null
               },
               {
+                "name": "minSuspicionScore",
+                "description": "Only return transactions with a suspicion score greater than or equal to this value (0-100).",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "parties",
-                "description": null,
+                "description": "Filter to transactions involving all of the specified party identifiers (name, stationId, or OID).",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -20922,7 +21034,7 @@
               },
               {
                 "name": "searchText",
-                "description": null,
+                "description": "Free-text search across party names, station IDs, OIDs, and item names.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -20934,7 +21046,7 @@
               },
               {
                 "name": "sortDirection",
-                "description": null,
+                "description": "Sort direction: ASC or DESC.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -20946,11 +21058,31 @@
               },
               {
                 "name": "sortField",
-                "description": null,
+                "description": "Field to sort by. One of: @timestamp, transactionValue, suspicionScore.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
                   "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "suspicionFlags",
+                "description": "Filter to transactions matching any of the specified suspicion flags (e.g. MISPRICED, CYCLIC_TRADE, ONE_SIDED_TRADE).",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -26249,37 +26381,45 @@
       },
       {
         "kind": "OBJECT",
-        "name": "SuspiciousTransactionResult",
-        "description": null,
+        "name": "SuspicionFlagDefinition",
+        "description": "A suspicion flag definition, including its name, point value, and description.",
         "isOneOf": null,
         "fields": [
           {
-            "name": "results",
-            "description": null,
+            "name": "description",
+            "description": "Human-readable description of what triggers this flag.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "OBJECT",
-                    "name": "Transaction",
-                    "ofType": null
-                  }
-                }
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
               }
             },
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "totalResults",
-            "description": null,
+            "name": "flag",
+            "description": "The flag identifier used in suspicionFlags arrays.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "points",
+            "description": "Base point value this flag contributes to the suspicion score.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -27937,7 +28077,7 @@
           },
           {
             "name": "entity",
-            "description": null,
+            "description": "Resolves the party identifier to either an Account (for stationId) or a server object (for OID).",
             "args": [],
             "type": {
               "kind": "UNION",
