@@ -205,11 +205,7 @@ export class PlayerCreatureObjectResolver
     return Array.from(treeMap.entries()).map(([id, data]) => ({
       id,
       name: data.name,
-      skills: data.skills.sort((a, b) => {
-        const depthA = this.skillService.getSkillDepth(a.id);
-        const depthB = this.skillService.getSkillDepth(b.id);
-        return depthA - depthB || a.xpCost - b.xpCost;
-      }),
+      skills: data.skills.sort((a, b) => a.xpCost - b.xpCost),
     }));
   }
 

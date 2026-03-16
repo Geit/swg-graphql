@@ -351,17 +351,4 @@ export class SkillService {
 
     return null;
   }
-
-  /**
-   * Returns the depth of a skill in its tree (0 = tree root, 1 = direct child, etc.)
-   */
-  getSkillDepth(skillId: string): number {
-    let depth = 0;
-    let current = this._skillMap.get(skillId);
-    while (current && current.parent) {
-      depth += 1;
-      current = this._skillMap.get(current.parent);
-    }
-    return depth;
-  }
 }
