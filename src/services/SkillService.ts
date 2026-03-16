@@ -207,4 +207,20 @@ export class SkillService {
 
     return this._skillMap.get(skillId) ?? null;
   }
+
+  /**
+   * Finds the tree root for a skill by walking up the parent chain.
+   * The tree root is the skill whose parent is 'skill_system_root'.
+   */
+  async getTreeRootForSkill(skillId: string): Promise<EnrichedSkillData | null> {
+    await this.loadSkillData();
+
+    let current = this._skillMap.get(skillId);
+    while (current) {
+      if (current.parent === 'skill_system_root') return current;
+      current = this._skillMap.get(current.parent);
+    }
+
+    return null;
+  }
 }

@@ -13,7 +13,7 @@ import { ManfSchematicObject } from './ManfSchematicObject';
 import { PlayerObject } from './PlayerObject';
 import { IServerObject, ServerObject, Location, UnenrichedServerObject } from './ServerObject';
 import { Account, UnenrichedAccount } from './Account';
-import { PlayerCreatureObject } from './PlayerCreatureObject';
+import { PlayerCreatureObject, SkillTree } from './PlayerCreatureObject';
 import { PlanetWatcherArgs } from './PlanetWatcherArgs';
 import { PlanetWatcherFrameEnd } from './PlanetWatcherFrameEnd';
 import { PlanetWatcherGameServerStatus } from './PlanetWatcherGameServerStatus';
@@ -67,6 +67,7 @@ export {
   Account,
   UnenrichedAccount,
   PlayerCreatureObject,
+  SkillTree,
   PlanetWatcherArgs,
   Location,
   Attributes,

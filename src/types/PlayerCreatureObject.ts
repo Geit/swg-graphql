@@ -114,6 +114,18 @@ export class Skill {
   ender: number;
 }
 
+@ObjectType()
+export class SkillTree {
+  @Field()
+  id: string;
+
+  @Field(() => String, { nullable: true })
+  name: string | null;
+
+  @Field(() => [Skill])
+  skills: Skill[];
+}
+
 /**
  * Player Creature Object isn't a real SWG thing, but allows us to do type refinement and grant access
  * to additional fields for players.
@@ -134,4 +146,7 @@ export class PlayerCreatureObject extends CreatureObject {
 
   @Field(() => [Skill], { description: 'Skills the player has' })
   skills: Skill[];
+
+  @Field(() => [SkillTree], { description: 'Skills grouped by their skill tree' })
+  skillTrees: SkillTree[];
 }

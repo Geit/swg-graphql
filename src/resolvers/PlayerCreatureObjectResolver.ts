@@ -13,7 +13,7 @@ import { PropertyListIds } from '../types/PropertyList';
 import { PlayerObject } from '../types/PlayerObject';
 import TAGIFY, { STRUCTURE_TYPE_IDS } from '../utils/tagify';
 import { isPresent, subsetOf } from '../utils/utility-types';
-import { Skill } from '../types/PlayerCreatureObject';
+import { Skill, SkillTree } from '../types/PlayerCreatureObject';
 import { SkillService } from '../services/SkillService';
 
 import { CreatureObjectResolver } from './CreatureObjectResolver';
@@ -114,6 +114,30 @@ export class PlayerCreatureObjectResolver
     const skills = (await Promise.all(skillPromises)).filter(isPresent);
 
     return skills;
+  }
+
+  @FieldResolver(() => [SkillTree])
+  async skillTrees(@Root() object: PlayerCreatureObject) {
+    const skills = await this.skills(object);
+    const treeMap = new Map<string, { name: string | null; skills: Skill[] }>();
+
+    for (const skill of skills) {
+      const treeRoot = await this.skillService.getTreeRootForSkill(skill.id);
+      if (!treeRoot) continue;
+
+      const existing = treeMap.get(treeRoot.id);
+      if (existing) {
+        existing.skills.push(skill);
+      } else {
+        treeMap.set(treeRoot.id, { name: treeRoot.name, skills: [skill] });
+      }
+    }
+
+    return Array.from(treeMap.entries()).map(([id, data]) => ({
+      id,
+      name: data.name,
+      skills: data.skills,
+    }));
   }
 
   @FieldResolver(() => Int)
