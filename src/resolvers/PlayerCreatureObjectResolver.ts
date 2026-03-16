@@ -222,11 +222,12 @@ export class PlayerCreatureObjectResolver
     }
 
     const treePriority = (id: string): number => {
+      if (id === 'class_chronicles') return 4;
       if (id.startsWith('class_')) return 0;
       if (id.startsWith('expertise_tree_')) return 1;
       if (id.startsWith('pilot')) return 2;
       if (id === 'general') return 3;
-      return 4;
+      return 5;
     };
 
     return Array.from(treeMap.entries())
