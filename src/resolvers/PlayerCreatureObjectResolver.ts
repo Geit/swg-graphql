@@ -122,6 +122,9 @@ export class PlayerCreatureObjectResolver
     const treeMap = new Map<string, { name: string | null; skills: Skill[] }>();
 
     for (const skill of skills) {
+      // Skip bare container skills with no meaningful data
+      if (skill.id === 'expertise') continue;
+
       // Check if this skill belongs to an expertise tree — if so, group by that instead
       const expertiseTree = this.skillService.getExpertiseTreeForSkill(skill.id);
       if (expertiseTree) {
@@ -137,16 +140,16 @@ export class PlayerCreatureObjectResolver
         continue;
       }
 
-      const treeRoot = await this.skillService.getTreeRootForSkill(skill.id);
-      if (!treeRoot) continue;
+      const category = await this.skillService.getCategoryForSkill(skill.id);
+      if (!category) continue;
 
-      const existing = treeMap.get(treeRoot.id);
+      const existing = treeMap.get(category.id);
       if (existing) {
         existing.skills.push(skill);
       } else {
         const name =
-          treeRoot.name ?? treeRoot.title ?? treeRoot.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        treeMap.set(treeRoot.id, { name, skills: [skill] });
+          category.name ?? category.title ?? category.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        treeMap.set(category.id, { name, skills: [skill] });
       }
     }
 

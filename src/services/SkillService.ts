@@ -272,16 +272,24 @@ export class SkillService {
   }
 
   /**
-   * Finds the tree root for a skill by walking up the parent chain.
-   * The tree root is the skill whose parent is empty (i.e. a direct child of skill_system_root).
+   * Finds the category for a skill — the 2nd level in the hierarchy.
+   * Mirrors the SWG client's SkillObject::findCategory() behaviour:
+   * walks up the parent chain and returns the skill whose parent's parent is empty (root).
+   * For skills that are direct children of root, returns the skill itself.
    */
-  async getTreeRootForSkill(skillId: string): Promise<EnrichedSkillData | null> {
+  async getCategoryForSkill(skillId: string): Promise<EnrichedSkillData | null> {
     await this.loadSkillData();
 
     let current = this._skillMap.get(skillId);
     while (current) {
+      // Direct child of root — this skill IS the category
       if (!current.parent) return current;
-      current = this._skillMap.get(current.parent);
+
+      const parentSkill = this._skillMap.get(current.parent);
+      // Parent is root (empty parent) — current is the category
+      if (parentSkill && !parentSkill.parent) return current;
+
+      current = parentSkill;
     }
 
     return null;
