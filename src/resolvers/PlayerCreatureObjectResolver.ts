@@ -202,12 +202,15 @@ export class PlayerCreatureObjectResolver
       }
     }
 
-    // Merge single-skill trees into a "General" catch-all
+    // Merge orphan trees (costumes, species, utility, etc.) into a "General" catch-all.
+    // Keep class, expertise, and pilot trees separate even if they have only one skill.
+    const isSignificantTree = (id: string) =>
+      id.startsWith('class_') || id.startsWith('expertise_tree_') || id.startsWith('pilot');
     const generalSkills: Skill[] = [];
     const keysToRemove: string[] = [];
     for (const [key, data] of treeMap) {
-      if (data.skills.length === 1) {
-        generalSkills.push(data.skills[0]);
+      if (data.skills.length <= 1 && !isSignificantTree(key)) {
+        generalSkills.push(...data.skills);
         keysToRemove.push(key);
       }
     }
