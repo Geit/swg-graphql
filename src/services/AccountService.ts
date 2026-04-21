@@ -111,18 +111,26 @@ export class AccountService {
         return stationIds.map(() => null);
       }
 
-      const endpoint = STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL.replace('{STATION_ID}', stationIds.join(','));
-      const res = await fetch(endpoint);
-      const body = await res.text();
+      try {
+        const endpoint = STATION_ID_TO_ACCOUNT_NAME_SERVICE_URL.replace('{STATION_ID}', stationIds.join(','));
+        const res = await fetch(endpoint);
+        const body = await res.text();
 
-      if (stationIds.length === 1) {
-        // Single ID — response is plain text (existing PHP behavior)
-        return [body === 'NULL' ? null : body];
+        if (stationIds.length === 1) {
+          // Single ID — response is plain text (existing PHP behavior)
+          return [body === 'NULL' ? null : body];
+        }
+
+        // Multiple IDs — response is JSON: { "stationId": "username" | null }
+        const results: Record<string, string | null> = JSON.parse(body);
+        return stationIds.map(id => results[id.toString()] ?? null);
+      } catch (err) {
+        // Don't let a transient lookup failure poison the cache forever.
+        for (const id of stationIds) {
+          this.accountNameLoader.clear(id);
+        }
+        throw err;
       }
-
-      // Multiple IDs — response is JSON: { "stationId": "username" | null }
-      const results: Record<string, string | null> = JSON.parse(body);
-      return stationIds.map(id => results[id.toString()] ?? null);
     },
     { cache: true }
   );

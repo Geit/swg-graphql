@@ -181,6 +181,21 @@ describe('AccountService', () => {
       expect(result2).toBe('AccountB');
     });
 
+    it('should retry after a failed lookup instead of caching the error', async () => {
+      const mockFetch = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('network down'))
+        .mockResolvedValueOnce({ text: () => Promise.resolve('RecoveredAccount') });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await expect(service.getAccountNameFromStationId(8008)).rejects.toThrow('network down');
+
+      const result = await service.getAccountNameFromStationId(8008);
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(result).toBe('RecoveredAccount');
+    });
+
     it('should return null for missing IDs in batch response', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         text: () => Promise.resolve(JSON.stringify({ '6006': 'FoundAccount', '7007': null })),
