@@ -1,4 +1,5 @@
 import { Job } from 'bullmq';
+import { createJobTimer } from '@core/utils/jobTimer';
 
 import gqlSdk from '../gqlSdk';
 
@@ -15,16 +16,18 @@ export async function checkRecentLogins(job: Job<GalaxySearchJobs>) {
   if (job.data.jobName !== 'checkRecentLogins') throw new Error('Job was passed to incorrect handler!');
 
   const log = job.log.bind(job);
-  const startTime = Date.now();
+  const timer = createJobTimer(log);
   const { limit = 1000, offset = 0, loginsWithLastSecs } = job.data;
 
   await log(`Checking recent logins within last ${loginsWithLastSecs}s (limit=${limit}, offset=${offset})`);
 
-  const getRecentLoginResult = await gqlSdk.getRecentLogins({
-    durationSeconds: loginsWithLastSecs,
-    limit,
-    offset,
-  });
+  const getRecentLoginResult = await timer.time('fetchRecentLogins', () =>
+    gqlSdk.getRecentLogins({
+      durationSeconds: loginsWithLastSecs,
+      limit,
+      offset,
+    })
+  );
 
   const characters = getRecentLoginResult.recentLogins.results;
   const totalResults = getRecentLoginResult.recentLogins.totalResults;
@@ -37,13 +40,15 @@ export async function checkRecentLogins(job: Job<GalaxySearchJobs>) {
     // We schedule more recent login fetches here to retrieve them.
     const paginationJobs = Math.ceil(totalResults / limit) - 1;
     await log(`Scheduling ${paginationJobs} paginated follow-up checkRecentLogins jobs`);
-    await queue.addBulk(
-      Array(paginationJobs)
-        .fill(true)
-        .map((_, idx) => ({
-          name: 'checkRecentLogins',
-          data: { jobName: 'checkRecentLogins', loginsWithLastSecs, limit, offset: (idx + 1) * limit },
-        }))
+    await timer.time('enqueuePagination', () =>
+      queue.addBulk(
+        Array(paginationJobs)
+          .fill(true)
+          .map((_, idx) => ({
+            name: 'checkRecentLogins',
+            data: { jobName: 'checkRecentLogins', loginsWithLastSecs, limit, offset: (idx + 1) * limit },
+          }))
+      )
     );
   }
 
@@ -55,17 +60,19 @@ export async function checkRecentLogins(job: Job<GalaxySearchJobs>) {
     }
   }
 
-  await queue.addBulk(
-    Array.from(characterIds).map(id => ({
-      name: 'indexObject',
-      data: { jobName: 'indexObject', objectId: id },
-      opts: { jobId: `indexObject-${id}` },
-    }))
+  await timer.time('enqueueIndexObjects', () =>
+    queue.addBulk(
+      Array.from(characterIds).map(id => ({
+        name: 'indexObject',
+        data: { jobName: 'indexObject', objectId: id },
+        opts: { jobId: `indexObject-${id}` },
+      }))
+    )
   );
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
   await log(
     `Enqueued indexObject for ${characterIds.size} unique characters ` +
-      `(expanded from ${characters.length} logins via account siblings) in ${elapsed}s`
+      `(expanded from ${characters.length} logins via account siblings)`
   );
+  await timer.total();
 }

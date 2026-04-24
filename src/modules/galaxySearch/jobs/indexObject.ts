@@ -1,5 +1,6 @@
 import { Job } from 'bullmq';
 import { isPresent } from '@core/utils/utility-types';
+import { createJobTimer } from '@core/utils/jobTimer';
 
 import { saveDocuments } from '../utils/saveDocuments';
 import { AccountDocument, ObjectDocument, SearchDocument } from '../types';
@@ -19,16 +20,18 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
   if (job.data.jobName !== 'indexObject') throw new Error('Job was passed to incorrect handler!');
 
   const log = job.log.bind(job);
-  const startTime = Date.now();
+  const timer = createJobTimer(log);
   const { objectId } = job.data;
 
   await log(`Indexing object ${objectId}`);
 
-  const getObjectDetailResult = await gqlSdk.getLoadingWithObjectDetails({
-    excludeDeleted: false,
-    limit: 10000,
-    rootId: objectId,
-  });
+  const getObjectDetailResult = await timer.time('fetchObjectDetails', () =>
+    gqlSdk.getLoadingWithObjectDetails({
+      excludeDeleted: false,
+      limit: 10000,
+      rootId: objectId,
+    })
+  );
 
   const rootResults = getObjectDetailResult.root ?? [];
   const contentResults = getObjectDetailResult.contents ?? [];
@@ -47,6 +50,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
   let structuresEnqueued = 0;
   let recursiveTemplatesEnqueued = 0;
 
+  const endProcess = timer.start('processObjects');
   for (const object of objects) {
     if (object.__typename === 'PlayerCreatureObject') {
       if (object.account) {
@@ -141,13 +145,17 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
     documents.push(objectDoc);
   }
 
-  const documentSaves = saveDocuments(documents);
-  await Promise.all(documentSaves);
+  await endProcess();
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+  await timer.time('saveDocuments', async () => {
+    const documentSaves = saveDocuments(documents);
+    await Promise.all(documentSaves);
+  });
+
   await log(
     `Saved ${documents.length} documents for ${objectId} ` +
       `(${accountDocs} account, ${structuresEnqueued} structure reindexes enqueued, ` +
-      `${recursiveTemplatesEnqueued} recursive-template reindexes enqueued) in ${elapsed}s`
+      `${recursiveTemplatesEnqueued} recursive-template reindexes enqueued)`
   );
+  await timer.total();
 }

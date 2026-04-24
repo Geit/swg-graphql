@@ -1,4 +1,5 @@
 import { isPresent } from '@core/utils/utility-types';
+import { createJobTimer } from '@core/utils/jobTimer';
 
 import { saveDocument } from '../utils/saveDocuments';
 import { ResourceTypeDocument } from '../types';
@@ -27,37 +28,39 @@ export async function indexResources(log: JobLogger, fullIndex: boolean) {
 }
 
 async function indexPageOfResources(log: JobLogger, limit = RESOURCES_PER_PAGE, offset = 0, fullIndex = false) {
-  const startFind = Date.now();
+  const timer = createJobTimer(log);
 
-  const resourceListingResult = await gqlSdk.getResourceListing({
-    limit,
-    offset,
-  });
+  const resourceListingResult = await timer.time('fetchResources', () =>
+    gqlSdk.getResourceListing({
+      limit,
+      offset,
+    })
+  );
 
   const resources = resourceListingResult.resources.results;
-
-  await log(`Finding new resources: ${Date.now() - startFind}ms`);
   if (resources.length === 0) return { hasMorePages: false };
 
-  const startProduce = Date.now();
   await log(`Producing documents for ${resources.length} resources`);
 
-  const documentPromises = resources.map(async resource => {
-    const documentToCommit = produceDocumentForResource(resource);
+  const results = await timer.time('produceResourceDocs', () =>
+    Promise.all(
+      resources.map(async resource => {
+        const documentToCommit = produceDocumentForResource(resource);
 
-    if (documentToCommit) {
-      const result = await saveDocument(documentToCommit);
-      return result;
-    }
-  });
-  const results = await Promise.all(documentPromises);
+        if (documentToCommit) {
+          const result = await saveDocument(documentToCommit);
+          return result;
+        }
+      })
+    )
+  );
 
   // We have more new resources to process as long as every document was "new" and we had a full page of results.
   const hasMorePages =
     (results.every(r => r && r.result === 'created') && results.length === limit) ||
     (fullIndex && results.length === limit);
 
-  await log(`Producing resource docs: ${Date.now() - startProduce}ms`);
+  await timer.total();
   return { hasMorePages };
 }
 
