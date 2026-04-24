@@ -154,8 +154,9 @@ export class AuctionService {
         .from<MarketAuctionRecord>('MARKET_AUCTIONS')
         .whereIn('ITEM_ID', [...keys]);
 
+      const byId = new Map(results.map(r => [String(r.ITEM_ID), r]));
       return keys.map(key => {
-        const found = results.find(r => String(r.ITEM_ID) === key);
+        const found = byId.get(key);
         return found ? AuctionService.convertRecord(found) : null;
       });
     },

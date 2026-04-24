@@ -29,6 +29,7 @@ export class InstallationObjectService {
       .from<InstallationObjectRecord>('INSTALLATION_OBJECTS')
       .whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
+    const byId = new Map(results.map(result => [String(result.OBJECT_ID), result]));
+    return keys.map(key => byId.get(key));
   }
 }

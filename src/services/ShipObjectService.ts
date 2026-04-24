@@ -71,6 +71,7 @@ export class ShipObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<ShipObjectRecord>('SHIP_OBJECTS').whereIn('OBJECT_ID', keys);
 
-    return keys.map(key => results.find(result => String(result.OBJECT_ID) === key));
+    const byId = new Map(results.map(result => [String(result.OBJECT_ID), result]));
+    return keys.map(key => byId.get(key));
   }
 }

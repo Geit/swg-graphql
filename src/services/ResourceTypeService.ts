@@ -100,8 +100,9 @@ export class ResourceTypeService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<ResourceTypeRecord>('RESOURCE_TYPES').whereIn('RESOURCE_ID', keys);
 
+    const byId = new Map(results.map(result => [String(result.RESOURCE_ID), result]));
     return keys.map(key => {
-      const foundRecord = results.find(result => String(result.RESOURCE_ID) === key);
+      const foundRecord = byId.get(key);
 
       return foundRecord ? ResourceTypeService.convertRecordToResourceType(foundRecord) : null;
     });

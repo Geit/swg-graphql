@@ -71,8 +71,9 @@ export class AuctionLocationService {
   static async batchFunction(keys: readonly string[]): Promise<(AuctionLocation | null)[]> {
     const results = await knexDb.select().from<AuctionLocationRecord>('AUCTION_LOCATIONS').whereIn('LOCATION_ID', keys);
 
+    const byId = new Map(results.map(r => [String(r.LOCATION_ID), r]));
     return keys.map(key => {
-      const found = results.find(r => String(r.LOCATION_ID) === key);
+      const found = byId.get(key);
       return found ? AuctionLocationService.convertRecord(found) : null;
     });
   }

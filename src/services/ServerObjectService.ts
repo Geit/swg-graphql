@@ -199,8 +199,9 @@ export class ServerObjectService {
   static async batchFunction(keys: readonly string[]) {
     const results = await knexDb.select().from<ServerObjectRecord>('OBJECTS').whereIn('OBJECT_ID', keys);
 
+    const byId = new Map(results.map(result => [String(result.OBJECT_ID), result]));
     return keys.map(key => {
-      const foundRecord = results.find(result => String(result.OBJECT_ID) === String(key));
+      const foundRecord = byId.get(String(key));
 
       return foundRecord ? ServerObjectService.convertRecordToObject(foundRecord) : null;
     });

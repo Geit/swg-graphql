@@ -47,10 +47,18 @@ export class PropertyListService {
 
     const results = await query;
 
-    return keys.map(({ listId, objectId }) =>
-      results
-        .filter(result => String(result.OBJECT_ID) === objectId && (!listId || result.LIST_ID === listId))
-        .map(PropertyListService.convertRecordToObject)
-    );
+    const byObjectId = new Map<string, PropertyListRecord[]>();
+    for (const result of results) {
+      const id = String(result.OBJECT_ID);
+      const bucket = byObjectId.get(id);
+      if (bucket) bucket.push(result);
+      else byObjectId.set(id, [result]);
+    }
+
+    return keys.map(({ listId, objectId }) => {
+      const bucket = byObjectId.get(objectId) ?? [];
+      const filtered = listId ? bucket.filter(result => result.LIST_ID === listId) : bucket;
+      return filtered.map(PropertyListService.convertRecordToObject);
+    });
   }
 }
