@@ -27,7 +27,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
 
   const getObjectDetailResult = await timer.time('fetchObjectDetails', () =>
     gqlSdk.getLoadingWithObjectDetails({
-      excludeDeleted: false,
+      excludeDeleted: true,
       limit: 10000,
       rootId: objectId,
     })
