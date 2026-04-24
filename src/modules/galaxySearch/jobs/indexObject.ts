@@ -23,13 +23,13 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
   const getObjectDetailResult = await gqlSdk.getLoadingWithObjectDetails({
     excludeDeleted: false,
     limit: 10000,
-    loadWithIds: [objectId],
+    rootId: objectId,
   });
 
-  const objects = getObjectDetailResult.objects;
+  const objects = [...(getObjectDetailResult.root ?? []), ...(getObjectDetailResult.contents ?? [])];
   const queue = createGalaxySearchQueue();
 
-  if (!objects) return;
+  if (objects.length === 0) return;
 
   const documents: SearchDocument[] = [];
 
@@ -56,8 +56,8 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
             opts: {
               jobId: `indexObject-${struct.id}`,
               removeOnComplete: {
-                // Reindex structures once every 24h
-                age: 60 * 60 * 24,
+                // Reindex structures once every hour
+                age: 60 * 60,
               },
             },
           }))

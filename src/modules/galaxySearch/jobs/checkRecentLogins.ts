@@ -39,11 +39,19 @@ export async function checkRecentLogins(job: Job<GalaxySearchJobs>) {
     );
   }
 
+  const characterIds = new Set<string>();
+  for (const character of characters) {
+    characterIds.add(character.id);
+    for (const accountCharacter of character.account?.characters ?? []) {
+      characterIds.add(accountCharacter.id);
+    }
+  }
+
   await queue.addBulk(
-    characters.map(c => ({
+    Array.from(characterIds).map(id => ({
       name: 'indexObject',
-      data: { jobName: 'indexObject', objectId: c.id },
-      opts: { jobId: `indexObject-${c.id}` },
+      data: { jobName: 'indexObject', objectId: id },
+      opts: { jobId: `indexObject-${id}` },
     }))
   );
 }

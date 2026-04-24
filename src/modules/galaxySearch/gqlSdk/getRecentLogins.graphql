@@ -7,6 +7,11 @@ query getRecentLogins($durationSeconds: Int, $limit: Int, $offset: Int) {
     totalResults
     results {
       id
+      account {
+        characters {
+          id
+        }
+      }
     }
   }
 }

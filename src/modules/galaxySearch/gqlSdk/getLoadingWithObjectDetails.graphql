@@ -1,52 +1,59 @@
-query getLoadingWithObjectDetails($loadWithIds: [ID!]!, $limit: Int, $excludeDeleted: Boolean) {
-  objects(loadsWithIds: $loadWithIds, limit: $limit, excludeDeleted: $excludeDeleted) {
-    __typename
-    id
-    name
-    basicName: resolvedName(resolveCustomNames: false)
-    resolvedName
-    staticItemName
-    templateId
-    template
-    location
-    scene
-    loadContents
-    deletionDate
-    deletionReason
+fragment IndexedObjectFields on IServerObject {
+  __typename
+  id
+  name
+  basicName: resolvedName(resolveCustomNames: false)
+  resolvedName
+  staticItemName
+  templateId
+  template
+  location
+  scene
+  loadContents
+  deletionDate
+  deletionReason
 
-    ... on CreatureObject {
-      worldspaceLocation
-    }
+  ... on CreatureObject {
+    worldspaceLocation
+  }
 
-    ... on ITangibleObject {
-      count
-      owner {
-        id
-        ... on PlayerCreatureObject {
-          account {
-            id
-            accountName
-          }
+  ... on ITangibleObject {
+    count
+    owner {
+      id
+      ... on PlayerCreatureObject {
+        account {
+          id
+          accountName
         }
       }
-      shipPartSummary {
-        headlinePercentile
-        reverseEngineeringLevel
-      }
     }
+    shipPartSummary {
+      headlinePercentile
+      reverseEngineeringLevel
+    }
+  }
 
-    ... on PlayerCreatureObject {
-      account {
-         id
-         accountName
-         characters {
-           id
-           name
-         }
-      }
-      structures: ownedObjects(structuresOnly: true) {
+  ... on PlayerCreatureObject {
+    account {
+      id
+      accountName
+      characters {
         id
+        name
       }
     }
+    structures: ownedObjects(structuresOnly: true) {
+      id
+    }
+  }
+}
+
+query getLoadingWithObjectDetails($rootId: ID!, $limit: Int, $excludeDeleted: Boolean) {
+  root: objects(objectIds: [$rootId], excludeDeleted: $excludeDeleted) {
+    ...IndexedObjectFields
+  }
+  contents: objects(containedByIdRecursive: $rootId, limit: $limit, excludeDeleted: $excludeDeleted) {
+    ...IndexedObjectFields
   }
 }
