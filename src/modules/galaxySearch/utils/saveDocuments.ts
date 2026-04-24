@@ -15,7 +15,14 @@ async function _saveDocuments(documents: readonly SearchDocument[]) {
   const results = await elasticClient.bulk({ body });
 
   if (results.errors) {
-    console.log('Errors while storing search indexed characters');
+    const failures = results.items
+      .map((item, idx) => ({ item: item.index, doc: documents[idx] }))
+      .filter(({ item }) => item?.error);
+    const sample = failures
+      .slice(0, 3)
+      .map(({ item, doc }) => `${doc.type}:${doc.id} ${item?.error?.type}: ${item?.error?.reason}`)
+      .join('; ');
+    throw new Error(`Elasticsearch bulk index failed for ${failures.length}/${documents.length} documents. ${sample}`);
   }
 
   return results.items.map(i => i.index);

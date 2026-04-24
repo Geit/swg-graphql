@@ -18,7 +18,11 @@ const RECURSIVE_INDEX_TEMPLATES = new Set(['object/tangible/bank/character_bank.
 export async function indexObject(job: Job<GalaxySearchJobs>) {
   if (job.data.jobName !== 'indexObject') throw new Error('Job was passed to incorrect handler!');
 
+  const log = job.log.bind(job);
+  const startTime = Date.now();
   const { objectId } = job.data;
+
+  await log(`Indexing object ${objectId}`);
 
   const getObjectDetailResult = await gqlSdk.getLoadingWithObjectDetails({
     excludeDeleted: false,
@@ -26,12 +30,22 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
     rootId: objectId,
   });
 
-  const objects = [...(getObjectDetailResult.root ?? []), ...(getObjectDetailResult.contents ?? [])];
+  const rootResults = getObjectDetailResult.root ?? [];
+  const contentResults = getObjectDetailResult.contents ?? [];
+  const objects = [...rootResults, ...contentResults];
   const queue = createGalaxySearchQueue();
 
-  if (objects.length === 0) return;
+  await log(`Fetched ${rootResults.length} root + ${contentResults.length} contained objects`);
+
+  if (objects.length === 0) {
+    await log(`No objects returned for ${objectId} — nothing to index`);
+    return;
+  }
 
   const documents: SearchDocument[] = [];
+  let accountDocs = 0;
+  let structuresEnqueued = 0;
+  let recursiveTemplatesEnqueued = 0;
 
   for (const object of objects) {
     if (object.__typename === 'PlayerCreatureObject') {
@@ -46,6 +60,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
           characters: object.account.characters?.map(c => c.name).filter(isPresent) ?? [],
         };
         documents.push(accountDoc);
+        accountDocs += 1;
       }
 
       if (object.structures && object.structures.length > 0) {
@@ -62,6 +77,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
             },
           }))
         );
+        structuresEnqueued += object.structures.length;
       }
     }
 
@@ -75,6 +91,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
           },
         },
       ]);
+      recursiveTemplatesEnqueued += 1;
     }
 
     const location =
@@ -126,4 +143,11 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
 
   const documentSaves = saveDocuments(documents);
   await Promise.all(documentSaves);
+
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+  await log(
+    `Saved ${documents.length} documents for ${objectId} ` +
+      `(${accountDocs} account, ${structuresEnqueued} structure reindexes enqueued, ` +
+      `${recursiveTemplatesEnqueued} recursive-template reindexes enqueued) in ${elapsed}s`
+  );
 }
