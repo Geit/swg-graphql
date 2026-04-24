@@ -36,6 +36,18 @@ export const ORA_DOMAIN = process.env.ORA_DOMAIN ?? 'swg';
 export const ORA_USE_THIN_CLIENT = process.env.ORA_USE_THIN_CLIENT === '1';
 
 /**
+ * Minimum number of connections to keep open in the Oracle DB pool.
+ */
+export const ORA_POOL_MIN = parseInt(process.env.ORA_POOL_MIN ?? '') || 2;
+
+/**
+ * Maximum number of connections the Oracle DB pool will open. Each connecting process
+ * holds its own pool, so the effective load on Oracle is (max * number of processes).
+ * Keep this comfortably below Oracle's `PROCESSES` budget to avoid ORA-12516.
+ */
+export const ORA_POOL_MAX = parseInt(process.env.ORA_POOL_MAX ?? '') || 5;
+
+/**
  * The port to expose the GraphQL server on.
  */
 export const PORT = parseInt(process.env.PORT ?? '4000');
@@ -119,6 +131,16 @@ export const ORA_LOGIN_DATABASE = process.env.ORA_LOGIN_DATABASE ?? 'swg';
  * Domain to use within Oracle for Login.
  */
 export const ORA_LOGIN_DOMAIN = process.env.ORA_LOGIN_DOMAIN ?? 'swg';
+
+/**
+ * Minimum number of connections to keep open in the Oracle Login DB pool.
+ */
+export const ORA_LOGIN_POOL_MIN = parseInt(process.env.ORA_LOGIN_POOL_MIN ?? '') || 2;
+
+/**
+ * Maximum number of connections the Oracle Login DB pool will open.
+ */
+export const ORA_LOGIN_POOL_MAX = parseInt(process.env.ORA_LOGIN_POOL_MAX ?? '') || 10;
 //#endregion
 
 export const ENABLE_STRUCTURE_SHORTCUT = Boolean(process.env.ENABLE_STRUCTURE_SHORTCUT) || false;

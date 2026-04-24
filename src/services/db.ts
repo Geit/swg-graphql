@@ -7,6 +7,8 @@ import {
   ORA_DOMAIN,
   ORA_HOST,
   ORA_PASS,
+  ORA_POOL_MAX,
+  ORA_POOL_MIN,
   ORA_USER,
   ENABLE_SEPARATE_LOGIN_DB,
   ORA_LOGIN_CONN_STRING,
@@ -14,6 +16,8 @@ import {
   ORA_LOGIN_DOMAIN,
   ORA_LOGIN_HOST,
   ORA_LOGIN_PASS,
+  ORA_LOGIN_POOL_MAX,
+  ORA_LOGIN_POOL_MIN,
   ORA_LOGIN_USER,
   ORA_USE_THIN_CLIENT,
 } from '../config';
@@ -33,6 +37,10 @@ const defaultDbConnector = knex({
     domain: ORA_DOMAIN,
     connectionString: ORA_CONN_STRING,
   },
+  pool: {
+    min: ORA_POOL_MIN,
+    max: ORA_POOL_MAX,
+  },
 });
 
 export const loginDb = ENABLE_SEPARATE_LOGIN_DB
@@ -45,6 +53,10 @@ export const loginDb = ENABLE_SEPARATE_LOGIN_DB
         database: ORA_LOGIN_DATABASE,
         domain: ORA_LOGIN_DOMAIN,
         connectionString: ORA_LOGIN_CONN_STRING,
+      },
+      pool: {
+        min: ORA_LOGIN_POOL_MIN,
+        max: ORA_LOGIN_POOL_MAX,
       },
     })
   : defaultDbConnector;
