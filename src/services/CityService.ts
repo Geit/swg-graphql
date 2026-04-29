@@ -160,7 +160,6 @@ export class CityService {
             });
           } else {
             const [
-              ,
               id,
               name,
               cityHallId,
