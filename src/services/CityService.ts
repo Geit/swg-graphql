@@ -245,7 +245,7 @@ export class CityService {
             const citizens = cities.get(id)?.citizens ?? [];
 
             citizens.push({
-              id,
+              id: citizenId,
               name,
               skillTemplate: null,
               level: null,
