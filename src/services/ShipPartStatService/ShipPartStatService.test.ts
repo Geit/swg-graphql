@@ -340,6 +340,109 @@ describe('ShipPartStatService', () => {
     });
   });
 
+  describe('staj tier calculation for reverse-engineered parts', () => {
+    const setupRePart = (reLevel: number) => {
+      const testCrc = 44444;
+      service.shipPartMap.set(testCrc, {
+        name: 're_test_part',
+        type: 'weapon',
+        crc: testCrc,
+        reLevel,
+        stats: [
+          {
+            name: 'ship_component_weapon_damage_maximum',
+            mean: 1000,
+            stdDev: 100,
+            objVarKey: 'ship_comp.weapon.damage_maximum',
+          },
+          {
+            name: 'ship_component_mass',
+            mean: 100,
+            stdDev: 10,
+            inverse: true,
+            objVarKey: 'ship_comp.mass',
+          },
+        ],
+      });
+
+      service.stajTiers = [
+        { name: 'tier0', color: 'grey' },
+        { name: 'tier1', color: 'green' },
+        { name: 'tier2', color: 'gold' },
+      ];
+
+      service.stajPartData.set(
+        `w${reLevel % 10}` as never,
+        new Map([
+          [
+            'ship_component_weapon_damage_maximum',
+            { statName: 'ship_component_weapon_damage_maximum', tierThresholds: [0, 1000, 1100] },
+          ],
+          ['ship_component_mass', { statName: 'ship_component_mass', tierThresholds: [200, 100, 90] }],
+        ])
+      );
+
+      service.loadingHandle = Promise.resolve();
+      return testCrc;
+    };
+
+    it('should undo the RE bonus before comparing to staj thresholds for non-inverse stats', async () => {
+      // Level 9 RE bonus: 0.06 base + 0.01 expertise = 0.07
+      // A post-RE damage of 1100 corresponds to a pre-RE value of 1100 / 1.07 ≈ 1028,
+      // which sits in tier1 (>= 1000) — not tier2 (>= 1100), which it would falsely reach
+      // if we compared the post-RE value directly.
+      const testCrc = setupRePart(9);
+
+      mockObjVarService.getObjVarsForObject.mockResolvedValue([
+        { name: 'ship_comp.weapon.damage_maximum', type: 2, value: 1100 },
+        { name: 'ship_comp.mass', type: 2, value: 100 },
+        { name: 'ship_comp.flags', type: 0, value: 16 }, // RE flag set
+      ]);
+      mockStringService.load.mockResolvedValue({});
+
+      const result = await service.lookupShipPartStats('12345', testCrc);
+
+      const damageStat = result?.stats.find(s => s.name === 'ship_component_weapon_damage_maximum');
+      expect(damageStat?.stajTier?.name).toBe('tier1');
+    });
+
+    it('should undo the RE bonus before comparing to staj thresholds for inverse stats', async () => {
+      // Level 9 RE bonus = 0.07. A post-RE mass of 90 corresponds to pre-RE 90 / 0.93 ≈ 96.77,
+      // which sits in tier1 (<= 100), not tier2 (<= 90).
+      const testCrc = setupRePart(9);
+
+      mockObjVarService.getObjVarsForObject.mockResolvedValue([
+        { name: 'ship_comp.weapon.damage_maximum', type: 2, value: 0 },
+        { name: 'ship_comp.mass', type: 2, value: 90 },
+        { name: 'ship_comp.flags', type: 0, value: 16 },
+      ]);
+      mockStringService.load.mockResolvedValue({});
+
+      const result = await service.lookupShipPartStats('12345', testCrc);
+
+      const massStat = result?.stats.find(s => s.name === 'ship_component_mass');
+      expect(massStat?.stajTier?.name).toBe('tier1');
+    });
+
+    it('should compare raw values to staj thresholds when the part is not RE', async () => {
+      const testCrc = setupRePart(9);
+
+      mockObjVarService.getObjVarsForObject.mockResolvedValue([
+        { name: 'ship_comp.weapon.damage_maximum', type: 2, value: 1100 },
+        { name: 'ship_comp.mass', type: 2, value: 90 },
+        { name: 'ship_comp.flags', type: 0, value: 0 }, // not RE
+      ]);
+      mockStringService.load.mockResolvedValue({});
+
+      const result = await service.lookupShipPartStats('12345', testCrc);
+
+      const damageStat = result?.stats.find(s => s.name === 'ship_component_weapon_damage_maximum');
+      const massStat = result?.stats.find(s => s.name === 'ship_component_mass');
+      expect(damageStat?.stajTier?.name).toBe('tier2');
+      expect(massStat?.stajTier?.name).toBe('tier2');
+    });
+  });
+
   describe('headlinePercentile calculation', () => {
     it('should return max percentile across all stats', async () => {
       const testCrc = 55555;

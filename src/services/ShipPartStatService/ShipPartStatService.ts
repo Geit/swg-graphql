@@ -22,6 +22,23 @@ import { calcZScore, getZPercentile } from './statisticsUtils';
 const RE_LEVEL_KEY = 'reverseEngineeringLevel';
 const TYPE_KEY = 'strType';
 
+const RE_LEVEL_BASE_BONUS = new Map<number, number>([
+  [1, 0.01],
+  [2, 0.02],
+  [3, 0.02],
+  [4, 0.03],
+  [5, 0.03],
+  [6, 0.04],
+  [7, 0.04],
+  [8, 0.05],
+  [9, 0.06],
+  [10, 0.06],
+]);
+
+const RE_EXPERTISE_BONUS = 0.01;
+
+const getReverseEngineerBonus = (level: number) => (RE_LEVEL_BASE_BONUS.get(level) ?? 0) + RE_EXPERTISE_BONUS;
+
 interface StajTier {
   name: string;
   color: string;
@@ -207,6 +224,9 @@ export class ShipPartStatService {
       this.objvarService.getObjVarsForObject(objectId),
     ]);
 
+    const isReverseEngineered = ((objvars.find(ov => ov.name === 'ship_comp.flags')?.value as number) & (1 << 4)) !== 0;
+    const reBonus = isReverseEngineered ? getReverseEngineerBonus(part.reLevel) : 0;
+
     const stats = classData.stats.map(stat => {
       const value = objvars.find(floatObjvar(stat.objVarKey))?.value;
 
@@ -233,8 +253,9 @@ export class ShipPartStatService {
       }
 
       const stajDataForStat = stajDataForPart?.get(stat.name);
+      const preReValue = isReverseEngineered ? value / (stat.inverse ? 1 - reBonus : 1 + reBonus) : value;
       const stajTierIndex = stajDataForStat?.tierThresholds.reduce((acc, threshold, idx) => {
-        if ((stat.inverse && value <= threshold) || (!stat.inverse && value >= threshold)) return idx;
+        if ((stat.inverse && preReValue <= threshold) || (!stat.inverse && preReValue >= threshold)) return idx;
         return acc;
       }, 0);
 
@@ -247,7 +268,7 @@ export class ShipPartStatService {
     });
 
     return {
-      isReverseEngineered: ((objvars.find(ov => ov.name === 'ship_comp.flags')?.value as number) & (1 << 4)) !== 0,
+      isReverseEngineered,
       reverseEngineeringLevel: part.reLevel,
       stats,
       headlinePercentile: stats.reduce(
