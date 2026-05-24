@@ -1,6 +1,8 @@
 {
   "thisIsTheApiKey": {
     "enabled": true,
-    "purpose": "Sample API Key"
+    "purpose": "Sample API Key",
+    "roles": ["csrReadonly"],
+    "permissions": ["tradeAnalysis:label"]
   }
 }

@@ -43,7 +43,7 @@
     "start-built": "node build/index.js",
     "start-dev": "yarn ts-node-dev  -r tsconfig-paths/register src/index.ts",
     "start-dev-sh": "./start.sh",
-    "lint": "eslint --ext .ts,.js,.tsx,.jsx .",
+    "lint": "eslint .",
     "build": "rimraf build && yarn run tsc && tsc-alias",
     "codegen:main": "graphql-codegen --config codegen.yml --verbose || echo \"Could not regenerate root schema, server must be running, skipping for now\" && exit 0",
     "codegen": "yarn codegen:main && yarn workspaces run codegen",

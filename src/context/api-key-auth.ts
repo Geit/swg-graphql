@@ -3,14 +3,58 @@ import { readFileSync } from 'fs';
 
 import { SWGGraphqlContextFunction } from './types';
 
+import { expandRoles, isPermission, isRoleName, Permission, RoleName } from '@core/auth';
+
 interface ApiKeysDocument {
   enabled: boolean;
-  roles: string[];
+  roles?: string[];
+  permissions?: string[];
 }
 
+interface ValidatedApiKey {
+  enabled: boolean;
+  roles: readonly RoleName[];
+  permissions: readonly Permission[];
+}
+
+export const API_KEY_PREFIX = 'ApiKey-';
 const serverConfigFile = path.join(__dirname, '../../data/api-keys.json');
-const apiKeys: Record<string, ApiKeysDocument | undefined> = JSON.parse(
-  readFileSync(serverConfigFile, { encoding: 'ascii' })
+
+const validateApiKeys = (raw: Record<string, ApiKeysDocument | undefined>): Record<string, ValidatedApiKey> => {
+  const validated: Record<string, ValidatedApiKey> = {};
+  const errors: string[] = [];
+
+  for (const [keyId, entry] of Object.entries(raw)) {
+    if (!entry) continue;
+
+    const unknownRoles = (entry.roles ?? []).filter((r): r is string => !isRoleName(r));
+    const unknownPermissions = (entry.permissions ?? []).filter(p => !isPermission(p));
+
+    if (unknownRoles.length > 0) {
+      errors.push(`api-keys.json: key "${keyId}" references unknown role(s): ${unknownRoles.join(', ')}`);
+    }
+    if (unknownPermissions.length > 0) {
+      errors.push(`api-keys.json: key "${keyId}" references unknown permission(s): ${unknownPermissions.join(', ')}`);
+    }
+
+    validated[keyId] = {
+      enabled: entry.enabled,
+      roles: (entry.roles ?? []).filter(isRoleName),
+      permissions: (entry.permissions ?? []).filter(isPermission),
+    };
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Invalid api-keys configuration:\n  ${errors.join('\n  ')}`);
+  }
+
+  return validated;
+};
+
+export const _validateApiKeys = validateApiKeys;
+
+const apiKeys: Record<string, ValidatedApiKey> = validateApiKeys(
+  JSON.parse(readFileSync(serverConfigFile, { encoding: 'ascii' }))
 );
 
 // eslint-disable-next-line require-await
@@ -21,7 +65,7 @@ export const apiKeyAuth: SWGGraphqlContextFunction = async params => {
     };
   }
 
-  const apiKey = apiKeys[params.req.headers.authorization.replace('ApiKey-', '')];
+  const apiKey = apiKeys[params.req.headers.authorization.slice(API_KEY_PREFIX.length)];
 
   if (!apiKey || !apiKey.enabled) {
     return {
@@ -29,8 +73,11 @@ export const apiKeyAuth: SWGGraphqlContextFunction = async params => {
     };
   }
 
+  const permissions = expandRoles(apiKey.roles);
+  for (const perm of apiKey.permissions) permissions.add(perm);
+
   return {
-    roles: new Set(apiKey.roles),
+    permissions,
     isAuthenticated: true,
   };
 };

@@ -19,7 +19,7 @@ import { PlayerObjectService } from '../services/PlayerObjectService';
 
 import { CreatureObjectResolver } from './CreatureObjectResolver';
 
-import { ROLES } from '@core/auth/roles';
+import { PERMISSIONS } from '@core/auth';
 
 @Resolver(() => PlayerCreatureObject)
 @Service()
@@ -82,7 +82,7 @@ export class PlayerCreatureObjectResolver
   }
 
   @FieldResolver()
-  @Authorized([ROLES.READ_ACCOUNTS])
+  @Authorized([PERMISSIONS.ACCOUNTS_READ])
   async account(@Root() object: PlayerCreatureObject) {
     const playerRecord = await this.playerCreatureObjectService.getPlayerRecordForCharacter(object.id);
 

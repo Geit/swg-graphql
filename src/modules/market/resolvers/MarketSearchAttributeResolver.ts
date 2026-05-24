@@ -10,6 +10,7 @@ import {
 import { SearchAttributeService } from '../services/SearchAttributeService';
 import { normalizeAttributeName, ParsedSearchAttribute } from '../utils/parseAdvancedSearchAttribute';
 
+import { PERMISSIONS } from '@core/auth';
 import { StringFileLoader } from '@core/services/StringFileLoader';
 
 @Service()
@@ -23,7 +24,7 @@ export class MarketSearchAttributeResolver {
   @Query(() => MarketSearchAttributeSearchResult, {
     description: 'Get searchable market attributes with optional filtering and pagination',
   })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   async marketSearchAttributes(
     @Arg('gameObjectType', {
       nullable: true,
@@ -61,7 +62,7 @@ export class MarketSearchAttributeResolver {
   }
 
   @Query(() => [String], { description: 'Get all game object types that have searchable attributes' })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   marketSearchableTypes(): string[] {
     return Array.from(this.searchAttributeService.getGameObjectTypes()).sort();
   }

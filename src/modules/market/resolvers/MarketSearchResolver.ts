@@ -10,6 +10,8 @@ import {
 } from '../types';
 import { MarketSearchService } from '../services/MarketSearchService';
 
+import { PERMISSIONS } from '@core/auth';
+
 @Service()
 @Resolver()
 export class MarketSearchResolver {
@@ -17,7 +19,7 @@ export class MarketSearchResolver {
   private readonly marketSearchService: MarketSearchService;
 
   @Query(() => MarketSearchResult, { nullable: true })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   async marketListings(
     @Arg('searchText', { nullable: true }) searchText?: string,
     @Arg('category', () => Int, { nullable: true }) category?: number,

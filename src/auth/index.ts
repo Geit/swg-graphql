@@ -1,3 +1,7 @@
 export * from './authorizationGuard';
 
-export * from './roles';
+export * from './permissions';
+
+export * from './roleBundles';
+
+export * from './kibanaPrivilegeMap';

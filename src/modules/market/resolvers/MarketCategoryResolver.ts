@@ -4,6 +4,7 @@ import { Service } from 'typedi';
 import { MarketCategory } from '../types';
 import { GameObjectType, getCategoryName, getMaskedType, isSubType } from '../utils/gameObjectType';
 
+import { PERMISSIONS } from '@core/auth';
 import { StringFileLoader } from '@core/services/StringFileLoader';
 
 @Service()
@@ -14,7 +15,7 @@ export class MarketCategoryResolver {
   constructor(private readonly stringService: StringFileLoader) {}
 
   @Query(() => [MarketCategory], { description: 'Get all valid market categories' })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   async marketCategories(
     @Arg('parentOnly', { nullable: true, defaultValue: false, description: 'Only return top-level parent categories' })
     parentOnly?: boolean
@@ -27,14 +28,14 @@ export class MarketCategoryResolver {
   }
 
   @Query(() => MarketCategory, { nullable: true, description: 'Get a market category by ID' })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   async marketCategory(@Arg('id', () => Int) id: number): Promise<MarketCategory | null> {
     const categories = await this.getCategories();
     return categories.find(c => c.id === id) ?? null;
   }
 
   @Query(() => [MarketCategory], { description: 'Get subcategories for a parent category' })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   async marketSubcategories(@Arg('parentId', () => Int) parentId: number): Promise<MarketCategory[]> {
     const categories = await this.getCategories();
     return categories.filter(c => c.parentId === parentId);

@@ -4,6 +4,7 @@ import { Service } from 'typedi';
 import { MarketLocation, MarketLocationSearchResult } from '../types';
 import { AuctionLocation, AuctionLocationService } from '../services/AuctionLocationService';
 
+import { PERMISSIONS } from '@core/auth';
 import { ServerObjectService } from '@core/services/ServerObjectService';
 import { IServerObject } from '@core/types';
 
@@ -16,7 +17,7 @@ export class MarketLocationResolver {
   ) {}
 
   @Query(() => MarketLocation, { nullable: true, description: 'Get a market location by ID' })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   async marketLocation(@Arg('id', () => String) id: string): Promise<MarketLocation | null> {
     const location = await this.locationService.getOne(id);
     if (!location) return null;
@@ -24,7 +25,7 @@ export class MarketLocationResolver {
   }
 
   @Query(() => MarketLocationSearchResult, { description: 'Search for market locations' })
-  @Authorized()
+  @Authorized([PERMISSIONS.MARKET_READ])
   async marketLocations(
     @Arg('planet', { nullable: true, description: 'Filter by planet name' }) planet?: string,
     @Arg('region', { nullable: true, description: 'Filter by region name' }) region?: string,

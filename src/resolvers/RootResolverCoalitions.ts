@@ -5,7 +5,7 @@ import { GuildService } from '../services/GuildService';
 import { CityService } from '../services/CityService';
 import { Guild, City } from '../types';
 
-import { ROLES } from '@core/auth';
+import { PERMISSIONS } from '@core/auth';
 
 @ObjectType()
 class GuildsResult {
@@ -34,7 +34,7 @@ export class RootResolver {
   private readonly cityService: CityService;
 
   @Query(() => GuildsResult)
-  @Authorized([ROLES.READ_GUILDS])
+  @Authorized([PERMISSIONS.GUILDS_READ])
   async guilds(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
@@ -54,13 +54,13 @@ export class RootResolver {
   }
 
   @Query(() => Guild, { nullable: true })
-  @Authorized([ROLES.READ_GUILDS])
+  @Authorized([PERMISSIONS.GUILDS_READ])
   guild(@Arg('guildId', { nullable: false }) id: string) {
     return this.guildService.getGuild(id);
   }
 
   @Query(() => CitiesResult)
-  @Authorized([ROLES.READ_CITIES])
+  @Authorized([PERMISSIONS.CITIES_READ])
   async cities(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
@@ -80,7 +80,7 @@ export class RootResolver {
   }
 
   @Query(() => City, { nullable: true })
-  @Authorized([ROLES.READ_CITIES])
+  @Authorized([PERMISSIONS.CITIES_READ])
   city(@Arg('cityId', { nullable: false }) id: string) {
     return this.cityService.getCity(id);
   }
