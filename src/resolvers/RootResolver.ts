@@ -8,7 +8,7 @@ import { IServerObject, UnenrichedServerObject, Account, PlayerCreatureObject } 
 import { ResourceType, ResourceTypeResult } from '../types/ResourceType';
 import TAGIFY from '../utils/tagify';
 
-import { ROLES } from '@core/auth';
+import { PERMISSIONS } from '@core/auth';
 
 @ObjectType()
 class RecentLoginsResult {
@@ -16,7 +16,7 @@ class RecentLoginsResult {
   totalResults: number;
 
   @Field(() => [PlayerCreatureObject])
-  @Authorized([ROLES.READ_OBJECTS])
+  @Authorized([PERMISSIONS.OBJECTS_READ])
   results: PlayerCreatureObject[];
 }
 
@@ -31,13 +31,13 @@ export class RootResolver {
   private readonly playerCreatureService: PlayerCreatureObjectService;
 
   @Query(() => IServerObject, { nullable: true })
-  @Authorized([ROLES.READ_OBJECTS])
+  @Authorized([PERMISSIONS.OBJECTS_READ])
   object(@Arg('objectId', { nullable: false }) objectId: string): Promise<Partial<IServerObject> | null> {
     return this.objectService.getOne(objectId);
   }
 
   @Query(() => [IServerObject], { nullable: true })
-  @Authorized([ROLES.READ_OBJECTS])
+  @Authorized([PERMISSIONS.OBJECTS_READ])
   objects(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('excludeDeleted', { defaultValue: false }) excludeDeleted: boolean,
@@ -57,7 +57,7 @@ export class RootResolver {
   }
 
   @Query(() => Account, { nullable: true })
-  @Authorized([ROLES.READ_ACCOUNTS, ROLES.READ_OBJECTS])
+  @Authorized([PERMISSIONS.ACCOUNTS_READ, PERMISSIONS.OBJECTS_READ])
   account(@Arg('stationId', { nullable: false }) accountId: string) {
     return Object.assign(new Account(), {
       id: parseInt(accountId),
@@ -65,7 +65,7 @@ export class RootResolver {
   }
 
   @Query(() => ResourceTypeResult)
-  @Authorized([ROLES.READ_RESOURCES])
+  @Authorized([PERMISSIONS.RESOURCES_READ])
   async resources(
     @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number
@@ -84,13 +84,13 @@ export class RootResolver {
   }
 
   @Query(() => ResourceType, { nullable: true })
-  @Authorized([ROLES.READ_RESOURCES])
+  @Authorized([PERMISSIONS.RESOURCES_READ])
   resource(@Arg('resourceId', { nullable: false }) id: string) {
     return this.resourceTypeService.getOne(id);
   }
 
   @Query(() => RecentLoginsResult)
-  @Authorized([ROLES.READ_LOGINS])
+  @Authorized([PERMISSIONS.LOGINS_READ])
   async recentLogins(
     @Arg('limit', () => Int, { defaultValue: 1000 }) limit: number,
     @Arg('offset', () => Int, { defaultValue: 0 }) offset: number,
