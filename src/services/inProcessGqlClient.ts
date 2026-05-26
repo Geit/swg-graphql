@@ -1,7 +1,7 @@
 import { execute, type GraphQLSchema } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { ALL_PERMISSIONS } from '@core/auth';
+import { getAuthRegistry } from '@core/auth';
 import type { ContextType } from '@core/context/types';
 
 let schema: GraphQLSchema | null = null;
@@ -15,10 +15,12 @@ export const setInProcessGqlSchema = (built: GraphQLSchema): void => {
   resolveSchemaReady(built);
 };
 
-const SYSTEM_CONTEXT: ContextType = {
+// Built lazily so module-contributed permissions registered via `installAuthRegistry` at boot
+// are included — capturing this at module-load freezes it to the core-only set.
+const buildSystemContext = (): ContextType => ({
   isAuthenticated: true,
-  permissions: new Set(ALL_PERMISSIONS),
-};
+  permissions: new Set(getAuthRegistry().allPermissions),
+});
 
 export async function runQuery<TData, TVariables>(
   document: TypedDocumentNode<TData, TVariables>,
@@ -30,7 +32,7 @@ export async function runQuery<TData, TVariables>(
     schema: activeSchema,
     document,
     variableValues: variables as Record<string, unknown>,
-    contextValue: SYSTEM_CONTEXT,
+    contextValue: buildSystemContext(),
   });
 
   if (result.errors && result.errors.length > 0) {
