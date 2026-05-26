@@ -3,12 +3,12 @@ import { kibanaAuthorisationContext } from './kibana-auth';
 import { SWGGraphqlContextFunction } from './types';
 
 import { DISABLE_AUTH } from '@core/config';
-import { ALL_PERMISSIONS, Permission } from '@core/auth';
+import { getAuthRegistry, Permission } from '@core/auth';
 
 export const getRequestContext: SWGGraphqlContextFunction = params => {
   if (DISABLE_AUTH) {
     return Promise.resolve({
-      permissions: new Set<Permission>(ALL_PERMISSIONS),
+      permissions: new Set<Permission>(getAuthRegistry().allPermissions),
       isAuthenticated: true,
     });
   }
