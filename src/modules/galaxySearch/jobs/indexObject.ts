@@ -1,10 +1,11 @@
 import { Job } from 'bullmq';
 import { isPresent } from '@core/utils/utility-types';
 import { createJobTimer } from '@core/utils/jobTimer';
+import { runQuery } from '@core/services/inProcessGqlClient';
 
 import { saveDocuments } from '../utils/saveDocuments';
 import { AccountDocument, ObjectDocument, SearchDocument } from '../types';
-import gqlSdk from '../gqlSdk';
+import { GetLoadingWithObjectDetailsDocument } from '../gqlSdk';
 import { stripUGCModifiers } from '../utils/stripUgcModifiers';
 
 import { createGalaxySearchQueue, GalaxySearchJobs } from '.';
@@ -26,7 +27,7 @@ export async function indexObject(job: Job<GalaxySearchJobs>) {
   await log(`Indexing object ${objectId}`);
 
   const getObjectDetailResult = await timer.time('fetchObjectDetails', () =>
-    gqlSdk.getLoadingWithObjectDetails({
+    runQuery(GetLoadingWithObjectDetailsDocument, {
       excludeDeleted: true,
       limit: 10000,
       rootId: objectId,

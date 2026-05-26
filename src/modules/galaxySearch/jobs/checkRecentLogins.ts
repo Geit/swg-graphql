@@ -1,7 +1,8 @@
 import { Job } from 'bullmq';
 import { createJobTimer } from '@core/utils/jobTimer';
+import { runQuery } from '@core/services/inProcessGqlClient';
 
-import gqlSdk from '../gqlSdk';
+import { GetRecentLoginsDocument } from '../gqlSdk';
 
 import { createGalaxySearchQueue, GalaxySearchJobs } from '.';
 
@@ -22,7 +23,7 @@ export async function checkRecentLogins(job: Job<GalaxySearchJobs>) {
   await log(`Checking recent logins within last ${loginsWithLastSecs}s (limit=${limit}, offset=${offset})`);
 
   const getRecentLoginResult = await timer.time('fetchRecentLogins', () =>
-    gqlSdk.getRecentLogins({
+    runQuery(GetRecentLoginsDocument, {
       durationSeconds: loginsWithLastSecs,
       limit,
       offset,

@@ -1,9 +1,10 @@
 import { isPresent } from '@core/utils/utility-types';
 import { createJobTimer } from '@core/utils/jobTimer';
+import { runQuery } from '@core/services/inProcessGqlClient';
 
 import { saveDocument } from '../utils/saveDocuments';
 import { ResourceTypeDocument } from '../types';
-import gqlSdk, { GetResourceListingQuery } from '../gqlSdk';
+import { GetResourceListingDocument, GetResourceListingQuery } from '../gqlSdk';
 
 export type JobLogger = (message: string) => Promise<number>;
 
@@ -31,7 +32,7 @@ async function indexPageOfResources(log: JobLogger, limit = RESOURCES_PER_PAGE, 
   const timer = createJobTimer(log);
 
   const resourceListingResult = await timer.time('fetchResources', () =>
-    gqlSdk.getResourceListing({
+    runQuery(GetResourceListingDocument, {
       limit,
       offset,
     })
