@@ -5,18 +5,10 @@ export const PERMISSIONS = {
   GUILDS_READ: 'guilds:read',
   CITIES_READ: 'cities:read',
   RESOURCES_READ: 'resources:read',
-  MARKET_READ: 'market:read',
-  SEARCH_READ: 'search:read',
-  TRANSACTIONS_READ: 'transactions:read',
-  TRADE_ANALYSIS_READ: 'tradeAnalysis:read',
-  TRADE_ANALYSIS_LABEL: 'tradeAnalysis:label',
-  SESSIONS_READ: 'sessions:read',
 } as const;
 
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+// `string & {}` preserves IDE autocomplete on the core literals while still accepting
+// module-contributed permission strings registered at runtime via `installAuthRegistry`.
+export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS] | (string & {});
 
 export const ALL_PERMISSIONS: Permission[] = Object.values(PERMISSIONS);
-
-const PERMISSION_SET: ReadonlySet<string> = new Set(ALL_PERMISSIONS);
-
-export const isPermission = (value: string): value is Permission => PERMISSION_SET.has(value);

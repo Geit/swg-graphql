@@ -21,21 +21,21 @@ describe('_validateApiKeys', () => {
 
   it('accepts a key with only known permissions', () => {
     const result = _validateApiKeys({
-      key1: { enabled: true, permissions: ['tradeAnalysis:label'] },
+      key1: { enabled: true, permissions: ['objects:read'] },
     });
     expect(result.key1).toEqual({
       enabled: true,
       roles: [],
-      permissions: ['tradeAnalysis:label'],
+      permissions: ['objects:read'],
     });
   });
 
   it('accepts roles and permissions together', () => {
     const result = _validateApiKeys({
-      key1: { enabled: true, roles: ['csrReadonly'], permissions: ['tradeAnalysis:label'] },
+      key1: { enabled: true, roles: ['csrReadonly'], permissions: ['objects:read'] },
     });
     expect(result.key1.roles).toEqual(['csrReadonly']);
-    expect(result.key1.permissions).toEqual(['tradeAnalysis:label']);
+    expect(result.key1.permissions).toEqual(['objects:read']);
   });
 
   it('throws on an unknown role', () => {
@@ -49,9 +49,23 @@ describe('_validateApiKeys', () => {
   it('throws on an unknown permission', () => {
     expect(() =>
       _validateApiKeys({
-        key1: { enabled: true, permissions: ['tradeAnalysis:lable'] }, // typo
+        key1: { enabled: true, permissions: ['objects:reed'] }, // typo
       })
-    ).toThrowError(/unknown permission.*tradeAnalysis:lable/);
+    ).toThrowError(/unknown permission.*objects:reed/);
+  });
+
+  it('accepts permissions contributed by a module after its registry is installed', async () => {
+    const { installAuthRegistry } = await import('@core/auth');
+    const { tradeAnalysisAuth } = await import('@core/modules/legends-gql-modules/tradeAnalysis/permissions');
+    installAuthRegistry([tradeAnalysisAuth]);
+    try {
+      const result = _validateApiKeys({
+        key1: { enabled: true, permissions: ['tradeAnalysis:label'] },
+      });
+      expect(result.key1.permissions).toEqual(['tradeAnalysis:label']);
+    } finally {
+      installAuthRegistry([]);
+    }
   });
 
   it('throws once with all errors aggregated across keys', () => {

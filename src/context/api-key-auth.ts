@@ -53,9 +53,13 @@ const validateApiKeys = (raw: Record<string, ApiKeysDocument | undefined>): Reco
 
 export const _validateApiKeys = validateApiKeys;
 
-const apiKeys: Record<string, ValidatedApiKey> = validateApiKeys(
-  JSON.parse(readFileSync(serverConfigFile, { encoding: 'ascii' }))
-);
+// Deferred to `loadApiKeys()` because validation depends on the auth registry being installed
+// (module-contributed permissions must be recognised before they can pass `isPermission`).
+let apiKeys: Record<string, ValidatedApiKey> = {};
+
+export const loadApiKeys = (): void => {
+  apiKeys = validateApiKeys(JSON.parse(readFileSync(serverConfigFile, { encoding: 'ascii' })));
+};
 
 // eslint-disable-next-line require-await
 export const apiKeyAuth: SWGGraphqlContextFunction = async params => {

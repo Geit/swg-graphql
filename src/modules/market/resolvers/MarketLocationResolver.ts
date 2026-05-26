@@ -3,8 +3,8 @@ import { Service } from 'typedi';
 
 import { MarketLocation, MarketLocationSearchResult } from '../types';
 import { AuctionLocation, AuctionLocationService } from '../services/AuctionLocationService';
+import { PERMISSIONS } from '../permissions';
 
-import { PERMISSIONS } from '@core/auth';
 import { ServerObjectService } from '@core/services/ServerObjectService';
 import { IServerObject } from '@core/types';
 

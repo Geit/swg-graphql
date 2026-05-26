@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { ALL_PERMISSIONS, PERMISSIONS } from './permissions';
-import { expandRoles, isRoleName, ROLE_BUNDLES } from './roleBundles';
+import { expandRoles } from './registry';
+import { isRoleName, ROLE_BUNDLES } from './roleBundles';
 
 describe('isRoleName', () => {
   it('accepts every defined bundle key', () => {
@@ -18,20 +19,20 @@ describe('isRoleName', () => {
 });
 
 describe('ROLE_BUNDLES', () => {
-  it('csrReadonly contains read-only permissions and does not contain TRADE_ANALYSIS_LABEL', () => {
-    expect(ROLE_BUNDLES.csrReadonly).not.toContain(PERMISSIONS.TRADE_ANALYSIS_LABEL);
+  it('csrReadonly contains the core read-only permissions only', () => {
     expect(ROLE_BUNDLES.csrReadonly).toContain(PERMISSIONS.OBJECTS_READ);
-    expect(ROLE_BUNDLES.csrReadonly).toContain(PERMISSIONS.MARKET_READ);
+    expect(ROLE_BUNDLES.csrReadonly).toContain(PERMISSIONS.ACCOUNTS_READ);
+    expect(ROLE_BUNDLES.csrReadonly).toContain(PERMISSIONS.LOGINS_READ);
+    expect(ROLE_BUNDLES.csrReadonly).toContain(PERMISSIONS.GUILDS_READ);
+    expect(ROLE_BUNDLES.csrReadonly).toContain(PERMISSIONS.CITIES_READ);
+    expect(ROLE_BUNDLES.csrReadonly).toContain(PERMISSIONS.RESOURCES_READ);
   });
 
-  it('csrAnalyst extends csrReadonly with the label-write permission', () => {
-    for (const perm of ROLE_BUNDLES.csrReadonly) {
-      expect(ROLE_BUNDLES.csrAnalyst).toContain(perm);
-    }
-    expect(ROLE_BUNDLES.csrAnalyst).toContain(PERMISSIONS.TRADE_ANALYSIS_LABEL);
+  it('csrAnalyst starts equal to csrReadonly before module contributions', () => {
+    expect(new Set(ROLE_BUNDLES.csrAnalyst)).toEqual(new Set(ROLE_BUNDLES.csrReadonly));
   });
 
-  it('admin grants every defined permission', () => {
+  it('admin grants every core permission', () => {
     expect([...ROLE_BUNDLES.admin].sort()).toEqual([...ALL_PERMISSIONS].sort());
   });
 });
@@ -46,17 +47,12 @@ describe('expandRoles', () => {
     expect(result).toEqual(new Set(ROLE_BUNDLES.csrReadonly));
   });
 
-  it('deduplicates overlapping permissions across multiple roles', () => {
-    const both = expandRoles(['csrReadonly', 'csrAnalyst']);
-    // csrAnalyst is a superset of csrReadonly, so the union equals csrAnalyst
-    expect(both).toEqual(new Set(ROLE_BUNDLES.csrAnalyst));
-  });
-
   it('returns a fresh Set per call (no shared mutable state)', () => {
     const a = expandRoles(['csrReadonly']);
     const b = expandRoles(['csrReadonly']);
     expect(a).not.toBe(b);
-    a.add(PERMISSIONS.TRADE_ANALYSIS_LABEL);
-    expect(b.has(PERMISSIONS.TRADE_ANALYSIS_LABEL)).toBe(false);
+    const c = expandRoles([]);
+    c.add(PERMISSIONS.OBJECTS_READ);
+    expect(expandRoles([])).toEqual(new Set());
   });
 });

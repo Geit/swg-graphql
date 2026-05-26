@@ -9,8 +9,8 @@ import {
 } from '../types';
 import { SearchAttributeService } from '../services/SearchAttributeService';
 import { normalizeAttributeName, ParsedSearchAttribute } from '../utils/parseAdvancedSearchAttribute';
+import { PERMISSIONS } from '../permissions';
 
-import { PERMISSIONS } from '@core/auth';
 import { StringFileLoader } from '@core/services/StringFileLoader';
 
 @Service()

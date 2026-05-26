@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { Queue } from 'bullmq';
 import { NonEmptyArray } from 'type-graphql';
 
+import { AuthContribution } from './auth/registry';
+
 export interface ModuleExports {
   moduleName: string;
 
@@ -23,6 +25,12 @@ export interface ModuleExports {
    * Queues that the module manages. These will be exposed in the admin interface.
    */
   queues?: Queue[];
+
+  /**
+   * Permissions, role-bundle additions, and Kibana privilege mappings this module owns. Merged
+   * into the global auth registry at boot.
+   */
+  auth?: AuthContribution;
 
   /**
    * Called on SIGTERM/SIGINT to gracefully shut down workers and close connections.

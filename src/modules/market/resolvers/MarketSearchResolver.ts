@@ -9,8 +9,7 @@ import {
   MarketAttributeFilterInput,
 } from '../types';
 import { MarketSearchService } from '../services/MarketSearchService';
-
-import { PERMISSIONS } from '@core/auth';
+import { PERMISSIONS } from '../permissions';
 
 @Service()
 @Resolver()

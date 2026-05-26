@@ -4,7 +4,7 @@ import { ELASTIC_KIBANA_INDEX, ELASTIC_REQUIRED_PRIVILEGE, ELASTIC_SEARCH_URL } 
 
 import { SWGGraphqlContextFunction } from './types';
 
-import { isKibanaPrivilege, KIBANA_PRIVILEGE_TO_PERMISSIONS, Permission } from '@core/auth';
+import { getAuthRegistry, isKibanaPrivilege, Permission } from '@core/auth';
 
 /**
  * Partial response body for the Elastic "Has Privileges" API.
@@ -18,9 +18,8 @@ interface ElasticHasPrivilegesResponse {
 
 const KIBANA_APPLICATION = `kibana-${ELASTIC_KIBANA_INDEX}`;
 
-const PRIVILEGES_TO_PROBE = Array.from(
-  new Set<string>([ELASTIC_REQUIRED_PRIVILEGE, ...Object.keys(KIBANA_PRIVILEGE_TO_PERMISSIONS)])
-);
+const privilegesToProbe = (): string[] =>
+  Array.from(new Set<string>([ELASTIC_REQUIRED_PRIVILEGE, ...getAuthRegistry().privilegesToProbe]));
 
 const PERMISSION_CACHE_TTL_MS = 30_000;
 const PERMISSION_CACHE_MAX_ENTRIES = 1000;
@@ -139,17 +138,19 @@ export const kibanaAuthorisationContext: SWGGraphqlContextFunction = async param
     };
   }
 
-  const result = await queryPrivileges(token, PRIVILEGES_TO_PROBE);
+  const result = await queryPrivileges(token, privilegesToProbe());
   const held = heldPrivilegesFor(result);
 
   if (!held.has(ELASTIC_REQUIRED_PRIVILEGE)) {
     throw forbidden('Incorrect authorization');
   }
 
+  const registry = getAuthRegistry();
   const permissions = new Set<Permission>();
   for (const priv of held) {
     if (isKibanaPrivilege(priv)) {
-      for (const perm of KIBANA_PRIVILEGE_TO_PERMISSIONS[priv]) permissions.add(perm);
+      const perms = registry.kibanaPrivilegeMap.get(priv) ?? [];
+      for (const perm of perms) permissions.add(perm as Permission);
     }
   }
 

@@ -4,6 +4,7 @@ import { NonEmptyArray } from 'type-graphql';
 
 import { startJobs } from './jobs';
 import { initialIndexSetup } from './migrations';
+import { galaxySearchAuth } from './permissions';
 
 const galaxySearchModule: Module = async () => {
   if (!ENABLE_TEXT_SEARCH) return null;
@@ -21,7 +22,7 @@ const galaxySearchModule: Module = async () => {
 
   const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`];
 
-  return { moduleName: 'Galaxy Search', queues, resolvers, shutdown };
+  return { moduleName: 'Galaxy Search', auth: galaxySearchAuth, queues, resolvers, shutdown };
 };
 
 export default galaxySearchModule;

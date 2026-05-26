@@ -4,10 +4,10 @@ import { ServerObjectService } from '@core/services/ServerObjectService';
 import { ResourceTypeService } from '@core/services/ResourceTypeService';
 import { Account } from '@core/types';
 import { isPresent } from '@core/utils/utility-types';
-import { PERMISSIONS } from '@core/auth';
 
 import { SearchResultDetails, DateRangeInput, IntRangeInput } from '../types';
 import { SearchService } from '../services/SearchService';
+import { PERMISSIONS } from '../permissions';
 
 @Service()
 @Resolver()

@@ -3,6 +3,7 @@ import { NonEmptyArray } from 'type-graphql';
 
 import { startJobs } from './jobs';
 import { initialMarketIndexSetup } from './migrations';
+import { marketAuth } from './permissions';
 import { SearchAttributeService } from './services/SearchAttributeService';
 
 import { Module } from '@core/moduleTypes';
@@ -33,7 +34,7 @@ const marketModule: Module = async () => {
 
   const resolvers: NonEmptyArray<string> = [`${__dirname}/resolvers/*.{js,ts}`];
 
-  return { moduleName: 'Market Search', queues, resolvers, shutdown };
+  return { moduleName: 'Market Search', auth: marketAuth, queues, resolvers, shutdown };
 };
 
 export default marketModule;

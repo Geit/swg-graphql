@@ -3,8 +3,8 @@ import { Service } from 'typedi';
 
 import { MarketCategory } from '../types';
 import { GameObjectType, getCategoryName, getMaskedType, isSubType } from '../utils/gameObjectType';
+import { PERMISSIONS } from '../permissions';
 
-import { PERMISSIONS } from '@core/auth';
 import { StringFileLoader } from '@core/services/StringFileLoader';
 
 @Service()

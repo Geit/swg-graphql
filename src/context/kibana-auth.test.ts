@@ -1,14 +1,32 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { _clearPermissionCache, kibanaAuthorisationContext } from './kibana-auth';
 
-import { PERMISSIONS } from '@core/auth';
+import { PERMISSIONS, installAuthRegistry } from '@core/auth';
+import { galaxySearchAuth } from '@core/modules/galaxySearch/permissions';
+import { marketAuth, PERMISSIONS as MARKET_PERMISSIONS } from '@core/modules/market/permissions';
+import { sessionsAuth } from '@core/modules/legends-gql-modules/sessions/permissions';
+import {
+  transactionsAuth,
+  PERMISSIONS as TRANSACTIONS_PERMISSIONS,
+} from '@core/modules/legends-gql-modules/transactions/permissions';
+import {
+  tradeAnalysisAuth,
+  PERMISSIONS as TRADE_ANALYSIS_PERMISSIONS,
+} from '@core/modules/legends-gql-modules/tradeAnalysis/permissions';
 
 vi.mock('../config', () => ({
   ELASTIC_SEARCH_URL: 'http://elastic.test/',
   ELASTIC_KIBANA_INDEX: '.kibana',
   ELASTIC_REQUIRED_PRIVILEGE: 'feature_galaxySearch.all',
 }));
+
+beforeAll(() => {
+  installAuthRegistry([galaxySearchAuth, marketAuth, sessionsAuth, transactionsAuth, tradeAnalysisAuth]);
+});
+afterAll(() => {
+  installAuthRegistry([]);
+});
 
 type FetchResponse = { ok: boolean; status?: number; json?: () => Promise<unknown> };
 
@@ -89,7 +107,7 @@ describe('kibanaAuthorisationContext - permission set construction', () => {
     const result = await kibanaAuthorisationContext(makeParams('Bearer t1'));
     expect(result.isAuthenticated).toBe(true);
     expect(result.permissions).toEqual(
-      new Set([PERMISSIONS.MARKET_READ, PERMISSIONS.OBJECTS_READ])
+      new Set([MARKET_PERMISSIONS.MARKET_READ, PERMISSIONS.OBJECTS_READ])
       // Note: gate privilege feature_galaxySearch.all is held but not in the map,
       // so no extra permissions from it (galaxySearch.read is what grants SEARCH_READ).
     );
@@ -105,13 +123,14 @@ describe('kibanaAuthorisationContext - permission set construction', () => {
   it('grants TRADE_ANALYSIS_LABEL only when feature_tradeListings.all is held', async () => {
     mockFetch(elasticResponse(['feature_galaxySearch.all', 'feature_tradeListings.read']));
     const readOnly = await kibanaAuthorisationContext(makeParams('Bearer t-readonly'));
-    expect(readOnly.permissions?.has(PERMISSIONS.TRADE_ANALYSIS_LABEL)).toBe(false);
-    expect(readOnly.permissions?.has(PERMISSIONS.TRADE_ANALYSIS_READ)).toBe(true);
+    expect(readOnly.permissions?.has(TRADE_ANALYSIS_PERMISSIONS.TRADE_ANALYSIS_LABEL)).toBe(false);
+    expect(readOnly.permissions?.has(TRADE_ANALYSIS_PERMISSIONS.TRADE_ANALYSIS_READ)).toBe(true);
+    expect(readOnly.permissions?.has(TRANSACTIONS_PERMISSIONS.TRANSACTIONS_READ)).toBe(true);
 
     _clearPermissionCache();
     mockFetch(elasticResponse(['feature_galaxySearch.all', 'feature_tradeListings.read', 'feature_tradeListings.all']));
     const labeller = await kibanaAuthorisationContext(makeParams('Bearer t-labeller'));
-    expect(labeller.permissions?.has(PERMISSIONS.TRADE_ANALYSIS_LABEL)).toBe(true);
+    expect(labeller.permissions?.has(TRADE_ANALYSIS_PERMISSIONS.TRADE_ANALYSIS_LABEL)).toBe(true);
   });
 
   it('probes all mapped privileges (and the gate) in a single request', async () => {
@@ -168,10 +187,10 @@ describe('kibanaAuthorisationContext - cache', () => {
     const b = await kibanaAuthorisationContext(makeParams('Bearer tokenB'));
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(a.permissions?.has(PERMISSIONS.MARKET_READ)).toBe(true);
+    expect(a.permissions?.has(MARKET_PERMISSIONS.MARKET_READ)).toBe(true);
     expect(a.permissions?.has(PERMISSIONS.LOGINS_READ)).toBe(false);
     expect(b.permissions?.has(PERMISSIONS.LOGINS_READ)).toBe(true);
-    expect(b.permissions?.has(PERMISSIONS.MARKET_READ)).toBe(false);
+    expect(b.permissions?.has(MARKET_PERMISSIONS.MARKET_READ)).toBe(false);
   });
 
   it('does not cache failures (gate privilege missing)', async () => {

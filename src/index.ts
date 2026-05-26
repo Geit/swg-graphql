@@ -30,7 +30,8 @@ import { Module, ModuleExports } from './moduleTypes';
 import { AccountService } from './services/AccountService';
 import { setInProcessGqlSchema } from './services/inProcessGqlClient';
 import { isPresent } from './utils/utility-types';
-import { customAuthChecker } from './auth';
+import { customAuthChecker, installAuthRegistry } from './auth';
+import { loadApiKeys } from './context/api-key-auth';
 
 const GQL_PATH = '/graphql' as const;
 
@@ -87,6 +88,9 @@ async function bootstrap() {
   app.use(json({ limit: '1MB' }));
 
   const modules = await findAndLoadModules();
+
+  installAuthRegistry(modules.flatMap(m => (m.auth ? [m.auth] : [])));
+  loadApiKeys();
 
   const moduleShutdowns = modules.map(m => m.shutdown).filter(isPresent);
 

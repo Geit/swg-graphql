@@ -5,3 +5,5 @@ export * from './permissions';
 export * from './roleBundles';
 
 export * from './kibanaPrivilegeMap';
+
+export * from './registry';
