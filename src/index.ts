@@ -28,6 +28,7 @@ import { ContextType } from './context/types';
 import { getRequestContext } from './context';
 import { Module, ModuleExports } from './moduleTypes';
 import { AccountService } from './services/AccountService';
+import { setInProcessGqlSchema } from './services/inProcessGqlClient';
 import { isPresent } from './utils/utility-types';
 import { customAuthChecker } from './auth';
 
@@ -119,6 +120,8 @@ async function bootstrap() {
     container: Container,
     authChecker: customAuthChecker,
   });
+
+  setInProcessGqlSchema(schema);
 
   // Create the GraphQL server
   const server = new ApolloServer<ContextType>({
