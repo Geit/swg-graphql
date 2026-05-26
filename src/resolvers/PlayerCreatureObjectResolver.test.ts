@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { BiographyService } from '../services/BiographyService';
 import { CityService } from '../services/CityService';
 import { GuildService } from '../services/GuildService';
 import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
@@ -26,6 +27,7 @@ describe('PlayerCreatureObjectResolver', () => {
     getSkillInformation: ReturnType<typeof vi.fn>;
     getLevelForPlayer: ReturnType<typeof vi.fn>;
   };
+  let mockBiographyService: { load: ReturnType<typeof vi.fn> };
 
   const createMockObject = (id: string): PlayerCreatureObject =>
     ({
@@ -63,6 +65,10 @@ describe('PlayerCreatureObjectResolver', () => {
       getLevelForPlayer: vi.fn().mockResolvedValue(1),
     };
 
+    mockBiographyService = {
+      load: vi.fn().mockResolvedValue(null),
+    };
+
     resolver = new PlayerCreatureObjectResolver();
     resolver.playerCreatureObjectService = mockPlayerCreatureService as unknown as PlayerCreatureObjectService;
     resolver.objectService = mockObjectService as unknown as ServerObjectService;
@@ -71,6 +77,7 @@ describe('PlayerCreatureObjectResolver', () => {
     resolver.cityService = mockCityService as unknown as CityService;
     resolver.guildService = mockGuildService as unknown as GuildService;
     resolver.skillService = mockSkillService as unknown as SkillService;
+    resolver.biographyService = mockBiographyService as unknown as BiographyService;
   });
 
   describe('ownedObjects', () => {
@@ -233,6 +240,33 @@ describe('PlayerCreatureObjectResolver', () => {
       mockGuildService.getGuildForPlayer.mockResolvedValue(null);
 
       const result = await resolver.guild(createMockObject('12345'));
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('biography', () => {
+    it('should return biography text when present', async () => {
+      mockBiographyService.load.mockResolvedValue({ OBJECT_ID: 12345, BIOGRAPHY: 'A long time ago...' });
+
+      const result = await resolver.biography(createMockObject('12345'));
+
+      expect(mockBiographyService.load).toHaveBeenCalledWith('12345');
+      expect(result).toBe('A long time ago...');
+    });
+
+    it('should return null when no record exists', async () => {
+      mockBiographyService.load.mockResolvedValue(undefined);
+
+      const result = await resolver.biography(createMockObject('12345'));
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when BIOGRAPHY column is null', async () => {
+      mockBiographyService.load.mockResolvedValue({ OBJECT_ID: 12345, BIOGRAPHY: null });
+
+      const result = await resolver.biography(createMockObject('12345'));
 
       expect(result).toBeNull();
     });

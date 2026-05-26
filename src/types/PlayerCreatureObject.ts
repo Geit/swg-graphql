@@ -173,4 +173,7 @@ export class PlayerCreatureObject extends CreatureObject {
 
   @Field(() => [SkillTree], { description: 'Skills grouped by their skill tree' })
   skillTrees: SkillTree[];
+
+  @Field(() => String, { nullable: true, description: 'Player-written character biography' })
+  biography: string | null;
 }

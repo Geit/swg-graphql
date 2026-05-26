@@ -2,6 +2,7 @@ import { Arg, Authorized, FieldResolver, Int, Resolver, ResolverInterface, Root 
 import { Inject, Service } from 'typedi';
 
 import { ENABLE_STRUCTURE_SHORTCUT } from '../config';
+import { BiographyService } from '../services/BiographyService';
 import { CityService } from '../services/CityService';
 import { GuildService } from '../services/GuildService';
 import { PlayerCreatureObjectService } from '../services/PlayerCreatureObjectService';
@@ -50,6 +51,9 @@ export class PlayerCreatureObjectResolver
 
   @Inject()
   playerObjectService: PlayerObjectService;
+
+  @Inject()
+  biographyService: BiographyService;
 
   @FieldResolver()
   async ownedObjects(
@@ -254,6 +258,12 @@ export class PlayerCreatureObjectResolver
   @FieldResolver(() => Guild, { nullable: true, description: 'The Guild the player is a member of' })
   guild(@Root() object: PlayerCreatureObject) {
     return this.guildService.getGuildForPlayer(object.id);
+  }
+
+  @FieldResolver(() => String, { nullable: true })
+  async biography(@Root() object: PlayerCreatureObject) {
+    const record = await this.biographyService.load(object.id);
+    return record?.BIOGRAPHY ?? null;
   }
 
   @FieldResolver(() => PlayerObject)
