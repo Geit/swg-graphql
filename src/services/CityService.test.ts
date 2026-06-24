@@ -64,7 +64,7 @@ describe('CityService', () => {
       mockPropertyListService.load.mockResolvedValue([
         {
           listId: PropertyListIds.Cities,
-          value: ':1:Old City:111:naboo:150:250:600:333:8:12:4:60:70:80:150:0:90:100:110:0:0:0:444:555',
+          value: '1:Old City:111:naboo:150:250:600:333:8:12:4:60:70:80:150:0:90:100:110:0:0:0:444:555',
         },
       ]);
 

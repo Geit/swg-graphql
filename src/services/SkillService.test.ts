@@ -15,6 +15,7 @@ describe('SkillService', () => {
   beforeEach(() => {
     tracker.reset();
 
+    // Empty datatable/string-map defaults for every file the service loads.
     mockDataTableService = {
       load: vi.fn().mockResolvedValue([]),
     };
@@ -22,17 +23,6 @@ describe('SkillService', () => {
     mockStringService = {
       load: vi.fn().mockResolvedValue({}),
     };
-
-    // Mock the datatable returns
-    mockDataTableService.load
-      .mockResolvedValueOnce([]) // player_level.iff
-      .mockResolvedValueOnce([]); // skills.iff
-
-    // Mock the string file returns
-    mockStringService.load
-      .mockResolvedValueOnce({}) // skl_n
-      .mockResolvedValueOnce({}) // skl_t
-      .mockResolvedValueOnce({}); // skl_d
 
     service = new SkillService(
       mockDataTableService as unknown as DataTableService,
@@ -50,47 +40,57 @@ describe('SkillService', () => {
     it('should return skill data with enriched information', async () => {
       const skillId = 'combat_brawler_novice';
 
-      // Reset and set up with actual skill data
+      // Reset and key the mocks off the requested file so the order/number of loads doesn't matter.
+      const skillRow = {
+        name: skillId,
+        parent: '',
+        graphType: 0,
+        godOnly: false,
+        isTitle: false,
+        isProfession: true,
+        isHidden: false,
+        moneyRequired: 0,
+        pointsRequired: 0,
+        skillsRequiredCount: 0,
+        skillsRequired: '',
+        preclusionSkills: '',
+        xpType: 'combat_general',
+        xpCost: 0,
+        xpCap: 1000,
+        missionsRequired: '',
+        apprenticeshipsRequired: '',
+        statsRequired: '',
+        speciesRequired: '',
+        jediStateRequired: 0,
+        skillAbility: '',
+        commands: 'berserk1,taunt',
+        skillMods: 'brawler_accuracy=10,brawler_damage=5',
+        schematicsGranted: '',
+        schematicsRevoked: '',
+        searchable: true,
+        ender: 0,
+      };
+
       mockDataTableService.load
         .mockReset()
-        .mockResolvedValueOnce([]) // player_level.iff
-        .mockResolvedValueOnce([
-          {
-            name: skillId,
-            parent: '',
-            graphType: 0,
-            godOnly: false,
-            isTitle: false,
-            isProfession: true,
-            isHidden: false,
-            moneyRequired: 0,
-            pointsRequired: 0,
-            skillsRequiredCount: 0,
-            skillsRequired: '',
-            preclusionSkills: '',
-            xpType: 'combat_general',
-            xpCost: 0,
-            xpCap: 1000,
-            missionsRequired: '',
-            apprenticeshipsRequired: '',
-            statsRequired: '',
-            speciesRequired: '',
-            jediStateRequired: 0,
-            skillAbility: '',
-            commands: 'berserk1,taunt',
-            skillMods: 'brawler_accuracy=10,brawler_damage=5',
-            schematicsGranted: '',
-            schematicsRevoked: '',
-            searchable: true,
-            ender: 0,
-          },
-        ]);
+        .mockImplementation(({ fileName }) => Promise.resolve(fileName === 'skill/skills.iff' ? [skillRow] : []));
 
+      const stringsByFile = new Map<string, Record<string, string>>([
+        ['skl_n', { [skillId]: 'Novice Brawler' }],
+        ['skl_t', { [skillId]: 'Brawler' }],
+        ['skl_d', { [skillId]: 'A novice brawler skill' }],
+        ['cmd_n', { berserk1: 'Berserk', taunt: 'Taunt' }],
+        [
+          'stat_n',
+          Object.fromEntries([
+            ['brawler_accuracy', 'Brawler Accuracy'],
+            ['brawler_damage', 'Brawler Damage'],
+          ]),
+        ],
+      ]);
       mockStringService.load
         .mockReset()
-        .mockResolvedValueOnce({ [skillId]: 'Novice Brawler' }) // skl_n
-        .mockResolvedValueOnce({ [skillId]: 'Brawler' }) // skl_t
-        .mockResolvedValueOnce({ [skillId]: 'A novice brawler skill' }); // skl_d
+        .mockImplementation((fileName: string) => Promise.resolve(stringsByFile.get(fileName) ?? {}));
 
       // Create a new service with the new mocks
       const testService = new SkillService(
@@ -108,10 +108,13 @@ describe('SkillService', () => {
       expect(result?.name).toBe('Novice Brawler');
       expect(result?.title).toBe('Brawler');
       expect(result?.description).toBe('A novice brawler skill');
-      expect(result?.commands).toEqual(['berserk1', 'taunt']);
+      expect(result?.commands).toEqual([
+        { id: 'berserk1', name: 'Berserk' },
+        { id: 'taunt', name: 'Taunt' },
+      ]);
       expect(result?.skillMods).toEqual([
-        { id: 'brawler_accuracy', value: 10 },
-        { id: 'brawler_damage', value: 5 },
+        { id: 'brawler_accuracy', name: 'Brawler Accuracy', value: 10 },
+        { id: 'brawler_damage', name: 'Brawler Damage', value: 5 },
       ]);
     });
   });
@@ -144,36 +147,37 @@ describe('SkillService', () => {
 
   describe('getLevelForPlayer', () => {
     it('should calculate level based on XP', async () => {
-      // Set up level data
+      // Set up level data, keyed off the requested file so other loads (skills/expertise) stay empty.
+      const levelData = [
+        {
+          level: 1,
+          xpRequired: 0,
+          xpType: 'combat_general',
+          xpMultiplier: 1,
+          healthGranted: 100,
+          expertisePoints: 0,
+        },
+        {
+          level: 2,
+          xpRequired: 1000,
+          xpType: 'combat_general',
+          xpMultiplier: 1,
+          healthGranted: 100,
+          expertisePoints: 1,
+        },
+        {
+          level: 3,
+          xpRequired: 3000,
+          xpType: 'combat_general',
+          xpMultiplier: 1,
+          healthGranted: 100,
+          expertisePoints: 1,
+        },
+      ];
+
       mockDataTableService.load
         .mockReset()
-        .mockResolvedValueOnce([
-          {
-            level: 1,
-            xpRequired: 0,
-            xpType: 'combat_general',
-            xpMultiplier: 1,
-            healthGranted: 100,
-            expertisePoints: 0,
-          },
-          {
-            level: 2,
-            xpRequired: 1000,
-            xpType: 'combat_general',
-            xpMultiplier: 1,
-            healthGranted: 100,
-            expertisePoints: 1,
-          },
-          {
-            level: 3,
-            xpRequired: 3000,
-            xpType: 'combat_general',
-            xpMultiplier: 1,
-            healthGranted: 100,
-            expertisePoints: 1,
-          },
-        ])
-        .mockResolvedValueOnce([]);
+        .mockImplementation(({ fileName }) => Promise.resolve(fileName === 'player/player_level.iff' ? levelData : []));
 
       mockStringService.load.mockReset().mockResolvedValue({});
 
