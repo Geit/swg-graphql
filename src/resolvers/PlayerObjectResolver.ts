@@ -182,7 +182,7 @@ export class PlayerObjectResolver implements ResolverInterface<PlayerObject> {
   async lifetimeGcwPoints(@Root() object: IServerObject) {
     const plyr = await this._getPlayerObject(object.id);
 
-    return plyr?.LIFETIME_PVP_KILLS ?? null;
+    return plyr?.LIFETIME_GCW_POINTS ?? null;
   }
 
   @FieldResolver()
