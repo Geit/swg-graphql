@@ -13,6 +13,7 @@ import { City, Guild, PlayerCreatureObject } from '../types';
 import { PropertyListIds } from '../types/PropertyList';
 import { PlayerObject } from '../types/PlayerObject';
 import TAGIFY, { STRUCTURE_TYPE_IDS } from '../utils/tagify';
+import { humanizeId } from '../utils/humanize';
 import { isPresent, subsetOf } from '../utils/utility-types';
 import { Skill, SkillTree } from '../types/PlayerCreatureObject';
 import { SkillService } from '../services/SkillService';
@@ -156,8 +157,7 @@ export class PlayerCreatureObjectResolver
           if (treeEntry) {
             treeEntry.skills.push(skill);
           } else {
-            const name =
-              expertiseTree.name ?? expertiseTree.stringId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            const name = expertiseTree.name ?? humanizeId(expertiseTree.stringId);
             treeMap.set(key, { name, skills: [skill] });
           }
         } else if (treeEntry) {
@@ -192,15 +192,9 @@ export class PlayerCreatureObjectResolver
             this.stringFileService.load('ui_roadmap'),
           ]);
           const template = rawPlayer?.SKILL_TEMPLATE;
-          name =
-            (template && skillTitles[template]) ??
-            groupId
-              .replace(/^class_/, '')
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, c => c.toUpperCase());
+          name = (template && skillTitles[template]) ?? humanizeId(groupId.replace(/^class_/, ''));
         } else {
-          name =
-            category.name ?? category.title ?? category.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          name = category.name ?? category.title ?? humanizeId(category.id);
         }
         treeMap.set(groupId, { name, skills: [skill] });
       }

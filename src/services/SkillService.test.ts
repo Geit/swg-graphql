@@ -40,7 +40,6 @@ describe('SkillService', () => {
     it('should return skill data with enriched information', async () => {
       const skillId = 'combat_brawler_novice';
 
-      // Reset and key the mocks off the requested file so the order/number of loads doesn't matter.
       const skillRow = {
         name: skillId,
         parent: '',
@@ -147,7 +146,6 @@ describe('SkillService', () => {
 
   describe('getLevelForPlayer', () => {
     it('should calculate level based on XP', async () => {
-      // Set up level data, keyed off the requested file so other loads (skills/expertise) stay empty.
       const levelData = [
         {
           level: 1,
