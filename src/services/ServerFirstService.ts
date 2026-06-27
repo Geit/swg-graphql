@@ -8,7 +8,7 @@ import { StringFileLoader } from './StringFileLoader';
 // Looked up by planet name so the OBJECT_ID isn't hardcoded across galaxies.
 const SERVER_FIRST_PLANET = 'tatooine';
 const SERVER_FIRST_PREFIX = 'collectionServerFirst.';
-const COLLECTION_DATATABLE = 'collection/collection';
+const COLLECTION_DATATABLE = 'collection/collection.iff';
 const COLLECTION_STRING_FILE = 'collection_n';
 
 // Partial collection.iff row (camelcase:true); only the columns we map are typed.
