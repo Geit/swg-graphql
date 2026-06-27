@@ -6,6 +6,7 @@ export const PERMISSIONS = {
   CITIES_READ: 'cities:read',
   RESOURCES_READ: 'resources:read',
   SERVER_FIRSTS_READ: 'serverFirsts:read',
+  CHRONICLES_READ: 'chronicles:read',
 } as const;
 
 // `string & {}` preserves IDE autocomplete on the core literals while still accepting
