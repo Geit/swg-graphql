@@ -40,7 +40,6 @@ describe('ServerFirstService', () => {
   let mockDataTable: { load: ReturnType<typeof vi.fn> };
   let mockStrings: { tryLoadFromRef: ReturnType<typeof vi.fn> };
 
-  // The objvar value shape live data uses: [unixSeconds, characterOid, characterName].
   const wedge = ['1620521518', '264553502281', 'Wedge Antilles'];
   const wedgeDate = new Date(1620521518 * 1000).toISOString();
   const completion = { characterName: 'Wedge Antilles', characterOid: '264553502281', dateCompleted: wedgeDate };
@@ -66,31 +65,43 @@ describe('ServerFirstService', () => {
     expect(mockObjVars.getObjVarsForObject).not.toHaveBeenCalled();
   });
 
-  it('filters to collectionServerFirst.* objvars and maps display names from collection.iff', async () => {
+  it('filters to collectionServerFirst.* objvars, names from collection_n.stf, category from the collection.iff book', async () => {
     mockObjVars.getObjVarsForObject.mockResolvedValueOnce([
       { name: 'someOther.objvar', type: 5, value: ['ignore', 'me'] },
-      { name: 'collectionServerFirst.master_pilot', type: 5, value: wedge },
+      { name: 'collectionServerFirst.col_rare_melee_01', type: 5, value: wedge },
     ]);
-    mockDataTable.load.mockResolvedValueOnce([{ name: 'master_pilot', stringName: 'master_pilot', category: 'pilot' }]);
-    mockStrings.tryLoadFromRef.mockResolvedValueOnce('Master Pilot');
+    // A bookName row sets the book for the collectionName rows that follow.
+    mockDataTable.load.mockResolvedValueOnce([{ bookName: 'weapon_book' }, { collectionName: 'col_rare_melee_01' }]);
+    const strings: Record<string, string> = {
+      'collection_n:col_rare_melee_01': 'Rare Melee Weapons Mark I',
+      'collection_n:weapon_book': 'Weapons',
+    };
+    mockStrings.tryLoadFromRef.mockImplementation((ref: string) => Promise.resolve(strings[ref] ?? null));
 
     const result = await service.getServerFirsts();
 
     expect(result).toEqual([
-      { collectionName: 'master_pilot', displayName: 'Master Pilot', category: 'pilot', ...completion },
+      {
+        collectionName: 'col_rare_melee_01',
+        displayName: 'Rare Melee Weapons Mark I',
+        category: 'Weapons',
+        ...completion,
+      },
     ]);
-    expect(mockStrings.tryLoadFromRef).toHaveBeenCalledWith('collection_n:master_pilot');
   });
 
-  it('keeps the raw collection name when the datatable read fails', async () => {
+  it('still resolves the display name when the collection.iff (category) read fails', async () => {
     mockObjVars.getObjVarsForObject.mockResolvedValueOnce([
-      { name: 'collectionServerFirst.master_pilot', type: 5, value: wedge },
+      { name: 'collectionServerFirst.col_rare_melee_01', type: 5, value: wedge },
     ]);
     mockDataTable.load.mockRejectedValueOnce(new Error('collection.iff missing'));
+    mockStrings.tryLoadFromRef.mockResolvedValue('Rare Melee Weapons Mark I');
 
     const result = await service.getServerFirsts();
 
-    expect(result).toEqual([{ collectionName: 'master_pilot', displayName: null, category: null, ...completion }]);
+    expect(result).toEqual([
+      { collectionName: 'col_rare_melee_01', displayName: 'Rare Melee Weapons Mark I', category: null, ...completion },
+    ]);
   });
 
   it('sorts newest-dated first, then undated alphabetically last', async () => {

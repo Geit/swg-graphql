@@ -11,11 +11,9 @@ const SERVER_FIRST_PREFIX = 'collectionServerFirst.';
 const COLLECTION_DATATABLE = 'collection/collection.iff';
 const COLLECTION_STRING_FILE = 'collection_n';
 
-// Partial collection.iff row (camelcase:true); only the columns we map are typed.
 interface CollectionRow {
-  name?: string;
-  stringName?: string;
-  category?: string;
+  bookName?: string;
+  collectionName?: string;
 }
 
 export interface ServerFirstRow {
@@ -61,10 +59,6 @@ export function parseServerFirstValue(value: unknown): Completer {
   return { characterName: null, characterOid: null, dateCompleted: null };
 }
 
-function normalizeStringRef(stringName: string): string {
-  return stringName.includes(':') ? stringName : `${COLLECTION_STRING_FILE}:${stringName}`;
-}
-
 @Service()
 export class ServerFirstService {
   constructor(
@@ -83,23 +77,24 @@ export class ServerFirstService {
     if (serverFirstVars.length === 0) return [];
 
     const neededNames = new Set(serverFirstVars.map(ov => ov.name.slice(SERVER_FIRST_PREFIX.length).toLowerCase()));
-    const displayByName = await this.buildCollectionDisplayMap(neededNames);
+    // Names come from collection_n.stf, not the datatable, so they resolve even without collection.iff.
+    const categoryByName = await this.buildCategoryMap(neededNames);
 
-    const rows: ServerFirstRow[] = serverFirstVars.map(ov => {
-      const collectionName = ov.name.slice(SERVER_FIRST_PREFIX.length);
-      const completer = parseServerFirstValue(ov.value);
-      const display = displayByName.get(collectionName.toLowerCase());
-      return {
-        collectionName,
-        displayName: display?.displayName ?? null,
-        category: display?.category ?? null,
-        characterName: completer.characterName,
-        characterOid: completer.characterOid,
-        dateCompleted: completer.dateCompleted,
-      };
-    });
+    const rows: ServerFirstRow[] = await Promise.all(
+      serverFirstVars.map(async ov => {
+        const collectionName = ov.name.slice(SERVER_FIRST_PREFIX.length);
+        const completer = parseServerFirstValue(ov.value);
+        return {
+          collectionName,
+          displayName: await this.strings.tryLoadFromRef(`${COLLECTION_STRING_FILE}:${collectionName}`),
+          category: categoryByName.get(collectionName.toLowerCase()) ?? null,
+          characterName: completer.characterName,
+          characterOid: completer.characterOid,
+          dateCompleted: completer.dateCompleted,
+        };
+      })
+    );
 
-    // Newest first, then by collection name.
     rows.sort(
       (a, b) =>
         (b.dateCompleted ?? '').localeCompare(a.dateCompleted ?? '') || a.collectionName.localeCompare(b.collectionName)
@@ -108,24 +103,29 @@ export class ServerFirstService {
     return rows;
   }
 
-  // Display name + category for the needed collections; missing data degrades to a raw name.
-  private async buildCollectionDisplayMap(
-    neededNames: Set<string>
-  ): Promise<Map<string, { displayName: string | null; category: string | null }>> {
-    const map = new Map<string, { displayName: string | null; category: string | null }>();
+  // Parent-book label per needed collection from collection.iff's positional tree
+  // (a bookName row sets the book for the collectionName rows under it).
+  private async buildCategoryMap(neededNames: Set<string>): Promise<Map<string, string | null>> {
+    const map = new Map<string, string | null>();
 
     let rows: CollectionRow[];
     try {
       rows = await this.dataTable.load<CollectionRow>({ fileName: COLLECTION_DATATABLE, camelcase: true });
-    } catch {
+    } catch (err) {
+      console.warn('[ServerFirstService] collection.iff load failed; categories unavailable:', err);
       return map;
     }
 
+    let book = '';
     for (const row of rows) {
-      const key = row.name?.toLowerCase();
-      if (!key || !neededNames.has(key)) continue;
-      const displayName = row.stringName ? await this.strings.tryLoadFromRef(normalizeStringRef(row.stringName)) : null;
-      map.set(key, { displayName, category: row.category ?? null });
+      if (row.bookName) {
+        book = row.bookName;
+      } else if (row.collectionName) {
+        const key = row.collectionName.toLowerCase();
+        if (neededNames.has(key)) {
+          map.set(key, book ? await this.strings.tryLoadFromRef(`${COLLECTION_STRING_FILE}:${book}`) : null);
+        }
+      }
     }
 
     return map;
