@@ -38,6 +38,15 @@ export class ExpertiseRank {
   mods: ExpertiseMod[];
 }
 
+@ObjectType({ description: 'A direct box-to-box expertise prerequisite (from the rank-1 skill SKILLS_REQUIRED).' })
+export class ExpertisePrerequisite {
+  @Field(() => String, { description: 'Prerequisite node id (its rank-1 skill name).' })
+  nodeId: string;
+
+  @Field(() => Int, { description: 'Minimum rank the prerequisite node must hold.' })
+  rank: number;
+}
+
 @ObjectType({ description: 'A node (skill) in an expertise tree at a grid position, with its ranks.' })
 export class ExpertiseNode {
   @Field(() => String, { description: 'Stable node id — the rank-1 skill name.' })
@@ -66,6 +75,11 @@ export class ExpertiseNode {
 
   @Field(() => Int, { description: 'Character level prerequisite from the datatable (PREREQ_LEVEL).' })
   prereqLevel: number;
+
+  @Field(() => [ExpertisePrerequisite], {
+    description: 'Boxes that must be trained first (rank-1 skill SKILLS_REQUIRED); usually empty or one.',
+  })
+  prerequisites: ExpertisePrerequisite[];
 
   @Field(() => [ExpertiseRank], {
     description: 'The ranks for this node, ordered by rank ascending. Each carries its own rank number.',

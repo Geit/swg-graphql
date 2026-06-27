@@ -54,6 +54,28 @@ describe('SkillService.getExpertiseData (real datatables)', () => {
     }
   });
 
+  it('resolves box prerequisites (SKILLS_REQUIRED) to node ids + required ranks', async () => {
+    const data = await service.getExpertiseData();
+    const tree = data.trees.find(t => t.id === 4)!;
+    const byId = new Map(tree.nodes.map(n => [n.id, n]));
+
+    // Root tier-1 nodes have no box prerequisite (only the tier gate).
+    expect(byId.get('expertise_fs_general_enhanced_strength_1')!.prerequisites).toEqual([]);
+
+    // A vertical link to a higher rank: Second Wind needs Heightened Speed maxed.
+    expect(byId.get('expertise_fs_general_second_wind_1')!.prerequisites).toEqual([
+      { nodeId: 'expertise_fs_general_heightened_speed_1', rank: 4 },
+    ]);
+
+    // A horizontal link: Improved Saber Block (T4 G3) needs Stance: Saber Block
+    // (T4 G2) — same tier, adjacent column.
+    const improved = byId.get('expertise_fs_general_improved_saber_block_1')!;
+    const stance = byId.get('expertise_fs_general_stance_saber_block_1')!;
+    expect(improved.prerequisites).toEqual([{ nodeId: stance.id, rank: 1 }]);
+    expect(improved.tier).toBe(stance.tier);
+    expect(improved.grid).not.toBe(stance.grid);
+  });
+
   it('stamps each rank with the SWG CRC of its skill name (build-code identity)', async () => {
     const data = await service.getExpertiseData();
     const tree = data.trees.find(t => t.id === 4)!;
