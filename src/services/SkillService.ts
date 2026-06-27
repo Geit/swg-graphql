@@ -382,8 +382,8 @@ export class SkillService {
       });
     };
 
-    // Resolve any rank skill name back to its owning node (the rank-1 NAME) and
-    // that rank's number, so a SKILLS_REQUIRED reference becomes a {nodeId, rank}.
+    // Any rank skill name -> its owning node (rank-1 NAME) + rank, so a
+    // SKILLS_REQUIRED reference resolves to a {nodeId, rank}.
     const skillToNodeRank = new Map<string, { nodeId: string; rank: number }>();
     for (const position of positions) {
       for (const r of position.ranks) {
@@ -391,10 +391,9 @@ export class SkillService {
       }
     }
 
-    // A box's prerequisites are the rank-1 skill's SKILLS_REQUIRED — each a
-    // specific rank of another box. The live data only ever lists one, but the
-    // client supports several, so resolve them all. Falls back to the rank-1
-    // skill when a reference omits the rank suffix; skips unresolved references.
+    // The rank-1 skill's SKILLS_REQUIRED — each a specific rank of another box.
+    // Live data lists at most one, but the client supports several. Falls back to
+    // rank 1 when a reference omits the suffix; skips unresolved references.
     const resolvePrereqs = (skillName: string) => {
       const raw = (this._skillMap.get(skillName)?.skillsRequired ?? '').trim();
       if (!raw) return [];

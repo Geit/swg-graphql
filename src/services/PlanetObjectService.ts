@@ -24,4 +24,15 @@ export class PlanetObjectService {
     const byId = new Map(results.map(result => [String(result.OBJECT_ID), result]));
     return keys.map(key => byId.get(key));
   }
+
+  // Resolve a planet object's id by planet name, so callers don't hardcode an OBJECT_ID.
+  async getObjectIdByPlanetName(planetName: string): Promise<string | null> {
+    const row = await knexDb
+      .select('OBJECT_ID')
+      .from<PlanetObjectRecord>('PLANET_OBJECTS')
+      .where('PLANET_NAME', planetName)
+      .first();
+
+    return row ? String(row.OBJECT_ID) : null;
+  }
 }
