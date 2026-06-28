@@ -39,14 +39,18 @@ function record(overrides: Record<number, string | number> = {}): string {
 }
 
 describe('parseChroniclerValue', () => {
-  it('decodes name, summed created/completed buckets, and rating fields', () => {
-    const value = record({ 3: 8, 4: 36, 10: 5, 11: 2, 13: 3, 14: 1, 16: 9, 17: 4 });
+  it('decodes name, oid, xp/tokens, summed quest buckets, plays, and rating fields', () => {
+    const value = record({ 6: 1500, 7: 10, 8: 3, 3: 8, 4: 36, 10: 5, 11: 2, 12: 47, 13: 3, 14: 1, 16: 9, 17: 4 });
 
     expect(parseChroniclerValue(value)).toEqual({
       name: 'Wedge Antilles',
       characterOid: '264553502281',
+      xp: 1500,
+      silverTokens: 10,
+      goldTokens: 3,
       questsCreated: 7,
       questsCompleted: 13,
+      questsPlayed: 47,
       ratingCount: 8,
       ratingTotal: 36,
       ratedQuestCount: 4,
@@ -57,8 +61,12 @@ describe('parseChroniclerValue', () => {
     expect(parseChroniclerValue('v3::Han Solo')).toEqual({
       name: 'Han Solo',
       characterOid: null,
+      xp: 0,
+      silverTokens: 0,
+      goldTokens: 0,
       questsCreated: 0,
       questsCompleted: 0,
+      questsPlayed: 0,
       ratingCount: 0,
       ratingTotal: 0,
       ratedQuestCount: 0,
@@ -90,7 +98,7 @@ describe('ChroniclesService.getChroniclers', () => {
   it('decodes the v3 chronicler rows the indexed query returns', async () => {
     dbState.v3Rows = [
       { VALUE: record({ 1: '111', 2: 'Tycho Celchu', 10: 3, 11: 1, 16: 4, 17: 2 }) },
-      { VALUE: record({ 1: '222', 2: 'Wedge Antilles', 3: 8, 4: 36, 13: 3, 14: 1 }) },
+      { VALUE: record({ 1: '222', 2: 'Wedge Antilles', 3: 8, 4: 36, 12: 99, 13: 3, 14: 1 }) },
     ];
 
     const rows = await service.getChroniclers();
@@ -99,8 +107,12 @@ describe('ChroniclesService.getChroniclers', () => {
       {
         name: 'Tycho Celchu',
         characterOid: '111',
+        xp: 0,
+        silverTokens: 0,
+        goldTokens: 0,
         questsCreated: 4,
         questsCompleted: 6,
+        questsPlayed: 0,
         ratingCount: 0,
         ratingTotal: 0,
         ratedQuestCount: 0,
@@ -108,8 +120,12 @@ describe('ChroniclesService.getChroniclers', () => {
       {
         name: 'Wedge Antilles',
         characterOid: '222',
+        xp: 0,
+        silverTokens: 0,
+        goldTokens: 0,
         questsCreated: 0,
         questsCompleted: 0,
+        questsPlayed: 99,
         ratingCount: 8,
         ratingTotal: 36,
         ratedQuestCount: 4,
@@ -123,5 +139,45 @@ describe('ChroniclesService.getChroniclers', () => {
     const rows = await service.getChroniclers();
 
     expect(rows.map(r => r.name)).toEqual(['Kira Sung']);
+  });
+});
+
+describe('ChroniclesService.getChronicler', () => {
+  let service: ChroniclesService;
+
+  beforeEach(() => {
+    service = new ChroniclesService();
+    dbState.cityObject = { OBJECT_ID: 8000 };
+    dbState.v3Rows = [];
+  });
+
+  it('decodes the single matching row for an oid', async () => {
+    dbState.v3Rows = [{ VALUE: record({ 1: '999', 2: 'Han Solo', 6: 1200, 12: 88 }) }];
+
+    expect(await service.getChronicler('999')).toEqual({
+      name: 'Han Solo',
+      characterOid: '999',
+      xp: 1200,
+      silverTokens: 0,
+      goldTokens: 0,
+      questsCreated: 0,
+      questsCompleted: 0,
+      questsPlayed: 88,
+      ratingCount: 0,
+      ratingTotal: 0,
+      ratedQuestCount: 0,
+    });
+  });
+
+  it('returns null when the oid has no chronicler row', async () => {
+    dbState.v3Rows = [];
+
+    expect(await service.getChronicler('999')).toBeNull();
+  });
+
+  it('returns null when there is no city aggregator object', async () => {
+    dbState.cityObject = undefined;
+
+    expect(await service.getChronicler('999')).toBeNull();
   });
 });

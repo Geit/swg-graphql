@@ -1,4 +1,4 @@
-import { Authorized, FieldResolver, Query, Resolver, Root } from 'type-graphql';
+import { Arg, Authorized, FieldResolver, ID, Query, Resolver, Root } from 'type-graphql';
 import { Inject, Service } from 'typedi';
 
 import { PERMISSIONS } from '../auth/permissions';
@@ -18,11 +18,20 @@ export class ChroniclesResolver {
 
   @Query(() => [ChroniclerStats], {
     description:
-      'Chronicle Master stats, one entry per chronicler, decoded from the v3 chronicler records in the city object property list. Unranked - rank by questsCreated, questsCompleted, or rating downstream.',
+      'Chronicle Master stats decoded from the v3 chronicler records in the city object property list; one entry per chronicler, with no inherent ordering.',
   })
   @Authorized([PERMISSIONS.CHRONICLES_READ])
   chroniclers(): Promise<ChroniclerStats[]> {
     return this.chroniclesService.getChroniclers();
+  }
+
+  @Query(() => ChroniclerStats, {
+    nullable: true,
+    description: "A single chronicler's stats by character oid, or null if that chronicler has no record.",
+  })
+  @Authorized([PERMISSIONS.CHRONICLES_READ])
+  chronicler(@Arg('oid', () => ID) oid: string): Promise<ChroniclerStats | null> {
+    return this.chroniclesService.getChronicler(oid);
   }
 
   @FieldResolver(() => PlayerCreatureObject, {
