@@ -80,6 +80,34 @@ describe('DataTableService', () => {
 
       expect(result).toEqual([]);
     });
+
+    it('dedupes repeated loads of the same file passed as distinct option objects', async () => {
+      mockLoadDatatable.mockResolvedValue([{ id: 1 }]);
+
+      await service.load({ fileName: 'gcw/x.iff', camelcase: true });
+      await service.load({ fileName: 'gcw/x.iff', camelcase: true });
+
+      expect(mockLoadDatatable).toHaveBeenCalledTimes(1);
+    });
+
+    it('keys camelcase variants of the same file separately', async () => {
+      mockLoadDatatable.mockResolvedValue([]);
+
+      await service.load({ fileName: 'gcw/x.iff', camelcase: true });
+      await service.load({ fileName: 'gcw/x.iff', camelcase: false });
+
+      expect(mockLoadDatatable).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not cache a failed load, so a later call retries and can succeed', async () => {
+      mockLoadDatatable.mockRejectedValueOnce(new Error('missing')).mockResolvedValueOnce([{ id: 1 }]);
+
+      await expect(service.load({ fileName: 'gcw/x.iff' })).rejects.toThrow('missing');
+      const result = await service.load({ fileName: 'gcw/x.iff' });
+
+      expect(result).toEqual([{ id: 1 }]);
+      expect(mockLoadDatatable).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('batchFunction', () => {
