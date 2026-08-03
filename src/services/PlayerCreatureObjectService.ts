@@ -39,6 +39,16 @@ export class PlayerCreatureObjectService {
     return query;
   }
 
+  /** Distinct accounts with a login in the window. PLAYERS is one row per character, so row counts over-count alts. */
+  async countActiveAccounts(withinLastSeconds: number) {
+    const [row] = await this.db
+      .from<PlayerRecord>('PLAYERS')
+      .countDistinct('STATION_ID', { as: 'count' })
+      .whereRaw('LAST_LOGIN_TIME >= SYSDATE - ? * (1/24/60/60)', withinLastSeconds);
+
+    return Number(row?.count ?? 0);
+  }
+
   async getCheapStructuresForCharacter(objectId: string) {
     const characterObjvars = await this.objvarService.getObjVarsForObject(objectId);
 

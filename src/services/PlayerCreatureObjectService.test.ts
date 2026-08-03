@@ -71,6 +71,47 @@ describe('PlayerCreatureObjectService', () => {
     });
   });
 
+  describe('countActiveAccounts', () => {
+    it('should aggregate distinct STATION_IDs in SQL, not fetch rows', async () => {
+      tracker.on.select('PLAYERS').response([{ count: 42 }]);
+
+      const result = await service.countActiveAccounts(86400);
+
+      const query = tracker.history.select[0];
+      expect(query.sql).toMatch(/count\(distinct\s+"?STATION_ID"?\)/i);
+      expect(query.sql).toContain('LAST_LOGIN_TIME >= SYSDATE - ? * (1/24/60/60)');
+      expect(query.sql).not.toMatch(/select\s+\*/i);
+      expect(query.bindings).toContain(86400);
+      expect(result).toBe(42);
+    });
+
+    it('should bind the requested window', async () => {
+      tracker.on.select('PLAYERS').response([{ count: 7 }]);
+
+      await service.countActiveAccounts(3600);
+
+      expect(tracker.history.select[0].bindings).toContain(3600);
+    });
+
+    it('should return 0 when the count comes back as zero', async () => {
+      tracker.on.select('PLAYERS').response([{ count: 0 }]);
+
+      await expect(service.countActiveAccounts(86400)).resolves.toBe(0);
+    });
+
+    it('should return 0 when no rows come back at all', async () => {
+      tracker.on.select('PLAYERS').response([]);
+
+      await expect(service.countActiveAccounts(86400)).resolves.toBe(0);
+    });
+
+    it('should coerce a string count (oracledb NUMBER) to a number', async () => {
+      tracker.on.select('PLAYERS').response([{ count: '1234' }]);
+
+      await expect(service.countActiveAccounts(86400)).resolves.toBe(1234);
+    });
+  });
+
   describe('getCheapStructuresForCharacter', () => {
     it('should extract structure OIDs from objvars', async () => {
       const mockObjVars = [
