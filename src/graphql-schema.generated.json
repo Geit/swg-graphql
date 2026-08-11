@@ -688,6 +688,742 @@
       },
       {
         "kind": "OBJECT",
+        "name": "BountyActivityPoint",
+        "description": "Bounty activity for one time bucket.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "bucket",
+            "description": "ISO-8601 date of the bucket start (YYYY-MM-DD, or YYYY-MM for MONTH).",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "creditsPaid",
+            "description": "Credits paid out in this bucket.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "failures",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "kills",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "successRate",
+            "description": "kills / (kills + failures), 0–1.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "BountyEvent",
+        "description": "A single bounty hunter encounter or mission acceptance, parsed from the game logs.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "credits",
+            "description": "Credits collected (KILL) or posted on the mission (TAKEN). Always 0 for FAILED — a failed collection pays nothing.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "hunter",
+            "description": "The bounty hunter. For a FAILED event this is the player who died attempting the collection.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PlayerCreatureObject",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "hunterNameAtTime",
+            "description": "The hunter's name as written in the log at the time. Display history only — players rename, so never use this for identity or grouping. Select `hunter { resolvedName }` for the current name.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "outcome",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "BountyOutcome",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "target",
+            "description": "The mark. For a FAILED event this is the player who successfully fought the hunter off.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PlayerCreatureObject",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "targetNameAtTime",
+            "description": "The target's name as written in the log at the time. Display history only.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "timestamp",
+            "description": "ISO-8601 timestamp of the event.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "BountyHunterRow",
+        "description": "One hunter's record over the range.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "character",
+            "description": "The hunter, resolved by id.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PlayerCreatureObject",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "creditsEarned",
+            "description": "Total credits collected.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "encounters",
+            "description": "kills + failures.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "failures",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "hunterName",
+            "description": "Most recent name seen for this hunter in the range. Display only — grouping keys on the character id.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "kills",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "successRate",
+            "description": "kills / encounters, 0–1.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "BountyHunterSort",
+        "description": "Sort key for the bounty hunter leaderboard.",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "CREDITS",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "KILLS",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "SUCCESS_RATE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "BountyInterval",
+        "description": "Time bucket granularity for the bounty activity series.",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "DAY",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "MONTH",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "WEEK",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "BountyOutcome",
+        "description": "KILL = hunter collected the bounty; FAILED = hunter died trying; TAKEN = mission accepted (not yet resolved).",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "FAILED",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "KILL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "TAKEN",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "BountySummary",
+        "description": "Headline bounty hunting figures for a date range.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "averageBounty",
+            "description": "Mean credits per collected bounty. Zero when there were no kills.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "creditsPaid",
+            "description": "Total credits paid out across all collected bounties.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "distinctHunters",
+            "description": "Distinct hunters who resolved at least one encounter.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "distinctTargets",
+            "description": "Distinct targets who were involved in at least one resolved encounter.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "fromDate",
+            "description": "Lower bound of the range (echoes the request; supports ES date math).",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "largestBounty",
+            "description": "The single largest bounty collected in the range.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "BountyEvent",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "successRate",
+            "description": "totalKills / totalEncounters, 0–1. Zero when there were no encounters.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalEncounters",
+            "description": "totalKills + totalFailures — encounters that resolved one way or the other.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalFailures",
+            "description": "Attempts where the hunter engaged their mark and died.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalKills",
+            "description": "Bounties successfully collected.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "untilDate",
+            "description": "Upper bound of the range (echoes the request; supports ES date math).",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "BountyTargetRow",
+        "description": "One target's record over the range — how often they were hunted down or fought off.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "character",
+            "description": "The target, resolved by id.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PlayerCreatureObject",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "encounters",
+            "description": "timesKilled + timesSurvived.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "survivalRate",
+            "description": "timesSurvived / encounters, 0–1.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "targetName",
+            "description": "Most recent name seen for this target in the range. Display only — grouping keys on the character id.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "timesKilled",
+            "description": "Times a hunter collected a bounty on them.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "timesSurvived",
+            "description": "Times they defeated a hunter who came for them.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "BountyTargetSort",
+        "description": "Sort key for the bounty target leaderboard.",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "SURVIVAL_RATE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "TIMES_KILLED",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "TIMES_SURVIVED",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "BuildingObject",
         "description": null,
         "isOneOf": null,
@@ -15139,7 +15875,7 @@
         "fields": [
           {
             "name": "category",
-            "description": "Coarse grouping for UI filtering (\"GCW\" / \"Fishing\" / \"Arena\").",
+            "description": "Coarse grouping for UI filtering (\"GCW\" / \"Fishing\" / \"Arena\" / \"Bounty Hunter\" / \"PvP\" / \"Space\").",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -15526,7 +16262,7 @@
           },
           {
             "name": "scoreLabel",
-            "description": "The score formatted the way the in-game board shows it — a plain integer, a percentage of the displayed total (GCW), or a distance in metres (fishing).",
+            "description": "The score formatted the way the in-game board shows it — a plain integer, a percentage of the displayed total (GCW), a distance in metres (fishing), or credits (bounty hunter value).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -15549,7 +16285,7 @@
       {
         "kind": "ENUM",
         "name": "LeaderboardId",
-        "description": "One of the 16 weekly leaderboards, identified by its in-game tracker object.",
+        "description": "One of the 25 weekly leaderboards, identified by its in-game tracker object.",
         "isOneOf": null,
         "fields": null,
         "inputFields": null,
@@ -15634,6 +16370,30 @@
             "deprecationReason": null
           },
           {
+            "name": "BOUNTY_HUNTER_GROUND_VALUE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "BOUNTY_HUNTER_SPACE_VALUE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "BOUNTY_HUNTER_TOTAL_KILLS",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "BOUNTY_HUNTER_UNIQUE_KILLS",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "FISHING",
             "description": null,
             "isDeprecated": false,
@@ -15647,6 +16407,36 @@
           },
           {
             "name": "GCW_REBEL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PVP_KILLS_GROUND_IMPERIAL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PVP_KILLS_GROUND_REBEL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PVP_KILLS_SPACE_IMPERIAL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PVP_KILLS_SPACE_REBEL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "SPACE_BATTLE_POINTS",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
@@ -15833,12 +16623,18 @@
       {
         "kind": "ENUM",
         "name": "LeaderboardValueType",
-        "description": "How a board's raw integer score is presented in-game (raw integer, percentage, or metres).",
+        "description": "How a board's raw integer score is presented in-game (raw integer, percentage, metres, or credits).",
         "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
         "enumValues": [
+          {
+            "name": "CREDITS",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "METERS",
             "description": null,
@@ -22511,6 +23307,338 @@
             "deprecationReason": null
           },
           {
+            "name": "bountyActivity",
+            "description": "Kills, failures and credits paid per time bucket, chronological. Empty buckets are omitted.",
+            "args": [
+              {
+                "name": "from",
+                "description": "Lower bound (inclusive). Supports ES date math. Clamped server-side to the max window.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-14d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "interval",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "BountyInterval",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "DAY",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "until",
+                "description": "Upper bound (exclusive). Supports ES date math.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "BountyActivityPoint",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "bountyHunterLeaderboard",
+            "description": "Bounty hunter leaderboard. `minEncounters` guards rate-based sorts — without a floor a hunter with one lucky kill outranks one with a hundred.",
+            "args": [
+              {
+                "name": "from",
+                "description": "Lower bound (inclusive). Supports ES date math. Clamped server-side to the max window.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-14d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": "Page size (capped server-side at 100).",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "25",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "minEncounters",
+                "description": "Exclude hunters with fewer resolved encounters than this in the range.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "10",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortBy",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "BountyHunterSort",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "KILLS",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "until",
+                "description": "Upper bound (exclusive). Supports ES date math.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "BountyHunterRow",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "bountySummary",
+            "description": "Headline bounty hunting figures for a date range: kills, failures, success rate, credits paid and the largest single bounty collected.",
+            "args": [
+              {
+                "name": "from",
+                "description": "Lower bound (inclusive). Supports ES date math. Clamped server-side to the max window.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-14d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "until",
+                "description": "Upper bound (exclusive). Supports ES date math.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "BountySummary",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "bountyTargetLeaderboard",
+            "description": "Bounty target leaderboard — who is hunted most, and who fights hunters off. Targets are spread thinner than hunters, so the default `minEncounters` is lower.",
+            "args": [
+              {
+                "name": "from",
+                "description": "Lower bound (inclusive). Supports ES date math. Clamped server-side to the max window.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now-14d\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": "Page size (capped server-side at 100).",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "25",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "minEncounters",
+                "description": "Exclude targets with fewer resolved encounters than this in the range.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "5",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortBy",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "BountyTargetSort",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "TIMES_KILLED",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "until",
+                "description": "Upper bound (exclusive). Supports ES date math.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"now\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "BountyTargetRow",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "chronicler",
             "description": "A single chronicler's stats by character oid, or null if that chronicler has no record.",
             "args": [
@@ -23459,7 +24587,7 @@
           },
           {
             "name": "leaderboards",
-            "description": "Metadata for all 16 weekly leaderboards. Cheap — reads no game state.",
+            "description": "Metadata for all 25 weekly leaderboards. Cheap — reads no game state.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -24426,6 +25554,112 @@
             "deprecationReason": null
           },
           {
+            "name": "recentBountyFailures",
+            "description": "Most recent failed bounty collections, newest first — hunters who engaged their mark and were killed by it. Page by passing the last row's `timestamp` as `before`.",
+            "args": [
+              {
+                "name": "before",
+                "description": "Cursor — return only events strictly older than this ISO-8601 timestamp.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": "Page size (capped server-side at 100).",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "25",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "BountyEvent",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "recentBountyKills",
+            "description": "Most recent successfully collected bounties, newest first. Pages the same way as failures.",
+            "args": [
+              {
+                "name": "before",
+                "description": "Cursor — return only events strictly older than this ISO-8601 timestamp.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "limit",
+                "description": "Page size (capped server-side at 100).",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "25",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "BountyEvent",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "recentLogins",
             "description": null,
             "args": [
@@ -24562,6 +25796,22 @@
               "ofType": {
                 "kind": "OBJECT",
                 "name": "ResourceTypeResult",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "restussEvent",
+            "description": "Live state of the in-game Battle of Restuss event: the build phase of all 13 tracked structures, galaxy-wide progress on all 16 event quests, and the winning faction the game itself has recorded. Reads the tracker objects' objvars on every call — cache at the edge rather than polling it hard.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "RestussEvent",
                 "ofType": null
               }
             },
@@ -27193,6 +28443,324 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "RestussBase",
+        "description": "One of the 13 tracked Restuss structures: the city-wide master objective plus six bases per faction. Build progress is read live from the structure's `base_builder.current_phase` objvar.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "faction",
+            "description": "Owning faction. The master objective (`ph1_restuss_master`) is NEUTRAL.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "RestussFaction",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "isScoring",
+            "description": "Whether this structure's phase counts towards its faction's war score. Four bases per faction score, each up to phase 3, giving the 0–12 war score the game reports. The master objective and the medical centres / walls do not score.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "key",
+            "description": "The structure's in-game object name, which is its stable identity across event resets — e.g. `ph1_reb_headquarters`. Note `baracks` is the in-game (mis)spelling and is preserved verbatim.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "maxPhase",
+            "description": "Highest value `phase` reaches for this structure: 2 for the master objective, 3 for every base. Static config, not read from the game.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": "Display name for the structure, e.g. \"Rebel Headquarters\".",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "phase",
+            "description": "Current build progress from the `base_builder.current_phase` objvar. 0-based, so a freshly started structure reads 0. Also 0 when the objvar is absent (structure not yet building, or the event is dormant) — use `RestussEvent.isActive` to tell those apart. Add 1 to both this and `maxPhase` to display it the way the game does (\"2 / 4\").",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "RestussEvent",
+        "description": "Live state of the in-game Battle of Restuss event: per-structure build phases, galaxy-wide event quest progress, and the game-side winner. Read straight from the tracker objects' objvars on every request — this is uncached live game state, so cache it at the edge if you are polling it.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "bases",
+            "description": "All 13 tracked structures, always in the same order (master objective, the six Rebel bases, then the six Imperial bases), whether or not their objvars were found.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "RestussBase",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "isActive",
+            "description": "Whether the event is currently running: true when the master objective (`ph1_restuss_master`) exists and carries a `base_builder.current_phase` objvar. When false, the event is dormant or has not started and every phase/counter below reads 0.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "quests",
+            "description": "All 16 event quests, always in the same order (the eight Imperial, then the eight Rebel).",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "RestussQuest",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "winningFaction",
+            "description": "The game's own record of the winning side, from the `winningFaction` objvar (1 ⇒ IMPERIAL, any other stored value ⇒ REBEL). Null until the game sets it. This is the authoritative game-side value, not something derived from the phase scores.",
+            "args": [],
+            "type": {
+              "kind": "ENUM",
+              "name": "RestussFaction",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "RestussFaction",
+        "description": "Which side of the GCW a Restuss base or event quest belongs to. NEUTRAL is only used by the city-wide master objective, which belongs to neither faction.",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "IMPERIAL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "NEUTRAL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "REBEL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "RestussQuest",
+        "description": "One of the 16 Restuss event quests. Completions are a galaxy-wide counter stored in a `restuss_event_quest.<key>` objvar on the tracker objects; the goal is static config.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "completed",
+            "description": "Galaxy-wide completions so far, from the `restuss_event_quest.<key>` objvar. 0 when the counter has not been created yet (nobody has completed it this event).",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "faction",
+            "description": "Which faction this quest counts for. Every event quest is IMPERIAL or REBEL.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "RestussFaction",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "goal",
+            "description": "Completions required to finish this quest. Static config from the event scripts, not game state.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "key",
+            "description": "The quest key, which is also the objvar suffix (`restuss_event_quest.<key>`) — e.g. `restuss_imperial_carbine_crafting_1`.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": "Display name for the quest, e.g. \"Imperial Crafting 1\".",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
                 "ofType": null
               }
             },
