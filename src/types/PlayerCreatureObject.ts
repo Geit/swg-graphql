@@ -34,6 +34,9 @@ export class SkillCommand {
 
   @Field(() => String, { nullable: true })
   name: string | null;
+
+  @Field(() => String, { nullable: true })
+  description: string | null;
 }
 
 @ObjectType()

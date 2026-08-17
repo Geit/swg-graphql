@@ -5,6 +5,7 @@ import { camelCase } from 'lodash';
 import { getStringCrc } from '../utils/crc';
 import { humanizeId } from '../utils/humanize';
 import type {
+  ExpertiseCommand,
   ExpertiseLevelPoints,
   ExpertiseMeta,
   ExpertiseMod,
@@ -122,6 +123,7 @@ interface SkillMod {
 interface SkillCommand {
   id: string;
   name: string | null;
+  description: string | null;
 }
 
 interface SkillDataToAdd {
@@ -205,6 +207,7 @@ export class SkillService {
       expertiseTreeData,
       expertiseNames,
       commandNames,
+      commandDescriptions,
       skillModNames,
       skillTemplateData,
       skillModListing,
@@ -231,6 +234,7 @@ export class SkillService {
       }),
       this.stringService.load('expertise_n'),
       this.stringService.load('cmd_n'),
+      this.stringService.load('cmd_d'),
       this.stringService.load('stat_n'),
       this.dataTable.load<SkillTemplateRow>({
         fileName: `skill_template/skill_template.iff`,
@@ -296,6 +300,7 @@ export class SkillService {
             (cmdId): SkillCommand => ({
               id: cmdId,
               name: commandNames[cmdId.toLowerCase()] ?? null,
+              description: commandDescriptions[cmdId.toLowerCase()] ?? null,
             })
           )
         : null;
@@ -382,6 +387,15 @@ export class SkillService {
       });
     };
 
+    const commandsForRank = (skillName: string): ExpertiseCommand[] => {
+      const commands = this._skillMap.get(skillName)?.commands ?? [];
+      return commands.map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+      }));
+    };
+
     // Any rank skill name -> its owning node (rank-1 NAME) + rank, so a
     // SKILLS_REQUIRED reference resolves to a {nodeId, rank}.
     const skillToNodeRank = new Map<string, { nodeId: string; rank: number }>();
@@ -428,6 +442,7 @@ export class SkillService {
             skillName: r.NAME,
             crc: getStringCrc(r.NAME),
             mods: modsForRank(r.NAME),
+            commands: commandsForRank(r.NAME),
           })
         ),
       };

@@ -79,6 +79,7 @@ describe('SkillService', () => {
         ['skl_t', { [skillId]: 'Brawler' }],
         ['skl_d', { [skillId]: 'A novice brawler skill' }],
         ['cmd_n', { berserk1: 'Berserk', taunt: 'Taunt' }],
+        ['cmd_d', { berserk1: 'Enter a berserk rage.' }],
         [
           'stat_n',
           Object.fromEntries([
@@ -107,9 +108,10 @@ describe('SkillService', () => {
       expect(result?.name).toBe('Novice Brawler');
       expect(result?.title).toBe('Brawler');
       expect(result?.description).toBe('A novice brawler skill');
+      // `taunt` has no cmd_d entry — an unresolved description is null, not undefined.
       expect(result?.commands).toEqual([
-        { id: 'berserk1', name: 'Berserk' },
-        { id: 'taunt', name: 'Taunt' },
+        { id: 'berserk1', name: 'Berserk', description: 'Enter a berserk rage.' },
+        { id: 'taunt', name: 'Taunt', description: null },
       ]);
       expect(result?.skillMods).toEqual([
         { id: 'brawler_accuracy', name: 'Brawler Accuracy', value: 10 },

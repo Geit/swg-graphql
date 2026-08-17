@@ -21,6 +21,18 @@ export class ExpertiseMod {
   divisor: number;
 }
 
+@ObjectType({ description: 'A single ability (command) granted by one rank of an expertise node.' })
+export class ExpertiseCommand {
+  @Field(() => String, { description: 'Command id, e.g. "fs_buff_invis_1".' })
+  id: string;
+
+  @Field(() => String, { nullable: true, description: 'Localized display name (cmd_n), or null.' })
+  name: string | null;
+
+  @Field(() => String, { nullable: true, description: 'Localized description (cmd_d), or null.' })
+  description: string | null;
+}
+
 @ObjectType({ description: 'One rank of an expertise node — its own skill, CRC and modifiers.' })
 export class ExpertiseRank {
   @Field(() => Int, { description: 'Rank number, 1-based.' })
@@ -36,6 +48,9 @@ export class ExpertiseRank {
 
   @Field(() => [ExpertiseMod], { description: 'Skill mods this rank grants.' })
   mods: ExpertiseMod[];
+
+  @Field(() => [ExpertiseCommand], { description: 'Abilities (commands) this rank grants.' })
+  commands: ExpertiseCommand[];
 }
 
 @ObjectType({ description: 'A direct box-to-box expertise prerequisite (from the rank-1 skill SKILLS_REQUIRED).' })

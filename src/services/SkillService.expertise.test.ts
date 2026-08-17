@@ -54,6 +54,39 @@ describe('SkillService.getExpertiseData (real datatables)', () => {
     }
   });
 
+  it('carries the abilities (COMMANDS) a rank grants, with names and descriptions', async () => {
+    const data = await service.getExpertiseData();
+    const tree = data.trees.find(t => t.id === 4)!;
+
+    const cloak = tree.nodes.find(n => n.id === 'expertise_fs_general_force_cloak_1')!;
+    expect(cloak.ranks[0].commands).toHaveLength(1);
+
+    const [command] = cloak.ranks[0].commands;
+    expect(command.id).toBe('fs_buff_invis_1');
+    expect(command.name).toBe('Force Cloak');
+    expect(command.description).toBeTruthy();
+
+    // A mods-only node grants no abilities on any rank.
+    const strength = tree.nodes.find(n => n.id === 'expertise_fs_general_enhanced_strength_1')!;
+    expect(strength.ranks.every(r => r.commands.length === 0)).toBe(true);
+    expect(strength.ranks.some(r => r.mods.length > 0)).toBe(true);
+  });
+
+  it('never grants an ability above rank 1 (abilities are not upgraded by rank)', async () => {
+    const data = await service.getExpertiseData();
+
+    const aboveRank1 = data.trees
+      .flatMap(t => t.nodes)
+      .flatMap(n => n.ranks)
+      .filter(r => r.rank > 1 && r.commands.length > 0);
+
+    expect(aboveRank1).toEqual([]);
+
+    // Guard against the inverse false pass — rank 1 really does carry commands.
+    const withCommands = data.trees.flatMap(t => t.nodes).filter(n => n.ranks[0].commands.length > 0);
+    expect(withCommands.length).toBeGreaterThan(0);
+  });
+
   it('resolves box prerequisites (SKILLS_REQUIRED) to node ids + required ranks', async () => {
     const data = await service.getExpertiseData();
     const tree = data.trees.find(t => t.id === 4)!;
