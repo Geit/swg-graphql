@@ -781,12 +781,12 @@
       {
         "kind": "OBJECT",
         "name": "BountyEvent",
-        "description": "A single bounty hunter encounter or mission acceptance, parsed from the game logs.",
+        "description": "A resolved bounty hunter encounter, parsed from the game logs.",
         "isOneOf": null,
         "fields": [
           {
             "name": "credits",
-            "description": "Credits collected (KILL) or posted on the mission (TAKEN). Always 0 for FAILED — a failed collection pays nothing.",
+            "description": "Credits collected. Always 0 for FAILED.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -814,7 +814,7 @@
           },
           {
             "name": "hunterNameAtTime",
-            "description": "The hunter's name as written in the log at the time. Display history only — players rename, so never use this for identity or grouping. Select `hunter { resolvedName }` for the current name.",
+            "description": "The hunter's name as written in the log at the time. Display history only — players rename. Select `hunter { resolvedName }` for the current name.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -1077,7 +1077,7 @@
       {
         "kind": "ENUM",
         "name": "BountyOutcome",
-        "description": "KILL = hunter collected the bounty; FAILED = hunter died trying; TAKEN = mission accepted (not yet resolved).",
+        "description": "KILL = hunter collected the bounty; FAILED = hunter died trying.",
         "isOneOf": null,
         "fields": null,
         "inputFields": null,
@@ -1094,14 +1094,108 @@
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "BountyPlacement",
+        "description": "A player paying credits to post a bounty on another player.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "credits",
+            "description": "Credits the payer spent to post this bounty.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           },
           {
-            "name": "TAKEN",
-            "description": null,
+            "name": "placedBy",
+            "description": "The player who paid to post this bounty. Often the target’s most recent victim.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PlayerCreatureObject",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "placedByNameAtTime",
+            "description": "Name of the player who paid, as written in the log at the time. Display history only — select `placedBy { resolvedName }` for their current name.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "target",
+            "description": "The player the bounty was posted on.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PlayerCreatureObject",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "targetNameAtTime",
+            "description": "Name of the player the bounty was posted on, as written in the log at the time.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "timestamp",
+            "description": "ISO-8601 timestamp of the placement.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
             "isDeprecated": false,
             "deprecationReason": null
           }
         ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
         "possibleTypes": null
       },
       {
@@ -6270,6 +6364,58 @@
       },
       {
         "kind": "OBJECT",
+        "name": "ExpertiseCommand",
+        "description": "A single ability (command) granted by one rank of an expertise node.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "description",
+            "description": "Localized description (cmd_d), or null.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "id",
+            "description": "Command id, e.g. \"fs_buff_invis_1\".",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": "Localized display name (cmd_n), or null.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "ExpertiseLevelPoints",
         "description": "Cumulative expertise points available at a character level.",
         "isOneOf": null,
@@ -6806,6 +6952,30 @@
         "description": "One rank of an expertise node — its own skill, CRC and modifiers.",
         "isOneOf": null,
         "fields": [
+          {
+            "name": "commands",
+            "description": "Abilities (commands) this rank grants.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "ExpertiseCommand",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "crc",
             "description": "SWG CRC of skillName (Crc::normalizeAndCalculate), as a signed int32.",
@@ -23381,7 +23551,7 @@
           },
           {
             "name": "bountyHunterLeaderboard",
-            "description": "Bounty hunter leaderboard. `minEncounters` guards rate-based sorts — without a floor a hunter with one lucky kill outranks one with a hundred.",
+            "description": "Bounty hunter leaderboard. `minEncounters` guards rate-based sorts against low-sample players.",
             "args": [
               {
                 "name": "from",
@@ -23535,7 +23705,7 @@
           },
           {
             "name": "bountyTargetLeaderboard",
-            "description": "Bounty target leaderboard — who is hunted most, and who fights hunters off. Targets are spread thinner than hunters, so the default `minEncounters` is lower.",
+            "description": "Bounty target leaderboard — who is hunted most, and who fights hunters off.",
             "args": [
               {
                 "name": "from",
@@ -25554,12 +25724,12 @@
             "deprecationReason": null
           },
           {
-            "name": "recentBountyFailures",
-            "description": "Most recent failed bounty collections, newest first — hunters who engaged their mark and were killed by it. Page by passing the last row's `timestamp` as `before`.",
+            "name": "recentBountyEncounters",
+            "description": "Most recent resolved bounty encounters, newest first. Defaults to both outcomes for a single chronological feed; pass one outcome to narrow it (KILL = bounty collected, FAILED = hunter died trying). Page by passing the last row's `timestamp` as `before`.",
             "args": [
               {
                 "name": "before",
-                "description": "Cursor — return only events strictly older than this ISO-8601 timestamp.",
+                "description": "Cursor — return only rows strictly older than this ISO-8601 timestamp.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -25582,6 +25752,30 @@
                   }
                 },
                 "defaultValue": "25",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "outcomes",
+                "description": "Outcomes to include. An empty list returns no rows.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "ENUM",
+                        "name": "BountyOutcome",
+                        "ofType": null
+                      }
+                    }
+                  }
+                },
+                "defaultValue": "[KILL, FAILED]",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -25607,12 +25801,12 @@
             "deprecationReason": null
           },
           {
-            "name": "recentBountyKills",
-            "description": "Most recent successfully collected bounties, newest first. Pages the same way as failures.",
+            "name": "recentBountyPlacements",
+            "description": "Most recent player-paid bounty postings, newest first — a player spending their own credits to have another player hunted. Distinct from the automatic bounties the game places on a PvP killer.",
             "args": [
               {
                 "name": "before",
-                "description": "Cursor — return only events strictly older than this ISO-8601 timestamp.",
+                "description": "Cursor — return only rows strictly older than this ISO-8601 timestamp.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -25650,7 +25844,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "OBJECT",
-                    "name": "BountyEvent",
+                    "name": "BountyPlacement",
                     "ofType": null
                   }
                 }
@@ -32534,6 +32728,18 @@
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "id",
             "description": null,
