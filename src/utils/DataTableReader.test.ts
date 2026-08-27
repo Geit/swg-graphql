@@ -53,7 +53,7 @@ function buildDtiiBuffer(columns: Column[], rows: Array<Record<string, unknown>>
   for (const row of rows) {
     for (const col of columns) {
       const value = row[col.name];
-      switch (col.type[0]) {
+      switch (col.type[0].toLowerCase()) {
         case 'b': // boolean
           rowsBuffer.writeInt32LE(value ? 1 : 0);
           break;
@@ -250,5 +250,54 @@ describe('loadDatatable', () => {
     });
 
     expect(result).toEqual([{ type: 1 }, { type: 2 }, { type: 3 }]);
+  });
+
+  /**
+   * The game writes a type letter uppercase for a required column and lowercase for one carrying a default.
+   * Both encode identically, so case must not reach the storage switch. Regression for
+   * `structure/player_structure.iff`, which mixes `i[1]` and `I` and failed to load at all.
+   */
+  it('should read uppercase type codes the same as lowercase ones', async () => {
+    const fs = await import('fs/promises');
+    const mockBuffer = buildDtiiBuffer(
+      [
+        { name: 'STRUCTURE', type: 's' },
+        { name: 'LOT_COST', type: 'i[1]' },
+        { name: 'CIVIC', type: 'I' },
+        { name: 'HAS_SIGN', type: 'I[0]' },
+      ],
+      [{ STRUCTURE: 'object/building/player/house.iff', LOT_COST: 3, CIVIC: 0, HAS_SIGN: 1 }]
+    );
+
+    vi.mocked(fs.readFile).mockResolvedValue(mockBuffer);
+
+    const result = await loadDatatable({ fileName: 'structure/player_structure.iff' });
+
+    expect(result).toEqual([{ STRUCTURE: 'object/building/player/house.iff', LOT_COST: 3, CIVIC: 0, HAS_SIGN: 1 }]);
+  });
+
+  /** An uppercase column must not knock every later column out of alignment in the sequential row read. */
+  it('should keep later columns aligned after an uppercase column', async () => {
+    const fs = await import('fs/promises');
+    const mockBuffer = buildDtiiBuffer(
+      [
+        { name: 'CIVIC', type: 'I' },
+        { name: 'NAME', type: 's' },
+        { name: 'RATE', type: 'f' },
+      ],
+      [
+        { CIVIC: 1, NAME: 'first', RATE: 1.5 },
+        { CIVIC: 0, NAME: 'second', RATE: 2.5 },
+      ]
+    );
+
+    vi.mocked(fs.readFile).mockResolvedValue(mockBuffer);
+
+    const result = await loadDatatable({ fileName: 'aligned.iff' });
+
+    expect(result).toEqual([
+      { CIVIC: 1, NAME: 'first', RATE: 1.5 },
+      { CIVIC: 0, NAME: 'second', RATE: 2.5 },
+    ]);
   });
 });

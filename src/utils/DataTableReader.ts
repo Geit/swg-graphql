@@ -97,7 +97,10 @@ export async function loadDatatable<T extends object>(options: LoadDatatableOpti
   // to being enriched with default values
   // + handle enums
   const getValueForColumn = (buffer: SmartBuffer, type: string) => {
-    switch (type[0]) {
+    // Case is metadata (uppercase = required, lowercase = has a default), not storage — both encode
+    // identically. `structure/player_structure.iff` mixes them, and since rows are one sequential stream a
+    // single unhandled letter fails the whole file rather than one column.
+    switch (type[0].toLowerCase()) {
       case 'b': {
         const val = buffer.readInt32LE();
         return Boolean(val);
