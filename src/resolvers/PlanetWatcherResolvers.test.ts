@@ -1,8 +1,10 @@
+import { promises as dns } from 'dns';
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { ServerObjectService } from '../services/ServerObjectService';
 
-import { PlanetWatcherResolvers } from './PlanetWatcherResolvers';
+import { PlanetWatcherResolvers, clearHostNameCache } from './PlanetWatcherResolvers';
 
 // Mock dns module
 vi.mock('dns', () => ({
@@ -21,6 +23,8 @@ describe('PlanetWatcherResolvers', () => {
     };
 
     resolver = new PlanetWatcherResolvers(mockObjectService as unknown as ServerObjectService);
+    clearHostNameCache();
+    vi.mocked(dns.reverse).mockClear();
   });
 
   describe('planetWatcherObject', () => {
@@ -211,6 +215,41 @@ describe('PlanetWatcherResolvers', () => {
       const result = await resolver.planetWatcherGameServerStatus(payload, { planet: 'naboo' } as never);
 
       expect(result[0].isOnline).toBe(false);
+    });
+
+    const gameServer = (ipAddress: string) => ({
+      isOnline: 1,
+      ipAddressLen: ipAddress.length,
+      ipAddress,
+      serverId: 1,
+      systemPid: 1000,
+      sceneIdLen: 5,
+      sceneId: 'naboo',
+    });
+
+    it('should cache reverse DNS lookups per IP address', async () => {
+      await resolver.planetWatcherGameServerStatus(
+        { planet: 'naboo', data: [gameServer('10.0.0.1'), gameServer('10.0.0.2')] },
+        { planet: 'naboo' } as never
+      );
+      const result = await resolver.planetWatcherGameServerStatus({ planet: 'naboo', data: [gameServer('10.0.0.1')] }, {
+        planet: 'naboo',
+      } as never);
+
+      expect(dns.reverse).toHaveBeenCalledTimes(2);
+      expect(dns.reverse).toHaveBeenCalledWith('10.0.0.1');
+      expect(dns.reverse).toHaveBeenCalledWith('10.0.0.2');
+      expect(result[0].hostName).toBe('test-hostname.example.com');
+    });
+
+    it('should fall back to the IP address when reverse DNS fails', async () => {
+      vi.mocked(dns.reverse).mockRejectedValueOnce(new Error('ENOTFOUND'));
+
+      const result = await resolver.planetWatcherGameServerStatus({ planet: 'naboo', data: [gameServer('10.0.0.9')] }, {
+        planet: 'naboo',
+      } as never);
+
+      expect(result[0].hostName).toBe('10.0.0.9');
     });
   });
 

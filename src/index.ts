@@ -22,7 +22,7 @@ import { mergeWith } from 'lodash';
 import { ZodError } from 'zod';
 import { glob } from 'glob';
 
-import { PORT, DISABLE_AUTH } from './config';
+import { PORT, DISABLE_AUTH, WS_PER_MESSAGE_DEFLATE, WS_DEFLATE_LEVEL, WS_DEFLATE_CONCURRENCY } from './config';
 import { checkKibanaToken } from './context/kibana-auth';
 import { ContextType } from './context/types';
 import { getRequestContext } from './context';
@@ -200,6 +200,15 @@ async function bootstrap() {
   const wsServer = new WebSocketServer({
     server: httpServer,
     path: GQL_PATH,
+    // Low level and a concurrency limit: ws warns of zlib memory fragmentation under concurrent load
+    perMessageDeflate: WS_PER_MESSAGE_DEFLATE
+      ? {
+          zlibDeflateOptions: { level: WS_DEFLATE_LEVEL },
+          clientNoContextTakeover: true,
+          threshold: 1024,
+          concurrencyLimit: WS_DEFLATE_CONCURRENCY,
+        }
+      : false,
   });
 
   // Passing in an instance of a GraphQLSchema and

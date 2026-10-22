@@ -1,13 +1,17 @@
-import { readFileSync } from 'fs';
-import path from 'path';
+import { EventEmitter } from 'events';
 
 import { PubSub, withFilter } from 'graphql-subscriptions';
 
 import { PlanetWatcherArgs } from '../types';
 
-import PlanetWatcher from './PlanetWatcher';
+import { planetTopic } from './PlanetWatcher';
+import { createPlanetWatcherFactory, PlanetWatcherPool } from './PlanetWatcherPool';
 
-export const pubsub = new PubSub();
+// One listener per subscription, so lift EventEmitter's default limit of 10
+const eventEmitter = new EventEmitter();
+eventEmitter.setMaxListeners(0);
+
+export const pubsub = new PubSub({ eventEmitter });
 
 export interface PubSubPayload {
   clientId?: string;
@@ -16,16 +20,7 @@ export interface PubSubPayload {
   data: unknown;
 }
 
-interface ConnectionDetails {
-  host: string;
-  port: number;
-}
-
-interface PlanetWatcherConnectionStatus {
-  count: number;
-  instance: PlanetWatcher;
-}
-const planetWatcherPool = new Map<string, PlanetWatcherConnectionStatus>();
+export const planetWatcherPool = new PlanetWatcherPool(createPlanetWatcherFactory(pubsub));
 
 /**
  * Creates (or attaches to an existing) planet watcher connection, and emits messages
@@ -33,59 +28,45 @@ const planetWatcherPool = new Map<string, PlanetWatcherConnectionStatus>();
  * GraphQL Server
  *
  * @param topic The topic produced by a PlanetWatcher connection to subsribe to
+ * @param pool The pool managing planet server connections
  * @returns Subsriber that can be used with graphlql-js
  */
-export const createPlanetWatcherSubscriber = (topic: string) => {
+export const createPlanetWatcherSubscriber = (topic: string, pool: PlanetWatcherPool = planetWatcherPool) => {
   return withFilter(
     (_rv, args: PlanetWatcherArgs) => {
       const PLANET = args.planet;
       const CLIENT_ID = args.clientId;
 
-      // Return an asyncIterator
-      const asyncIterator = pubsub.asyncIterator(topic);
+      const { watcher, existing } = pool.acquire(PLANET);
 
-      const existingVal = planetWatcherPool.get(PLANET);
+      const asyncIterator = pubsub.asyncIterator(planetTopic(topic, PLANET));
 
-      if (existingVal) {
-        planetWatcherPool.set(PLANET, {
-          ...existingVal,
-          count: existingVal.count + 1,
-        });
-        setImmediate(() => existingVal.instance.replayTopic(topic, CLIENT_ID));
-      } else {
-        // Reload the config each time, individual server layout can change each time
-        // Sync file read is a bit bleh though, maybe extract this into a job later?
-        const serverConfigFile = path.join(__dirname, '../../data/planet-servers.json');
-        const allServerDetails: Record<string, ConnectionDetails> = JSON.parse(
-          readFileSync(serverConfigFile, { encoding: 'ascii' })
-        );
-
-        const serverDetails = allServerDetails[PLANET];
-        const newPw = new PlanetWatcher(serverDetails.host, serverDetails.port, PLANET, pubsub);
-        planetWatcherPool.set(PLANET, {
-          count: 1,
-          instance: newPw,
-        });
-        newPw.connect();
-      }
+      let released = false;
+      let replayStarted = !existing;
 
       return {
         next() {
-          return asyncIterator.next();
+          const result = asyncIterator.next();
+
+          // PubSubAsyncIterator only starts listening in its first next(), so replay can't start any earlier
+          if (!replayStarted) {
+            replayStarted = true;
+            setImmediate(() => {
+              watcher
+                .replayTopic(topic, CLIENT_ID, () => released)
+                .catch(err => {
+                  console.error(`[PlanetWatcher] Failed to replay ${topic} for ${PLANET} to ${CLIENT_ID}`, err);
+                });
+            });
+          }
+
+          return result;
         },
         return() {
-          const poolVal = planetWatcherPool.get(PLANET);
-
-          if (poolVal) {
-            if (poolVal.count - 1 <= 0) {
-              poolVal.instance.disconnect();
-              planetWatcherPool.delete(PLANET);
-            } else {
-              planetWatcherPool.set(PLANET, {
-                ...poolVal,
-                count: poolVal.count - 1,
-              });
-            }
+          // return() can be called more than once
+          if (!released) {
+            released = true;
+            pool.release(PLANET);
           }
 
           return asyncIterator.return!();
@@ -99,13 +80,11 @@ export const createPlanetWatcherSubscriber = (topic: string) => {
       };
     },
     (payload: PubSubPayload, args: PlanetWatcherArgs) => {
-      if (payload.clientId) {
-        // Replay payloads have a clientId attached. Otherwise, messages are generally
-        // multi-cast to all connected parties for the given planet server.
-        return args.clientId === payload.clientId;
-      }
+      if (payload.planet !== args.planet) return false;
 
-      return args.planet === payload.planet;
+      // Replay payloads have a clientId attached. Otherwise, messages are generally
+      // multi-cast to all connected parties for the given planet server.
+      return !payload.clientId || payload.clientId === args.clientId;
     }
   );
 };

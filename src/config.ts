@@ -147,3 +147,42 @@ export const ENABLE_STRUCTURE_SHORTCUT = Boolean(process.env.ENABLE_STRUCTURE_SH
 
 export const REDIS_HOST = process.env.REDIS_HOST ?? 'localhost';
 export const REDIS_PORT = parseInt(process.env.REDIS_PORT ?? '') || 6379;
+
+//#region WebSocket / Planet Watcher
+/**
+ * Whether to enable WebSocket permessage-deflate. Set to `0` or `false` to disable.
+ */
+export const WS_PER_MESSAGE_DEFLATE = !['0', 'false'].includes(
+  (process.env.WS_PER_MESSAGE_DEFLATE ?? '').toLowerCase()
+);
+
+/**
+ * zlib level (1-9) for WebSocket permessage-deflate.
+ */
+export const WS_DEFLATE_LEVEL = Math.min(9, Math.max(1, parseInt(process.env.WS_DEFLATE_LEVEL ?? '') || 1));
+
+/**
+ * Maximum concurrent zlib operations for WebSocket compression.
+ */
+export const WS_DEFLATE_CONCURRENCY = parseInt(process.env.WS_DEFLATE_CONCURRENCY ?? '') || 10;
+
+/**
+ * Time (in ms) to keep a planet server connection and its cache alive after the last subscriber leaves.
+ */
+export const PLANET_WATCHER_IDLE_GRACE_MS = parseInt(process.env.PLANET_WATCHER_IDLE_GRACE_MS ?? '') || 120 * 1000;
+
+/**
+ * Maximum time (in ms) live object updates and frame ends are buffered before publishing.
+ */
+export const PLANET_WATCHER_FLUSH_INTERVAL_MS = parseInt(process.env.PLANET_WATCHER_FLUSH_INTERVAL_MS ?? '') || 50;
+
+/**
+ * Number of buffered object updates that triggers an immediate publish.
+ */
+export const PLANET_WATCHER_FLUSH_MAX_ITEMS = parseInt(process.env.PLANET_WATCHER_FLUSH_MAX_ITEMS ?? '') || 5000;
+
+/**
+ * Items per message when replaying cached objects and nodes to a new subscriber.
+ */
+export const PLANET_WATCHER_REPLAY_CHUNK_SIZE = parseInt(process.env.PLANET_WATCHER_REPLAY_CHUNK_SIZE ?? '') || 2500;
+//#endregion
