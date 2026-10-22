@@ -3,6 +3,8 @@ import { EventEmitter } from 'events';
 import { PubSubEngine } from 'graphql-subscriptions';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+import getStringCrc from '../utils/crc';
+
 import { SBMessageTypes } from './messages';
 import { FrameEndData } from './messages/FrameEndMessage';
 import { PlanetNodeStatusData } from './messages/PlanetNodeStatusMessage';
@@ -11,6 +13,7 @@ import PlanetWatcher from './PlanetWatcher';
 
 class FakeSocket extends EventEmitter {
   setTimeout = vi.fn();
+  setKeepAlive = vi.fn();
 
   destroy = vi.fn(() => {
     this.emit('close');
@@ -400,12 +403,18 @@ describe('PlanetWatcher', () => {
       expect(publishedOn('OBJECT_UPDATE:naboo')).toHaveLength(0);
     });
 
-    it('should destroy the socket when the planet server goes silent', () => {
+    it('should destroy the socket once the planet server goes silent after sending data', () => {
       const watcher = createWatcher();
       const onConnectionLost = vi.fn();
       watcher.onConnectionLost = onConnectionLost;
 
       watcher.connect();
+      expect(sockets[0].setKeepAlive).toHaveBeenCalledWith(true, 30_000);
+      expect(sockets[0].setTimeout).not.toHaveBeenCalled();
+
+      sockets[0].emit('data', Buffer.alloc(0));
+      sockets[0].emit('data', Buffer.alloc(0));
+      expect(sockets[0].setTimeout).toHaveBeenCalledTimes(1);
       expect(sockets[0].setTimeout).toHaveBeenCalledWith(60_000);
 
       sockets[0].emit('timeout');
@@ -432,43 +441,144 @@ describe('PlanetWatcher', () => {
       expect(onDataReceived).toHaveBeenCalledTimes(2);
     });
 
-    it('should remove objects and game servers missing from the dump after a reconnect', () => {
-      const watcher = createWatcher();
-      const gameServer = (serverId: number) => ({
-        isOnline: 1,
-        ipAddressLen: 8,
-        ipAddress: '10.0.0.1',
-        serverId,
-        systemPid: serverId,
-        sceneIdLen: 5,
-        sceneId: 'naboo',
-      });
-      const gameServerMessage = (serverId: number) =>
-        ({ type: 'GameServerStatus', data: gameServer(serverId) }) as unknown as SBMessageTypes;
+    it('should log the initial dump duration, message count and size once new objects stop arriving', () => {
+      const watcher = createWatcher({ flushMaxItems: 200 });
+      watcher.connect();
+      sockets[0].emit('connect');
 
+      vi.advanceTimersByTime(100);
+      // 400 new objects arrive in two capped flushes
+      watcher.onMessage(objectMessage(Array.from({ length: 200 }, (_, i) => objectStatus(i))));
+      watcher.onMessage(objectMessage(Array.from({ length: 200 }, (_, i) => objectStatus(i + 200))));
+      watcher.onMessage(objectMessage([objectStatus(1, { locationX: 1 })]));
+
+      vi.advanceTimersByTime(900);
+      expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('Initial dump'));
+
+      vi.advanceTimersByTime(500);
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /Initial dump for naboo complete 100 ms after connect: 400 objects, 0 cells, 3 OBJECT_UPDATE messages \(\d+\.\d\d MB\)/
+        )
+      );
+    });
+  });
+
+  describe('reconnect reconciliation', () => {
+    const gameServer = (serverId: number) => ({
+      isOnline: 1,
+      ipAddressLen: 8,
+      ipAddress: '10.0.0.1',
+      serverId,
+      systemPid: serverId,
+      sceneIdLen: 5,
+      sceneId: 'naboo',
+    });
+    const gameServerMessage = (serverId: number) =>
+      ({ type: 'GameServerStatus', data: gameServer(serverId) }) as unknown as SBMessageTypes;
+    const ids = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
+
+    const reconnect = (watcher: PlanetWatcher) => {
+      watcher.reset();
+      watcher.connect();
+      sockets[sockets.length - 1].emit('connect');
+      published = [];
+    };
+
+    const deletedIds = () =>
+      publishedOn('OBJECT_UPDATE:naboo')
+        .flatMap(p => p.payload.data as PlanetObjectStatus[])
+        .filter(o => o.deleteObject > 0)
+        .map(o => Number(o.networkId));
+
+    it('should remove objects, cells and game servers missing from the dump after a reconnect', () => {
+      const watcher = createWatcher();
       watcher.connect();
       sockets[0].emit('connect');
       watcher.onMessage(gameServerMessage(1));
       watcher.onMessage(gameServerMessage(2));
-      watcher.onMessage(objectMessage([1, 2, 3].map(id => objectStatus(id))));
+      watcher.onMessage(nodeMessage([nodeStatus(0, 0), nodeStatus(100, 0)]));
+      watcher.onMessage(objectMessage(ids(1, 10).map(id => objectStatus(id))));
       vi.advanceTimersByTime(1000);
 
-      // Planet server restarts: object 2 and game server 2 are gone afterwards
-      watcher.reset();
-      watcher.connect();
-      sockets[1].emit('connect');
-      published = [];
+      reconnect(watcher);
       watcher.onMessage(gameServerMessage(1));
-      watcher.onMessage(objectMessage([1, 3].map(id => objectStatus(id))));
+      watcher.onMessage(nodeMessage([nodeStatus(0, 0)]));
+      watcher.onMessage(
+        objectMessage(
+          ids(1, 10)
+            .filter(id => id !== 2)
+            .map(id => objectStatus(id))
+        )
+      );
 
-      // Nothing is removed until the new dump completes
-      vi.advanceTimersByTime(499);
-      expect(publishedOn('GAME_SERVER_STATUS:naboo')).toHaveLength(1);
+      vi.advanceTimersByTime(999);
+      expect(deletedIds()).toEqual([]);
 
       vi.advanceTimersByTime(1);
-      expect(publishedOn('OBJECT_UPDATE:naboo').map(objectIds)).toEqual([[1, 3], [2]]);
-      expect(publishedOn('OBJECT_UPDATE:naboo')[1].payload.data).toEqual([objectStatus(2, { deleteObject: 1 })]);
-      expect(publishedOn('GAME_SERVER_STATUS:naboo')[1].payload.data).toEqual([{ ...gameServer(2), isOnline: 0 }]);
+      const deletes = publishedOn('OBJECT_UPDATE:naboo').at(-1)!;
+      expect(deletes.payload.data).toEqual([objectStatus(2, { deleteObject: 1 })]);
+      expect(publishedOn('NODE_STATUS_UPDATE:naboo').at(-1)!.payload.data).toEqual([
+        { ...nodeStatus(100, 0), isLoaded: 0, serverCount: 0, serverIds: [], subscriptionCount: 0, subscriptions: [] },
+      ]);
+      expect(publishedOn('GAME_SERVER_STATUS:naboo').at(-1)!.payload.data).toEqual([{ ...gameServer(2), isOnline: 0 }]);
+    });
+
+    it('should not treat a quiet window before the dump has properly started as the end of it', () => {
+      const watcher = createWatcher({ flushMaxItems: 10_000 });
+      watcher.connect();
+      sockets[0].emit('connect');
+      watcher.onMessage(objectMessage(ids(1, 1000).map(id => objectStatus(id))));
+      vi.advanceTimersByTime(1000);
+
+      reconnect(watcher);
+
+      vi.advanceTimersByTime(480);
+      watcher.onMessage(objectMessage(ids(1, 50).map(id => objectStatus(id))));
+      vi.advanceTimersByTime(40);
+      watcher.onMessage(objectMessage(ids(51, 1000).map(id => objectStatus(id))));
+
+      vi.advanceTimersByTime(5000);
+      expect(deletedIds()).toEqual([]);
+      expect(watcher.latestObjectStatuses.size).toBe(1000);
+    });
+
+    it('should not count silent windows from before the dump started', () => {
+      const watcher = createWatcher();
+      watcher.connect();
+      sockets[0].emit('connect');
+      watcher.onMessage(objectMessage(ids(1, 100).map(id => objectStatus(id))));
+      vi.advanceTimersByTime(1000);
+
+      reconnect(watcher);
+
+      vi.advanceTimersByTime(1480);
+      watcher.onMessage(objectMessage(ids(1, 95).map(id => objectStatus(id))));
+      vi.advanceTimersByTime(40);
+      watcher.onMessage(objectMessage(ids(96, 100).map(id => objectStatus(id))));
+
+      vi.advanceTimersByTime(5000);
+      expect(deletedIds()).toEqual([]);
+    });
+
+    it('should hold back removals while the new dump is much smaller than the old state', () => {
+      const watcher = createWatcher();
+      watcher.connect();
+      sockets[0].emit('connect');
+      watcher.onMessage(objectMessage(ids(1, 100).map(id => objectStatus(id))));
+      vi.advanceTimersByTime(1000);
+
+      reconnect(watcher);
+      watcher.onMessage(objectMessage(ids(1, 50).map(id => objectStatus(id))));
+
+      vi.advanceTimersByTime(29_500);
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Initial dump for naboo complete'));
+      expect(deletedIds()).toEqual([]);
+
+      watcher.onMessage(objectMessage(ids(51, 60).map(id => objectStatus(id))));
+
+      vi.advanceTimersByTime(500);
+      expect(deletedIds()).toEqual(ids(61, 100));
     });
 
     it('should complete the dump for a planet with no objects after waiting', () => {
@@ -480,36 +590,77 @@ describe('PlanetWatcher', () => {
       sockets[0].emit('connect');
 
       vi.advanceTimersByTime(9500);
-      expect(published).toHaveLength(0);
+      expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('Initial dump for naboo complete'));
 
       vi.advanceTimersByTime(500);
-      expect(publishedOn('OBJECT_UPDATE:naboo').map(objectIds)).toEqual([[1]]);
       expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Initial dump for naboo complete'));
+      expect(deletedIds()).toEqual([]);
+
+      vi.advanceTimersByTime(20_000);
+      expect(deletedIds()).toEqual([1]);
+    });
+  });
+
+  describe('message framing', () => {
+    const frame = (name: string, payload: Buffer) => {
+      const body = Buffer.alloc(6 + payload.length);
+      body.writeUInt16LE(1, 0);
+      body.writeInt32LE(getStringCrc(name) | 0, 2);
+      payload.copy(body, 6);
+
+      const size = Buffer.alloc(4);
+      size.writeUInt32LE(body.length);
+      return Buffer.concat([size, body]);
+    };
+
+    const frameEnd = (serverId: number) => {
+      const payload = Buffer.alloc(10);
+      payload.writeUInt32LE(serverId, 0);
+      payload.writeUInt32LE(5, 4);
+      payload.writeUInt16LE(0, 8);
+      return frame('FrameEndMessage', payload);
+    };
+
+    const frameEndServerIds = () =>
+      publishedOn('FRAME_END:naboo').flatMap(p => (p.payload.data as FrameEndData[]).map(fe => fe.serverId));
+
+    it('should parse messages split across and combined within chunks', () => {
+      const watcher = createWatcher();
+      const bytes = Buffer.concat([frameEnd(1), frameEnd(2), frameEnd(3)]);
+
+      watcher.onData(bytes.subarray(0, 2));
+      watcher.onData(bytes.subarray(2, 25));
+      watcher.onData(bytes.subarray(25));
+      vi.advanceTimersByTime(50);
+
+      expect(frameEndServerIds()).toEqual([1, 2, 3]);
     });
 
-    it('should log the initial dump duration, message count and size once new objects stop arriving', () => {
-      const watcher = createWatcher({ flushMaxItems: 200 });
-      watcher.connect();
-      sockets[0].emit('connect');
+    it('should skip a malformed message and keep parsing the ones after it', () => {
+      const watcher = createWatcher();
 
-      vi.advanceTimersByTime(100);
-      // 400 new objects arrive in two capped flushes
-      watcher.onMessage(objectMessage(Array.from({ length: 200 }, (_, i) => objectStatus(i))));
-      watcher.onMessage(objectMessage(Array.from({ length: 200 }, (_, i) => objectStatus(i + 200))));
+      watcher.onData(Buffer.concat([frame('FrameEndMessage', Buffer.alloc(3)), frameEnd(7)]));
+      vi.advanceTimersByTime(50);
 
-      // First window saw lots of new objects, so the dump is still in progress
-      vi.advanceTimersByTime(400);
-      expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('Initial dump'));
-
-      // A quiet window marks the end of the dump
-      watcher.onMessage(objectMessage([objectStatus(1, { locationX: 1 })]));
-      vi.advanceTimersByTime(500);
-
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /Initial dump for naboo complete 100 ms after connect: 400 objects, 0 cells, 3 OBJECT_UPDATE messages \(\d+\.\d\d MB\)/
-        )
+      expect(frameEndServerIds()).toEqual([7]);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Skipped 1 malformed messages from Planet Server for naboo'),
+        expect.any(Error)
       );
+    });
+
+    it('should reconnect rather than wait forever on an impossible message size', () => {
+      const watcher = createWatcher();
+      const onConnectionLost = vi.fn();
+      watcher.onConnectionLost = onConnectionLost;
+      watcher.connect();
+
+      const corrupt = Buffer.alloc(8);
+      corrupt.writeUInt32LE(0xffffffff, 0);
+      sockets[0].emit('data', corrupt);
+
+      expect(sockets[0].destroy).toHaveBeenCalled();
+      expect(onConnectionLost).toHaveBeenCalledTimes(1);
     });
   });
 });

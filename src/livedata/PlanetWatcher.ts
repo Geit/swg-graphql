@@ -18,14 +18,22 @@ import { objectUpdateByteSize } from './planetWatcherMappers';
 const PLANET_CELL_WIDTH = 100;
 const PLANET_CELL_AXIS_COUNT = 160;
 
-// The initial dump is complete once a check window sees fewer than this many new objects
 const DUMP_CHECK_INTERVAL_MS = 500;
 const DUMP_QUIET_NEW_OBJECTS = 100;
+const DUMP_QUIET_WINDOWS = 2;
 // An empty planet never produces a dump
 const DUMP_MAX_WAIT_MS = 10 * 1000;
 
-// Frame ends arrive many times a second, so silence means a dead (possibly half-open) connection
+// Hold back reconnect removals while the new dump may still be arriving
+const STALE_REMOVAL_MIN_RATIO = 0.9;
+const STALE_REMOVAL_MAX_WAIT_MS = 30 * 1000;
+
+// Armed on first data, as planets without game servers can be silent
 const SOCKET_IDLE_TIMEOUT_MS = 60 * 1000;
+const SOCKET_KEEPALIVE_MS = 30 * 1000;
+
+const MAX_MESSAGE_SIZE = 16 * 1024 * 1024;
+const PARSE_ERROR_LOG_INTERVAL_MS = 10 * 1000;
 
 export interface PlanetWatcherOptions {
   flushIntervalMs?: number;
@@ -54,6 +62,8 @@ class PlanetWatcher {
 
   private queuedMessages = Buffer.alloc(0);
   private receivedData = false;
+  private parseErrors = 0;
+  private lastParseErrorLogAt = 0;
 
   private readonly flushIntervalMs: number;
   private readonly flushMaxItems: number;
@@ -69,12 +79,15 @@ class PlanetWatcher {
 
   // State from before a reconnect. Anything the new dump does not contain is removed from clients.
   private staleObjectStatuses = new Map<bigint, PlanetObjectStatus>();
+  private staleNodeStatuses = new Map<number, PlanetNodeStatusData>();
   private staleGameServerStatuses = new Map<number, GameServerStatusData>();
 
   private connectStartedAt = 0;
   private connectedAt = 0;
   private dumpCheckTimer: ReturnType<typeof setTimeout> | null = null;
   private dumpComplete = false;
+  private dumpStarted = false;
+  private dumpQuietWindows = 0;
   private dumpWindowNewObjects = 0;
   private dumpLastNewObjectAt = 0;
   private dumpObjectMessages = 0;
@@ -101,7 +114,7 @@ class PlanetWatcher {
     this.receivedData = false;
     this.startDumpTracking();
 
-    socket.setTimeout(SOCKET_IDLE_TIMEOUT_MS);
+    socket.setKeepAlive(true, SOCKET_KEEPALIVE_MS);
     socket.on('timeout', () => {
       console.warn(`[PlanetWatcher] No data from Planet Server for ${this.sceneName} in ${SOCKET_IDLE_TIMEOUT_MS} ms`);
       socket.destroy();
@@ -132,6 +145,7 @@ class PlanetWatcher {
     this.pendingObjectStatuses.clear();
     this.pendingFrameEnds = [];
     this.staleObjectStatuses.clear();
+    this.staleNodeStatuses.clear();
     this.staleGameServerStatuses.clear();
     this.generation += 1;
 
@@ -140,6 +154,7 @@ class PlanetWatcher {
 
   reset() {
     this.latestObjectStatuses.forEach((status, networkId) => this.staleObjectStatuses.set(networkId, status));
+    this.latestNodeStatuses.forEach((status, cellIndex) => this.staleNodeStatuses.set(cellIndex, status));
     this.latestGameServerStatus.forEach((status, serverId) => this.staleGameServerStatuses.set(serverId, status));
 
     this.latestObjectStatuses.clear();
@@ -168,6 +183,7 @@ class PlanetWatcher {
   onData(data: Buffer) {
     if (!this.receivedData) {
       this.receivedData = true;
+      this.connection?.setTimeout(SOCKET_IDLE_TIMEOUT_MS);
       this.onDataReceived?.();
     }
 
@@ -179,35 +195,62 @@ class PlanetWatcher {
      * A single packet may contain multiple messages.
      * A single message may span multiple packets.
      */
-    try {
-      while (msgOffset + 4 <= this.queuedMessages.length) {
-        const nextMsgSize = this.queuedMessages.readUInt32LE(msgOffset);
-        msgOffset += 4;
+    while (msgOffset + 4 <= this.queuedMessages.length) {
+      const nextMsgSize = this.queuedMessages.readUInt32LE(msgOffset);
 
-        if (nextMsgSize <= this.queuedMessages.length - msgOffset) {
-          // There is enough data in the buffer to parse this message
-          const msgView = this.queuedMessages.subarray(msgOffset, msgOffset + nextMsgSize);
-          msgOffset += nextMsgSize;
-
-          const msg = parse(msgView);
-
-          if (msg) {
-            this.onMessage(msg);
-          }
-        } else {
-          // We need to wait for more messages before attempting to read the buffer.
-          msgOffset -= 4; // Ensure we don't discard the message size
-          break;
-        }
+      if (nextMsgSize > MAX_MESSAGE_SIZE) {
+        // Unrecoverable desync, so reconnect for a fresh dump
+        console.error(
+          `[PlanetWatcher] Invalid message size ${nextMsgSize} from Planet Server for ${this.sceneName}, reconnecting`
+        );
+        this.queuedMessages = Buffer.alloc(0);
+        this.connection?.destroy();
+        return;
       }
 
-      // Discard up to the currently processed message.
-      this.queuedMessages = this.queuedMessages.subarray(msgOffset);
+      msgOffset += 4;
 
-      // If the above made a 0 length buffer, then make a totally new buffer to ensure GC.
-      if (this.queuedMessages.length === 0) this.queuedMessages = Buffer.alloc(0);
-    } catch {
-      this.queuedMessages = Buffer.alloc(0);
+      if (nextMsgSize <= this.queuedMessages.length - msgOffset) {
+        // There is enough data in the buffer to parse this message
+        const msgView = this.queuedMessages.subarray(msgOffset, msgOffset + nextMsgSize);
+        msgOffset += nextMsgSize;
+
+        const msg = this.parseMessage(msgView);
+
+        if (msg) {
+          this.onMessage(msg);
+        }
+      } else {
+        // We need to wait for more messages before attempting to read the buffer.
+        msgOffset -= 4; // Ensure we don't discard the message size
+        break;
+      }
+    }
+
+    // Discard up to the currently processed message.
+    this.queuedMessages = this.queuedMessages.subarray(msgOffset);
+
+    // If the above made a 0 length buffer, then make a totally new buffer to ensure GC.
+    if (this.queuedMessages.length === 0) this.queuedMessages = Buffer.alloc(0);
+  }
+
+  // The length prefix still marks the next message, so only the malformed one is lost
+  private parseMessage(msgView: Buffer) {
+    try {
+      return parse(msgView);
+    } catch (err) {
+      this.parseErrors += 1;
+
+      if (Date.now() - this.lastParseErrorLogAt >= PARSE_ERROR_LOG_INTERVAL_MS) {
+        console.error(
+          `[PlanetWatcher] Skipped ${this.parseErrors} malformed messages from Planet Server for ${this.sceneName}`,
+          err
+        );
+        this.lastParseErrorLogAt = Date.now();
+        this.parseErrors = 0;
+      }
+
+      return null;
     }
   }
 
@@ -246,6 +289,7 @@ class PlanetWatcher {
         });
 
         if (!this.dumpComplete && newObjects > 0) {
+          this.dumpStarted = true;
           this.dumpWindowNewObjects += newObjects;
           this.dumpLastNewObjectAt = Date.now();
         }
@@ -396,6 +440,8 @@ class PlanetWatcher {
     this.connectStartedAt = Date.now();
     this.connectedAt = 0;
     this.dumpComplete = false;
+    this.dumpStarted = false;
+    this.dumpQuietWindows = 0;
     this.dumpWindowNewObjects = 0;
     this.dumpLastNewObjectAt = 0;
     this.dumpObjectMessages = 0;
@@ -410,20 +456,36 @@ class PlanetWatcher {
     const quiet = this.dumpWindowNewObjects < DUMP_QUIET_NEW_OBJECTS;
     this.dumpWindowNewObjects = 0;
 
-    if (!quiet || !this.connectedAt) return;
-    if (this.latestObjectStatuses.size === 0 && Date.now() - this.connectedAt < DUMP_MAX_WAIT_MS) return;
+    if (!this.connectedAt) return;
+    const connectedFor = Date.now() - this.connectedAt;
 
-    this.flush();
+    if (!this.dumpComplete) {
+      this.dumpQuietWindows = quiet && this.dumpStarted ? this.dumpQuietWindows + 1 : 0;
 
-    this.dumpComplete = true;
+      const complete = this.dumpStarted
+        ? this.dumpQuietWindows >= DUMP_QUIET_WINDOWS
+        : connectedFor >= DUMP_MAX_WAIT_MS;
+      if (!complete) return;
+
+      this.flush();
+      this.dumpComplete = true;
+
+      console.log(
+        `[PlanetWatcher] Initial dump for ${this.sceneName} complete ${Math.max(this.dumpLastNewObjectAt, this.connectedAt) - this.connectStartedAt} ms after connect: ` +
+          `${this.latestObjectStatuses.size} objects, ${this.latestNodeStatuses.size} cells, ` +
+          `${this.dumpObjectMessages} OBJECT_UPDATE messages (${PlanetWatcher.formatBytes(this.dumpObjectBytes)})`
+      );
+    }
+
+    if (
+      this.latestObjectStatuses.size < this.staleObjectStatuses.size * STALE_REMOVAL_MIN_RATIO &&
+      connectedFor < STALE_REMOVAL_MAX_WAIT_MS
+    ) {
+      return;
+    }
+
     if (this.dumpCheckTimer) clearInterval(this.dumpCheckTimer);
     this.dumpCheckTimer = null;
-
-    console.log(
-      `[PlanetWatcher] Initial dump for ${this.sceneName} complete ${Math.max(this.dumpLastNewObjectAt, this.connectedAt) - this.connectStartedAt} ms after connect: ` +
-        `${this.latestObjectStatuses.size} objects, ${this.latestNodeStatuses.size} cells, ` +
-        `${this.dumpObjectMessages} OBJECT_UPDATE messages (${PlanetWatcher.formatBytes(this.dumpObjectBytes)})`
-    );
 
     this.publishStaleRemovals();
   }
@@ -432,17 +494,35 @@ class PlanetWatcher {
     const deletes = [...this.staleObjectStatuses.values()]
       .filter(status => !this.latestObjectStatuses.has(status.networkId))
       .map(status => ({ ...status, deleteObject: 1 }));
+    const unloaded = [...this.staleNodeStatuses.entries()]
+      .filter(([cellIndex]) => !this.latestNodeStatuses.has(cellIndex))
+      .map(([, status]) => ({
+        ...status,
+        isLoaded: 0,
+        serverCount: 0,
+        serverIds: [],
+        subscriptionCount: 0,
+        subscriptions: [],
+      }));
     const offline = [...this.staleGameServerStatuses.values()]
       .filter(status => !this.latestGameServerStatus.has(status.serverId))
       .map(status => ({ ...status, isOnline: 0 }));
 
     this.staleObjectStatuses.clear();
+    this.staleNodeStatuses.clear();
     this.staleGameServerStatuses.clear();
 
     for (let i = 0; i < deletes.length; i += this.replayChunkSize) {
       this.pubsub.publish(planetTopic('OBJECT_UPDATE', this.sceneName), {
         planet: this.sceneName,
         data: deletes.slice(i, i + this.replayChunkSize),
+      });
+    }
+
+    for (let i = 0; i < unloaded.length; i += this.replayChunkSize) {
+      this.pubsub.publish(planetTopic('NODE_STATUS_UPDATE', this.sceneName), {
+        planet: this.sceneName,
+        data: unloaded.slice(i, i + this.replayChunkSize),
       });
     }
 
@@ -453,10 +533,10 @@ class PlanetWatcher {
       });
     }
 
-    if (deletes.length > 0 || offline.length > 0) {
+    if (deletes.length > 0 || unloaded.length > 0 || offline.length > 0) {
       console.log(
-        `[PlanetWatcher] Removed ${deletes.length} objects and ${offline.length} game servers from ${this.sceneName} ` +
-          `that disappeared while reconnecting`
+        `[PlanetWatcher] Removed ${deletes.length} objects, ${unloaded.length} cells and ${offline.length} game servers ` +
+          `from ${this.sceneName} that disappeared while reconnecting`
       );
     }
   }
